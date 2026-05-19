@@ -1,0 +1,3558 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+WALTS 在庫検索ツール - 変更履歴
+================================================================================
+v0.1 : 初期モック (HTML単体、ダミーデータ30件)。検索/ソート/最終編集者表示。
+v0.2 : しきい値ハイライト追加 (thresholds.csv 別管理、警告/危険2段階)。
+v0.3 : バー目盛り改善、「危険まで残り」列追加。
+v0.4 : 在庫数を主役表示 (40px太字)、最終使用日・最終入庫日列の追加。
+v0.5 : 在庫数強調、インデックス更新日時の大型表示、発注状態管理 (localStorage)。
+v0.6 : 添付4ファイル(_FC150/_HPW/_SI0631/_熱酸化膜)からリアルデータ抽出。
+v0.7 : 品名別カード版、即在庫/予約済/入荷予定/入荷予定の予約を別カウント。
+v0.8 : 上部ナビカード削除、入荷予定セクションを現有在庫より上に配置。
+v0.9 : 品名ヘッダーに色付け、即在庫と予約を「30+5」加算表記で外数表示。
+v1.0 : 入荷予定シートのslot判定ロジックを修正
+       (塗りつぶしなし=未予約、色付き全部=予約済)。
+v1.1 : Theme=0(白塗りつぶし)を塗りつぶしなしと同じ在庫扱い。
+v1.2 : Excel非表示行を集計除外、特殊シート(不明品/Glass)除外、
+       灰色(Theme=0 tint≠0)は使用済扱いに修正。SI833-0016A問題解決。
+v1.3 : 品名ヘッダーの色を濃く調整、文字サイズアップ。
+v1.4 : 警告ロジック変更、ステータスバッジを品名右に表示。
+v1.5 : 警告判定を「自由に使える分」(即在庫の未予約 + 入荷予定の未予約)で計算。
+v1.6 : 即在庫の数字表示を入荷予定と同じ「未予約 + 予約」形式(同サイズ)に統一。
+v1.7 : 警告判定バグ修正(統一)、発注状況列を削除。
+v1.8 : ステータスバッジを大型化して即在庫サマリーの左に配置。
+v1.9 : サマリー部分が改行していたバグ修正
+       (ステータス+即在庫+入荷予定を確実に横並び)。
+v2.0 : 現有在庫ロット表も「在庫 + 予約」の加算表記に統一(入荷予定表と同じ形式)。
+v2.1 : 同一シート内ロットの区切り線を消し、別シート間の区切り線を濃く。
+v2.2 : 「要注意ロットのみ」チェックボックスを削除。
+v2.3 : ロット並び順をエクセルのシート表示順に変更(在庫数降順ソートを廃止)。
+v2.4 : ページ上部の変更履歴バナーを削除(履歴はこのコメントに保持)。
+v2.5 : 3年以上前の在庫を「ダミーウエハ」として別カウント(即在庫から除外、警告判定対象外)。
+v2.6 : ダミーブロックを一番右に移動、表示サイズを小さめに調整。
+v2.7 : 品名カードのロット情報をアコーディオン化(初期は全折りたたみ、検索時自動展開)。
+v2.8 : 全展開/全折りたたみボタンと表示中カウンターを削除(品名クリックだけで操作)。
+v2.9 : ウエハ全68品名(本社43+糸島25)統合、タブUI(ウエハ/基板)追加、出所バッジ表示。
+v3.0 : 接頭辞ベースで品名をグループ化(FC/CC/IP/HBM/MB/WM/HPW/熱酸化膜/ミラー/その他)。
+v3.1 : グループ自体もアコーディオン化(初期は全閉、検索時自動展開、状態localStorage保存)。
+v3.2 : グループヘッダーに品名プレビュー表示+合計在庫数表示。
+v3.3 : グループヘッダーの品名プレビューを丸角ボックス化(品名+在庫数を1単位で表示)。
+v3.4 : ヘッダー右上の「インデックス更新日時」を「前回からの変更ファイル一覧」に変更。
+v3.5 : 品名ピルのデザイン整理(白背景・枠線なし・数字一色・状態は丸ランプのみ)。
+v3.6 : 詳細パネル全体を白基調・数字一色に統一。グループ閉じ状態のピルからランプ削除。
+v3.7 : 品名カードヘッダーの色グラデーションを削除、淡いグレー単色に統一。
+v3.8 : 品名カードヘッダーの上部に色付き太線を復活(背景は淡いグレーのまま)。
+v3.9 : 品名カード上線を1色のパステルブルーに統一、ページ全体背景をグレーに変更。
+v4.0 : 「その他」を「汎用ウエハ系」と「その他」に分割
+       (Glass/ITO/AS8R/P-SiO P-SiN付ウエハ/SI0631×2を汎用ウエハ系に)。
+v4.1 : 基板タブ実装(21品名、入出庫履歴表示、ロット別在庫、過去1年集計)。
+v4.2 : 基板グループ分類をPad Pitchベースに変更(80/120/150/200μm Pitch + その他)。
+v4.3 : FBW (Full Bump Wafer) を独立グループに分離。
+v4.4 : 基板グループもアコーディオン化(品名プレビュー付き、ウエハと同様の操作感)。
+v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム取得方式へ移行。
+       MSAL認証 + ExcelJS によるブラウザ完結型データ取得。
+       本社・糸島フォルダを順次取得し統合表示。
+================================================================================
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>WALTS 在庫管理ツール v5.0</title>
+<style>
+  :root {
+    --bg: #eceef1;
+    --panel: #ffffff;
+    --ink: #1a1a1a;
+    --ink-dim: #6b6b6b;
+    --ink-faint: #999;
+    --line: #d8d8da;
+    --accent: #1a4d8f;
+    --accent-soft: #e8eef7;
+    --warn: #c25a00;
+    --warn-soft: #fcefe0;
+    --alert: #a02020;
+    --alert-soft: #f7e0e0;
+    --alert-strong: #f0bcbc;
+    --ok: #2d6a3e;
+    --ok-soft: #e6f0e8;
+    --incoming: #5a4a8a;
+    --incoming-soft: #e8e3f0;
+    --order-pending: #8a6d00;
+    --order-done: #2d5a8a;
+    --hover: #f1f3f5;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .app { max-width: 1700px; margin: 0 auto; padding: 16px 20px 40px; }
+
+  header.top {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 14px;
+  }
+  h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.02em; }
+  h1 .sub { font-size: 11px; font-weight: 400; color: var(--ink-dim); margin-left: 10px; }
+  .index-info { text-align: right; line-height: 1.2; }
+  .index-info .lbl { font-size: 10px; color: var(--ink-dim); letter-spacing: 0.08em; }
+  .index-info .time {
+    font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums;
+    color: var(--ink); margin-top: 2px;
+    font-family: "Consolas", "Yu Gothic UI", monospace;
+  }
+  .index-info .time .ago {
+    font-size: 11px; color: var(--ink-dim); font-weight: 400;
+    margin-left: 6px; font-family: inherit;
+  }
+
+  /* ナビカード(品名ジャンプ) */
+  .nav-cards {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; margin-bottom: 12px;
+  }
+  .nav-card {
+    background: var(--panel); border: 1px solid var(--line);
+    padding: 8px 12px; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-card:hover { background: var(--hover); }
+  .nav-card.danger { border-left: 4px solid var(--alert); }
+  .nav-card.warn { border-left: 4px solid var(--warn); }
+  .nav-card.ok { border-left: 4px solid var(--ok); }
+  .nav-card.none { border-left: 4px solid #999; }
+  .nav-card .pname {
+    font-size: 11px; font-weight: 700; color: var(--ink);
+    flex: 1; line-height: 1.2;
+  }
+  .nav-card .pqty {
+    font-size: 22px; font-weight: 800; line-height: 1;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
+  }
+  .nav-card .pqty.danger { color: var(--alert); }
+  .nav-card .pqty.warn { color: var(--warn); }
+  .nav-card .pqty.ok { color: var(--ok); }
+  .nav-card .pqty.zero { color: var(--alert); }
+
+  /* 検索バー */
+  .controls {
+    display: grid; grid-template-columns: 1fr auto auto;
+    gap: 10px; align-items: center;
+    background: var(--panel); border: 1px solid var(--line);
+    padding: 10px 12px; margin-bottom: 14px;
+    position: sticky; top: 0; z-index: 5;
+  }
+  .search { position: relative; }
+  .search input {
+    width: 100%; padding: 8px 10px 8px 32px;
+    font-size: 13px; border: 1px solid var(--line);
+    background: #fff; font-family: inherit;
+  }
+  .search input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .search::before {
+    content: "🔍"; position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%); font-size: 12px; opacity: 0.5;
+  }
+  .controls label {
+    font-size: 11px; color: var(--ink-dim);
+    display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    cursor: pointer;
+  }
+
+  /* 品名カード(メイン) */
+  .product-card {
+    background: var(--panel); border: 1px solid var(--line);
+    margin-bottom: 18px; padding: 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .pc-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 24px;
+    border-top: 5px solid var(--ink);
+  }
+  /* 品名ごとの色テーマ(ヘッダー上線とタイトル色) */
+  .pc-header {
+    border-top: 6px solid #7eb6e6;  /* パステルブルー(1色統一) */
+    background: #f4f7fa;             /* ほのかにブルーがかった淡いグレー */
+  }
+  .pc-header .pc-title .name { font-size: 20px; color: var(--ink); }
+  /* color-1〜8 のクラスは付与され続けるが見た目は全て同じ */
+  .pc-header.color-1, .pc-header.color-2, .pc-header.color-3, .pc-header.color-4,
+  .pc-header.color-5, .pc-header.color-6, .pc-header.color-7, .pc-header.color-8 {
+    border-top-color: #7eb6e6;
+    background: #f4f7fa;
+  }
+  .pc-title {
+    flex: 0 0 auto;
+  }
+  .pc-title .name {
+    font-size: 18px; font-weight: 700; color: var(--ink);
+    margin: 0;
+  }
+  .pc-title .file {
+    font-size: 10px; color: var(--ink-faint);
+    font-family: "Consolas", monospace; margin-top: 2px;
+  }
+  .pc-stats {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex: 1;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+  }
+  .pc-stat {
+    text-align: center;
+    padding: 0 8px;
+    border-right: 1px dashed var(--line);
+  }
+  .pc-stat:last-child { border-right: none; }
+  .pc-stat .label {
+    font-size: 9px; color: var(--ink-dim);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .pc-stat .val {
+    font-size: 28px; font-weight: 800; line-height: 1;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
+  }
+  .pc-stat .sub {
+    font-size: 10px; color: var(--ink-faint);
+    margin-top: 2px; font-family: "Consolas", monospace;
+  }
+  /* 詳細パネルの数字は全て黒、状態0(在庫切れ)のみ赤、ゼロ表記のみ薄く */
+  .pc-stat .val { color: var(--ink); }
+  .pc-stat .val.zero { color: var(--ink-faint); }
+  .pc-stat.in-stock .val.zero { color: var(--alert); }  /* 即在庫0は危険なので赤 */
+  .pc-stat.stock-reserved .val { color: var(--warn); }
+  .pc-stat.incoming-unreserved .val { color: var(--incoming); }
+  .pc-stat.incoming-reserved .val { color: var(--incoming); opacity: 0.75; }
+  .pc-stat.zero .val { color: var(--ink-faint); }
+  .pc-stat .val-combo {
+    display: flex; align-items: baseline; justify-content: center;
+    gap: 4px;
+  }
+  .pc-stat .val-plus {
+    font-size: 14px; font-weight: 600;
+    color: var(--ink-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .pc-stat .val-extra {
+    font-size: 18px; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .pc-stat .val-extra.zero { color: var(--ink-faint); font-weight: 400; }
+
+
+  /* セクションヘッダー */
+  .section-header {
+    padding: 8px 18px 6px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--ink-dim);
+    background: #f4f5f7;
+    border-bottom: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .section-header.stock { color: var(--accent); }
+  .section-header.incoming { color: var(--incoming); }
+  .section-header .badge {
+    background: rgba(0,0,0,0.06); padding: 1px 8px;
+    font-size: 10px; font-weight: 600; border-radius: 2px;
+    color: var(--ink-dim);
+  }
+
+  /* ロット表 */
+  .lot-table-wrap { overflow-x: auto; }
+  table.lot-table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+  }
+  table.lot-table thead th {
+    background: #f1f3f5; border-bottom: 1px solid var(--line);
+    padding: 6px 10px; text-align: left;
+    font-weight: 600; font-size: 10px;
+    letter-spacing: 0.04em; white-space: nowrap;
+    color: var(--ink-dim);
+  }
+  table.lot-table tbody td {
+    padding: 8px 10px; border-bottom: 1px solid #ece9e2;
+    font-variant-numeric: tabular-nums; vertical-align: middle;
+  }
+  /* 同一シート内ロットは区切り線なし */
+  table.lot-table tbody tr.same-sheet td { border-bottom: none; }
+  /* シート切替の行は濃い区切り線 */
+  table.lot-table tbody tr.sheet-boundary td {
+    border-bottom: 2px solid #8a8378;
+  }
+  table.lot-table tbody tr:hover { background: var(--hover); }
+  table.lot-table tbody tr.zero { color: var(--ink-dim); background: #f5f6f7; }
+  table.lot-table tbody tr.zero:hover { background: var(--hover); }
+
+  .lot-name {
+    font-weight: 600; font-size: 12px; min-width: 130px;
+  }
+  .lot-name .sheet {
+    display: block; font-size: 10px;
+    color: var(--ink-dim); font-weight: 400;
+    margin-top: 1px;
+  }
+
+  .qty-cell { text-align: right; min-width: 60px; padding-right: 16px !important; }
+  .qty-num {
+    font-size: 22px; font-weight: 800; line-height: 1;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
+  }
+  .qty-num.zero { color: var(--ink-faint); }
+  .qty-num.ok { color: var(--ink); }
+  .qty-num.warn { color: var(--ink); }
+  .qty-num.incoming { color: var(--ink); }
+
+  .reserved-cell { min-width: 180px; }
+  .reserved-num {
+    font-size: 15px; font-weight: 700; color: var(--ink-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .reserved-num.incoming { color: var(--ink-dim); }
+  .reserved-num.zero { color: var(--ink-faint); font-weight: 400; font-size: 12px; }
+  .reserved-customers {
+    font-size: 10px; color: var(--ink-dim);
+    margin-top: 2px;
+  }
+  .reserved-customers .item {
+    display: inline-block; background: #eef0f3;
+    padding: 1px 5px; margin: 1px 2px 1px 0;
+    border-radius: 2px; color: var(--ink-dim);
+    font-size: 9px; max-width: 220px;
+    overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; vertical-align: middle;
+  }
+  .reserved-customers .item.incoming {
+    background: #eef0f3; color: var(--ink-dim);
+  }
+
+  .date-cell {
+    font-family: "Consolas", monospace; font-size: 11px;
+    color: var(--ink); white-space: nowrap; min-width: 120px;
+  }
+  .date-cell .ago {
+    display: block; color: var(--ink-dim);
+    font-size: 9px; font-family: inherit;
+  }
+  .date-cell .raw-text { color: var(--warn); font-family: inherit; font-size: 11px; }
+  .date-cell .placeholder {
+    font-style: italic; color: var(--ink-faint);
+    font-family: inherit; font-size: 11px;
+  }
+
+  .loc-cell { min-width: 140px; font-size: 11px; line-height: 1.4; }
+  .loc-cell .item {
+    display: inline-block; background: #eef0f3;
+    padding: 1px 6px; margin: 1px 2px 1px 0;
+    border-radius: 2px; color: var(--ink); font-size: 10px;
+  }
+  .loc-cell .placeholder { color: var(--ink-faint); font-style: italic; font-size: 10px; }
+
+  /* 発注状態 */
+  .order-cell { min-width: 140px; }
+  .order-badge {
+    display: inline-block; padding: 3px 8px;
+    font-size: 10px; font-weight: 700;
+    border-radius: 3px; letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+  .order-badge.none { background: #f0eee7; color: var(--ink-dim); }
+  .order-badge.need {
+    background: var(--alert); color: #fff;
+    animation: blink 1.6s ease-in-out infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
+  .order-badge.pending { background: var(--order-pending); color: #fff; }
+  .order-badge.done { background: var(--order-done); color: #fff; }
+  .order-info {
+    display: block; font-size: 10px; color: var(--ink-dim);
+    margin-top: 3px; font-family: "Consolas", monospace;
+  }
+  .order-info b { color: var(--ink); font-weight: 600; }
+  .order-actions { display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap; }
+  .order-btn {
+    padding: 2px 6px; font-size: 10px;
+    border: 1px solid var(--line); background: #fff;
+    cursor: pointer; font-family: inherit;
+    color: var(--ink-dim); border-radius: 2px;
+  }
+  .order-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .order-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .empty {
+    padding: 30px 20px; text-align: center;
+    color: var(--ink-faint); font-style: italic; font-size: 12px;
+  }
+
+  .footer-note {
+    margin-top: 14px; font-size: 10px; color: var(--ink-dim);
+    padding: 8px 4px; border-top: 1px dashed var(--line);
+  }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: #fff;
+    padding: 10px 18px; font-size: 12px;
+    opacity: 0; pointer-events: none;
+    transition: all 0.25s ease; z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .mock-banner {
+    background: #fff8d6; border: 1px solid #d4c870; color: #6b5b00;
+    padding: 6px 12px; font-size: 11px; margin-bottom: 12px;
+  }
+  .mock-banner b { color: #4a3f00; }
+
+  /* モーダル */
+  .modal-bg {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4); z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: #fff; padding: 20px 24px;
+    min-width: 380px; border: 1px solid var(--line);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+  }
+  .modal h3 { margin: 0 0 12px; font-size: 14px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  .modal .field { margin-bottom: 10px; }
+  .modal .field label { display: block; font-size: 11px; color: var(--ink-dim); margin-bottom: 3px; }
+  .modal .field input, .modal .field textarea {
+    width: 100%; padding: 6px 8px;
+    border: 1px solid var(--line); font-family: inherit; font-size: 12px;
+  }
+  .modal-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+  .btn {
+    display: inline-block; padding: 5px 11px;
+    font-size: 11px; font-family: inherit;
+    border: 1px solid var(--line); background: #fff;
+    cursor: pointer; text-decoration: none; color: var(--ink);
+  }
+  .btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .pc-title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .pc-title-row { display: flex; align-items: center; gap: 12px; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 11px; border-radius: 14px;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.03em; white-space: nowrap;
+  }
+  .status-pill .num { font-variant-numeric: tabular-nums; }
+  .status-pill.ok {
+    background: #e6f0e8; color: #14422a;
+    border: 1px solid #b8d8c0;
+  }
+  .status-pill.warn {
+    background: #fcefe0; color: #7a3a00;
+    border: 1px solid #f5d199;
+  }
+  .status-pill.danger {
+    background: #f7e0e0; color: #6e1515;
+    border: 1px solid #f0bcbc;
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(160,32,32,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(160,32,32,0); }
+  }
+
+
+  /* 大型ステータスバッジ (サマリー左) */
+  .status-big {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    min-width: 130px;
+    text-align: center;
+  }
+  .status-big .label {
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1.1; margin-bottom: 4px;
+    color: var(--ink);
+    display: inline-flex; align-items: center; gap: 6px;
+    justify-content: center;
+  }
+  .status-big .lamp-big {
+    display: inline-block;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: #999;
+    flex-shrink: 0;
+  }
+  .status-big .num {
+    font-size: 32px; font-weight: 800;
+    line-height: 1; font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+  .status-big .unit {
+    font-size: 11px;
+    opacity: 0.65; margin-top: 2px;
+    font-weight: 600; letter-spacing: 0.05em;
+    color: var(--ink-dim);
+  }
+  .status-big.ok .lamp-big   { background: #2d7a3e; }
+  .status-big.warn .lamp-big { background: #d97706; }
+  .status-big.danger .lamp-big {
+    background: #c92a2a;
+    box-shadow: 0 0 0 0 rgba(201,42,42,0.5);
+    animation: lamp-pulse 1.6s ease-in-out infinite;
+  }
+
+
+  /* ダミーウエハ */
+  .pc-stat.dummy .val { color: #555; }
+  .pc-stat.dummy .val.zero { color: var(--ink-faint); }
+  tr.dummy-row { opacity: 0.55; }
+  tr.dummy-row td { color: #777; }
+  tr.dummy-row .lot-name { font-style: italic; }
+  .dummy-tag {
+    display: inline-block;
+    font-size: 9px; font-weight: 700;
+    background: #999; color: #fff;
+    padding: 1px 5px; margin-left: 6px;
+    border-radius: 2px; letter-spacing: 0.05em;
+    vertical-align: 1px;
+  }
+
+
+  /* ダミーブロックは控えめサイズ */
+  .pc-stat.dummy-mini {
+    text-align: center; padding: 0 8px;
+    opacity: 0.7;
+  }
+  .pc-stat.dummy-mini .label {
+    font-size: 9px; color: var(--ink-faint);
+    letter-spacing: 0.05em; margin-bottom: 2px;
+  }
+  .pc-stat.dummy-mini .val-combo { gap: 2px; }
+  .pc-stat.dummy-mini .val-combo .val {
+    font-size: 18px; font-weight: 700; color: #777;
+    line-height: 1;
+  }
+  .pc-stat.dummy-mini .val-combo .val.zero { color: var(--ink-faint); }
+  .pc-stat.dummy-mini .val-combo .val-plus {
+    font-size: 11px; color: var(--ink-faint);
+  }
+  .pc-stat.dummy-mini .sub {
+    font-size: 8px; color: var(--ink-faint);
+    margin-top: 2px;
+  }
+
+
+  /* アコーディオン制御 */
+  .pc-header {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+  }
+  .pc-header:hover { filter: brightness(0.98); }
+  .expand-toggle {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 24px; height: 24px;
+    margin-right: 8px;
+    font-size: 14px; color: var(--ink-dim);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+  .product-card.expanded .expand-toggle {
+    transform: rotate(90deg);
+    color: var(--ink);
+  }
+  .lot-section {
+    display: none;
+  }
+  .product-card.expanded .lot-section {
+    display: block;
+  }
+  /* タイトル横並び調整 */
+  .pc-title-wrap {
+    display: flex; align-items: center;
+    flex-shrink: 0;
+  }
+
+
+  /* タブUI */
+  .tabs {
+    display: flex; gap: 2px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 14px;
+  }
+  .tab {
+    padding: 10px 24px;
+    background: #dfe2e6;
+    color: var(--ink-dim);
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; border: 1px solid var(--line);
+    border-bottom: none; border-radius: 4px 4px 0 0;
+    user-select: none;
+  }
+  .tab:hover { background: #cfd3d8; color: var(--ink); }
+  .tab.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .tab .count { font-size: 11px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
+  .tab.active .count { opacity: 0.85; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  /* 出所バッジ */
+  .origin-badge {
+    display: inline-block; padding: 2px 9px;
+    font-size: 10px; font-weight: 700;
+    border-radius: 10px; margin-left: 10px;
+    letter-spacing: 0.06em; vertical-align: 3px;
+  }
+  .origin-badge.honsha { background: #d6e4f5; color: #2d5a8a; }
+  .origin-badge.itoshima { background: #d8ecda; color: #2d6a3e; }
+
+  /* === v5.0: Excel/SharePointリンクボタン === */
+  .file-link-group {
+    display: inline-flex; gap: 4px; margin-left: 10px;
+    vertical-align: 2px;
+  }
+  .file-link-btn {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 8px; font-size: 11px; font-weight: 600;
+    border-radius: 4px; border: 1px solid var(--line);
+    background: #fff; color: var(--ink);
+    text-decoration: none; cursor: pointer;
+    white-space: nowrap;
+  }
+  .file-link-btn:hover { background: #f0f4f8; border-color: #93b3d4; }
+  .file-link-btn.web { color: #2d5a8a; }
+  .file-link-btn.web:hover { background: #e8f0fa; border-color: #5a85b8; }
+  /* ロット行内では少し小さく */
+  .lot-row .file-link-btn { padding: 1px 6px; font-size: 10px; }
+
+
+  /* グループ区切り (アコーディオン) */
+  .group-block { margin: 14px 0 0; }
+  .group-block:first-child { margin-top: 6px; }
+  .group-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    border-left: 8px solid var(--ink);
+    background: #e5e7eb;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .group-header:hover { background: #d8dadf; }
+  .group-header .gtoggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px;
+    font-size: 12px; color: var(--ink-dim);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+  .group-block.expanded .group-header .gtoggle {
+    transform: rotate(90deg);
+    color: var(--ink);
+  }
+  .group-header .gname {
+    font-size: 16px; font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+  .group-header .gcount {
+    font-size: 11px; color: var(--ink-dim);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .group-header .gpreview {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    margin: 0 8px;
+    min-width: 0;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .group-block.expanded .group-header .gpreview {
+    opacity: 0.45;
+  }
+  .group-header .gpreview .pname-pill {
+    display: inline-flex; align-items: center;
+    gap: 5px;
+    padding: 3px 10px 3px 8px;
+    background: #fff;
+    border-radius: 12px;
+    font-size: 11px;
+    color: var(--ink);
+    flex-shrink: 0;
+    line-height: 1.4;
+  }
+  .group-header .gpreview .pname-pill .lamp {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #999;
+    flex-shrink: 0;
+  }
+  .group-header .gpreview .pname-pill.ok    .lamp { background: #2d7a3e; }
+  .group-header .gpreview .pname-pill.warn  .lamp { background: #d97706; }
+  .group-header .gpreview .pname-pill.danger .lamp {
+    background: #c92a2a;
+    box-shadow: 0 0 0 0 rgba(201,42,42,0.5);
+    animation: lamp-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes lamp-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(201,42,42,0.5); }
+    50% { box-shadow: 0 0 0 4px rgba(201,42,42,0); }
+  }
+  .group-header .gpreview .pname-pill .pn {
+    font-weight: 600;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--ink);
+  }
+  .group-header .gpreview .pname-pill .pq {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 11px;
+    margin-left: 2px;
+  }
+  .group-header .gpreview .pname-pill .origin-mini {
+    font-size: 8px;
+    opacity: 0.55;
+    margin-left: 2px;
+    color: var(--ink-dim);
+  }
+  .group-header .gstock {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    padding: 3px 12px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    min-width: 70px;
+    text-align: right;
+  }
+  .group-header .gstock .lbl {
+    font-size: 9px;
+    color: var(--ink-dim);
+    font-weight: 500;
+    margin-right: 4px;
+    letter-spacing: 0.04em;
+  }
+  .group-header .gstock .num.danger { color: var(--alert); }
+  .group-header .gstock .num.warn { color: var(--warn); }
+  .group-body { display: none; padding-top: 8px; }
+  .group-block.expanded .group-body { display: block; }
+  .group-header.empty { display: none; }
+
+
+  /* 変更ファイル表示 */
+  .changes-box {
+    text-align: right; line-height: 1.3;
+  }
+  .changes-box .lbl {
+    font-size: 10px; color: var(--ink-dim); letter-spacing: 0.06em;
+  }
+  .changes-box .summary {
+    font-size: 13px; font-weight: 700; margin-top: 2px;
+    color: var(--ink);
+  }
+  .changes-box .summary.has-changes {
+    color: var(--warn);
+    cursor: pointer; user-select: none;
+  }
+  .changes-box .summary.has-changes:hover { text-decoration: underline; }
+  .changes-box .summary .toggle-arrow {
+    font-size: 10px; margin-left: 4px;
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+  .changes-box.expanded .summary .toggle-arrow,
+  #changes-box.expanded .summary .toggle-arrow {
+    transform: rotate(90deg);
+  }
+  .changes-list {
+    display: none;
+    position: absolute;
+    right: 0; top: 100%;
+    margin-top: 8px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    padding: 8px 0;
+    z-index: 1000;
+    min-width: 380px;
+    max-width: 480px;
+    max-height: 60vh;
+    overflow-y: auto;
+    text-align: left;
+  }
+  .changes-box.expanded .changes-list,
+  #changes-box.expanded .changes-list,
+  #changes-box.expanded > .changes-list { display: block; }
+  .changes-list .change-item {
+    padding: 5px 14px;
+    font-size: 11px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid #f4f2eb;
+  }
+  .changes-list .change-item:last-child { border-bottom: none; }
+  .changes-list .change-item:hover { background: var(--hover); }
+  .changes-list .change-item .ago {
+    flex-shrink: 0; width: 75px;
+    font-size: 10px; color: var(--warn); font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .changes-list .change-item .pname {
+    flex: 1;
+    font-weight: 600;
+    color: var(--ink);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .changes-list .change-item .origin-badge {
+    font-size: 9px; padding: 1px 6px;
+    margin-left: 4px;
+    vertical-align: 1px;
+  }
+  .changes-list .change-empty {
+    padding: 14px 18px;
+    text-align: center;
+    color: var(--ink-dim); font-size: 11px;
+    font-style: italic;
+  }
+  .changes-list .change-section-label {
+    padding: 6px 14px 2px;
+    font-size: 9px; letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .index-info-wrap {
+    position: relative;
+  }
+
+
+  /* 基板カード */
+  .sub-card {
+    background: var(--panel);
+    margin-bottom: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .sub-header {
+    padding: 12px 16px;
+    border-top: 6px solid #86c5a0;  /* 基板は緑系 */
+    background: #f5faf6;
+    display: flex; align-items: center; gap: 20px;
+    cursor: pointer; user-select: none;
+  }
+  .sub-header:hover { filter: brightness(0.98); }
+  .sub-header .stoggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px;
+    font-size: 12px; color: var(--ink-dim);
+    transition: transform 0.2s ease;
+  }
+  .sub-card.expanded .sub-header .stoggle {
+    transform: rotate(90deg); color: var(--ink);
+  }
+  .sub-title { flex-shrink: 0; max-width: 50%; }
+  .sub-title .name {
+    font-size: 16px; font-weight: 700; margin: 0;
+    color: var(--ink);
+  }
+  .sub-title .file {
+    font-size: 10px; color: var(--ink-faint);
+    margin-top: 2px;
+  }
+  .sub-stats {
+    display: flex; gap: 18px; align-items: center;
+    flex: 1; justify-content: flex-end;
+  }
+  .sub-status {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 6px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    min-width: 110px;
+  }
+  .sub-status .label {
+    font-size: 13px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .sub-status .lamp-big {
+    display: inline-block;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: #999;
+  }
+  .sub-status.ok .lamp-big   { background: #2d7a3e; }
+  .sub-status.warn .lamp-big { background: #d97706; }
+  .sub-status.danger .lamp-big {
+    background: #c92a2a;
+    animation: lamp-pulse 1.6s ease-in-out infinite;
+  }
+  .sub-status.dormant .lamp-big { background: #999; }
+  .sub-status .num {
+    font-size: 26px; font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .sub-status .num.minus { color: var(--alert); }
+  .sub-status .unit {
+    font-size: 10px; color: var(--ink-dim);
+  }
+  .sub-meta {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: #16a34a !important;
+  }
+  .sub-meta .row { display: flex; gap: 8px; align-items: baseline; }
+  .sub-meta .row .lbl {
+    font-size: 13px; letter-spacing: 0.05em;
+    color: #16a34a !important; min-width: 70px;
+    font-weight: 700;
+  }
+  .sub-meta .row .val {
+    color: #16a34a !important;
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sub-meta .row .val .num {
+    font-variant-numeric: tabular-nums; font-weight: 800;
+    color: #16a34a !important;
+  }
+  .sub-meta .dormant-tag {
+    display: inline-block;
+    padding: 1px 7px; background: #e8f5ed;
+    color: var(--ink-dim);
+    font-size: 9px; font-weight: 700;
+    border-radius: 9px;
+    margin-left: 4px;
+  }
+  .sub-body { display: none; }
+  .sub-card.expanded .sub-body { display: block; }
+  /* ロット別在庫 */
+  .sub-lots {
+    padding: 10px 16px;
+    background: #f4f5f7;
+    border-bottom: 1px solid var(--line);
+    display: flex; gap: 8px; flex-wrap: wrap;
+    align-items: center;
+  }
+  .sub-lots .lbl {
+    font-size: 10px; color: var(--ink-dim);
+    font-weight: 700; letter-spacing: 0.05em;
+    margin-right: 6px;
+  }
+  .sub-lots .lot-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px;
+    background: #fff;
+    border-radius: 12px;
+    font-size: 11px;
+  }
+  .sub-lots .lot-pill .pn {
+    font-weight: 600;
+  }
+  .sub-lots .lot-pill .pq {
+    font-variant-numeric: tabular-nums; font-weight: 700;
+  }
+  .sub-lots .lot-pill .pq.zero { color: var(--ink-faint); }
+  .sub-lots .lot-pill .pq.minus { color: var(--alert); }
+  /* 履歴表 */
+  .sub-history {
+    padding: 0;
+    max-height: 50vh; overflow-y: auto;
+  }
+  table.history-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 11px;
+  }
+  table.history-table thead th {
+    position: sticky; top: 0;
+    background: #f1f3f5;
+    padding: 6px 10px; text-align: left;
+    font-weight: 600; color: var(--ink-dim);
+    font-size: 10px; letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--line);
+  }
+  table.history-table tbody td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    font-variant-numeric: tabular-nums;
+    vertical-align: top;
+  }
+  table.history-table tbody tr:hover { background: var(--hover); }
+  table.history-table .h-date { white-space: nowrap; font-family: "Consolas", monospace; font-size: 11px; }
+  table.history-table .h-company { font-weight: 600; min-width: 180px; }
+  table.history-table .h-company .note {
+    display: block; font-size: 10px;
+    color: var(--ink-dim); font-weight: 400;
+    margin-top: 2px;
+  }
+  table.history-table .h-lot { font-family: "Consolas", monospace; font-size: 10px; color: var(--ink-dim); }
+  table.history-table .h-num { text-align: right; font-weight: 600; }
+  table.history-table .h-num.zero { color: var(--ink-faint); font-weight: 400; }
+  table.history-table .h-in { color: #2d6a3e; }
+  table.history-table .h-out { color: #8a2d3e; }
+  table.history-table .h-sample { color: #8a6d00; }
+  table.history-table .h-stock { font-size: 13px; font-weight: 700; }
+  table.history-table .h-stock.minus { color: var(--alert); }
+  .minus-warning {
+    background: #fef0f0;
+    padding: 8px 14px;
+    color: var(--alert);
+    font-size: 11px;
+    border-bottom: 1px solid #f5d199;
+  }
+  /* 基板グループヘッダー */
+  .sgroup-header {
+    margin: 20px 0 6px;
+    padding: 8px 14px;
+    border-left: 6px solid #4a9b6e;
+    background: #e8f5ed;
+    font-size: 13px; font-weight: 700;
+    color: #1a5c3e;
+    letter-spacing: 0.02em;
+  }
+  .sgroup-header:first-child { margin-top: 6px; }
+
+
+  /* 基板グループ (アコーディオン) */
+  .sgroup-block { margin: 14px 0 0; }
+  .sgroup-block:first-child { margin-top: 6px; }
+  .sgroup-block .sgroup-header-wrap {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    border-left: 6px solid #4a9b6e;
+    background: #e8f5ed;
+    cursor: pointer;
+    user-select: none;
+  }
+  .sgroup-block .sgroup-header-wrap:hover { background: #d4ebdc; }
+  .sgroup-block .sgtoggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px;
+    font-size: 12px; color: var(--ink-dim);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+  .sgroup-block.expanded .sgtoggle {
+    transform: rotate(90deg); color: var(--ink);
+  }
+  .sgroup-block .sgname {
+    font-size: 22px; font-weight: 900;
+    color: #1a5c3e;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+  }
+  .sgroup-block .sgcount {
+    font-size: 14px; color: var(--ink-dim);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .sgroup-block .sgpreview {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    margin: 0 8px;
+    min-width: 0;
+    display: flex; gap: 4px;
+    align-items: center;
+  }
+  .sgroup-block.expanded .sgpreview {
+    opacity: 0.45;
+  }
+  .sgroup-block .sgpreview .pname-pill {
+    display: inline-flex; align-items: center;
+    gap: 5px;
+    padding: 3px 10px 3px 8px;
+    background: #fff;
+    border-radius: 12px;
+    font-size: 11px;
+    color: var(--ink);
+    flex-shrink: 0;
+    line-height: 1.4;
+  }
+  .sgroup-block .sgpreview .pname-pill .pn {
+    font-weight: 600;
+    max-width: 220px;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .sgroup-block .sgpreview .pname-pill .pq {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700; color: var(--ink);
+    font-size: 11px;
+    margin-left: 2px;
+  }
+  .sgroup-block .sgstock {
+    flex-shrink: 0;
+    font-size: 13px; font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    padding: 3px 12px;
+    background: #fff;
+    border-radius: 12px;
+    min-width: 70px;
+    text-align: right;
+  }
+  .sgroup-block .sgstock .lbl {
+    font-size: 9px; color: var(--ink-dim);
+    font-weight: 500; margin-right: 4px;
+    letter-spacing: 0.04em;
+  }
+  .sgroup-body { display: none; padding-top: 8px; }
+  .sgroup-block.expanded .sgroup-body { display: block; }
+
+</style>
+<!-- v5.0: SharePoint連携用ライブラリ (ローカル配置のJSを参照) -->
+<script src="msal-browser.min.js"></script>
+<script src="exceljs.min.js"></script>
+<script>
+/* ===========================================================================
+ * WALTS Substrate Scanner v0.1.0 (インライン版)
+ * 基板管理表(.xlsx)を解析し、v4.4 SUBSTRATE構造を生成
+ * window.WALTS_SubstrateScanner として公開
+ * =========================================================================== */
+(function (root) {
+  'use strict';
+
+  const HEADER_RULES = [
+    ['date',       [/^日付$/]],
+    ['lot',        [/^Lot\.?$/i, /^ロット$/]],
+    ['in_qty',     [/入庫/]],
+    ['out_sale',   [/^販売$/]],
+    ['out_proc',   [/^加工$/]],
+    ['out_sample', [/^サンプル$/, /^sample$/i]],
+    ['stock',      [/在庫/]],
+    ['note_col',   [/^備考$/]],
+    ['tori_date',  [/^取分け日$/]],
+    ['company',    [/会社/, /顧客/]],
+    ['person',     [/^担当者?$/, /取分け担当/]],
+  ];
+
+  const EXCLUDED_SHEET_PATTERNS = [
+    /^Sheet\d*$/i,
+    /^テンプレ/,
+    /^template/i,
+  ];
+
+  function isExcludedSheet(name) {
+    return EXCLUDED_SHEET_PATTERNS.some(p => p.test(name));
+  }
+
+  function cellToString(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return v.trim();
+    if (typeof v === 'number') return String(v);
+    if (typeof v === 'boolean') return String(v);
+    if (v instanceof Date) {
+      const y = v.getFullYear();
+      const m = String(v.getMonth() + 1).padStart(2, '0');
+      const d = String(v.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    if (typeof v === 'object') {
+      if (v.richText && Array.isArray(v.richText)) {
+        return v.richText.map(rt => rt.text).join('').trim();
+      }
+      if (typeof v.result !== 'undefined') {
+        return cellToString(v.result);
+      }
+      if (typeof v.text === 'string') return v.text.trim();
+      if (v.hyperlink && v.text) return cellToString(v.text);
+    }
+    return String(v).trim();
+  }
+
+  function cellToNumber(v) {
+    if (v == null || v === '') return 0;
+    if (typeof v === 'number') return v;
+    if (typeof v === 'object') {
+      if (typeof v.result === 'number') return v.result;
+      if (typeof v.result !== 'undefined') return cellToNumber(v.result);
+      const s = cellToString(v);
+      const m = s.match(/^-?\d+(?:\.\d+)?/);
+      return m ? parseFloat(m[0]) : 0;
+    }
+    const s = String(v).trim().replace(/,/g, '');
+    const m = s.match(/^-?\d+(?:\.\d+)?/);
+    return m ? parseFloat(m[0]) : 0;
+  }
+
+  function cellToIsoDate(v) {
+    if (v == null || v === '') return null;
+    if (v instanceof Date) {
+      const y = v.getFullYear();
+      const m = String(v.getMonth() + 1).padStart(2, '0');
+      const d = String(v.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    const s = cellToString(v);
+    if (!s) return null;
+    const m = s.match(/^(\d{4})[./\-年]\s*(\d{1,2})[./\-月]\s*(\d{1,2})/);
+    if (m) {
+      const y = parseInt(m[1], 10);
+      const mo = parseInt(m[2], 10);
+      const d = parseInt(m[3], 10);
+      if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+        return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      }
+    }
+    return null;
+  }
+
+  function normalizeText(v) {
+    const s = cellToString(v);
+    if (!s) return '';
+    return s.replace(/\r\n|\r|\n/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  function getCellValue(ws, row, col) {
+    if (!col) return null;
+    const cell = ws.getCell(row, col);
+    return cell ? cell.value : null;
+  }
+
+  function detectHeader(ws) {
+    if (!ws || ws.rowCount < 4) return null;
+    const labels = [];
+    for (let c = 1; c <= 20; c++) {
+      const v3 = cellToString(getCellValue(ws, 3, c));
+      const v4 = cellToString(getCellValue(ws, 4, c));
+      labels.push({ col: c, v3: v3, v4: v4 });
+    }
+    const colMap = {};
+    const used = new Set();
+    for (const [role, patterns] of HEADER_RULES) {
+      for (const { col, v3, v4 } of labels) {
+        if (used.has(col)) continue;
+        for (const label of [v3, v4]) {
+          if (!label) continue;
+          if (patterns.some(p => p.test(label))) {
+            colMap[role] = col;
+            used.add(col);
+            break;
+          }
+        }
+        if (colMap[role] != null) break;
+      }
+    }
+    const required = ['date', 'lot', 'in_qty', 'stock'];
+    if (!required.every(k => colMap[k] != null)) return null;
+    if (!['out_sale', 'out_proc', 'out_sample'].some(k => colMap[k] != null)) return null;
+    return colMap;
+  }
+
+  function extractRecords(ws, colMap, sheetName) {
+    const records = [];
+    if (ws.rowCount < 5) return records;
+    let lastDateIso = '';
+    let r = 5;
+    while (r <= ws.rowCount) {
+      const dateV = getCellValue(ws, r, colMap.date);
+      const lotV  = getCellValue(ws, r, colMap.lot);
+      const inV   = getCellValue(ws, r, colMap.in_qty);
+      const saleV = colMap.out_sale  ? getCellValue(ws, r, colMap.out_sale)  : null;
+      const procV = colMap.out_proc  ? getCellValue(ws, r, colMap.out_proc)  : null;
+      const smpV  = colMap.out_sample? getCellValue(ws, r, colMap.out_sample): null;
+      const stkV  = getCellValue(ws, r, colMap.stock);
+      const compT = colMap.company   ? getCellValue(ws, r, colMap.company)   : null;
+      const noteV = colMap.note_col  ? getCellValue(ws, r, colMap.note_col)  : null;
+      const toriV = colMap.tori_date ? getCellValue(ws, r, colMap.tori_date) : null;
+      const persV = colMap.person    ? getCellValue(ws, r, colMap.person)    : null;
+
+      const hasData = [dateV, lotV, inV, saleV, procV, smpV, stkV, compT].some(
+        x => x != null && x !== ''
+      );
+      if (!hasData) { r += 1; continue; }
+
+      let compB = null;
+      if (r + 1 <= ws.rowCount && colMap.company) {
+        compB = getCellValue(ws, r + 1, colMap.company);
+      }
+
+      const dateIso = cellToIsoDate(dateV);
+      let dateDisp = '';
+      if (dateV instanceof Date) {
+        dateDisp = cellToString(dateV);
+      } else if (dateV != null) {
+        dateDisp = cellToString(dateV);
+      }
+      let effectiveIso;
+      if (dateIso) {
+        lastDateIso = dateIso;
+        effectiveIso = dateIso;
+      } else {
+        effectiveIso = lastDateIso;
+      }
+
+      records.push({
+        sheet:      sheetName,
+        row:        r,
+        date:       dateDisp,
+        date_iso:   effectiveIso,
+        company:    normalizeText(compT),
+        note:       normalizeText(compB),
+        lot:        normalizeText(lotV),
+        in_qty:     cellToNumber(inV),
+        out_sale:   cellToNumber(saleV),
+        out_proc:   cellToNumber(procV),
+        out_sample: cellToNumber(smpV),
+        stock:      cellToNumber(stkV),
+        tori_date:  normalizeText(toriV),
+        person:     normalizeText(persV),
+      });
+      r += 2;
+    }
+    return records;
+  }
+
+  function aggregateLots(history) {
+    const lotsMap = new Map();
+    const order = [];
+    for (const rec of history) {
+      const lot = rec.lot;
+      if (!lot) continue;
+      if (!lotsMap.has(lot)) {
+        lotsMap.set(lot, { in_total: 0, out_total: 0, sample_total: 0 });
+        order.push(lot);
+      }
+      const d = lotsMap.get(lot);
+      d.in_total     += rec.in_qty;
+      d.out_total    += rec.out_sale + rec.out_proc;
+      d.sample_total += rec.out_sample;
+    }
+    return order.map(lot => {
+      const d = lotsMap.get(lot);
+      return {
+        lot: lot,
+        in_total:     d.in_total,
+        out_total:    d.out_total,
+        sample_total: d.sample_total,
+        stock:        d.in_total - d.out_total - d.sample_total,
+      };
+    });
+  }
+
+  function compute1yTotals(history, fileModifiedDate) {
+    let cutoffIso;
+    if (fileModifiedDate instanceof Date) {
+      const c = new Date(fileModifiedDate);
+      c.setFullYear(c.getFullYear() - 1);
+      cutoffIso = c.toISOString().slice(0, 10);
+    } else {
+      const validDates = history.map(h => h.date_iso).filter(d => d).sort();
+      if (!validDates.length) return { in_1y: 0, out_1y: 0, sample_1y: 0 };
+      const latest = new Date(validDates[validDates.length - 1]);
+      latest.setFullYear(latest.getFullYear() - 1);
+      cutoffIso = latest.toISOString().slice(0, 10);
+    }
+    let in_1y = 0, out_1y = 0, sample_1y = 0;
+    for (const rec of history) {
+      if (rec.date_iso && rec.date_iso >= cutoffIso) {
+        in_1y     += rec.in_qty;
+        out_1y    += rec.out_sale + rec.out_proc;
+        sample_1y += rec.out_sample;
+      }
+    }
+    return { in_1y, out_1y, sample_1y };
+  }
+
+  function scanWorkbook(wb, fileName, opts) {
+    opts = opts || {};
+    const fileModifiedDate = opts.fileModifiedDate || null;
+    const excludedSheetNames = new Set(opts.excludedSheetNames || []);
+
+    const product = fileName.replace(/\.xlsx$/i, '');
+    const allRecords = [];
+    const sheetsProcessed = [];
+    const sheetsSkipped = [];
+
+    wb.eachSheet((ws, sheetId) => {
+      const sn = ws.name;
+      if (excludedSheetNames.has(sn) || isExcludedSheet(sn)) {
+        sheetsSkipped.push({ name: sn, reason: 'template/excluded' });
+        return;
+      }
+      const colMap = detectHeader(ws);
+      if (!colMap) {
+        sheetsSkipped.push({ name: sn, reason: 'header not detected' });
+        return;
+      }
+      const recs = extractRecords(ws, colMap, sn);
+      if (!recs.length) {
+        sheetsSkipped.push({ name: sn, reason: 'no data' });
+        return;
+      }
+      allRecords.push(...recs);
+      sheetsProcessed.push({ name: sn, records: recs.length, col_map: colMap });
+    });
+
+    const sheetOrder = {};
+    sheetsProcessed.forEach((s, i) => { sheetOrder[s.name] = i; });
+    allRecords.sort((a, b) => {
+      const so = (sheetOrder[a.sheet] ?? 999) - (sheetOrder[b.sheet] ?? 999);
+      if (so !== 0) return so;
+      return a.row - b.row;
+    });
+
+    let currentStock = 0;
+    let lastTx = null;
+    if (allRecords.length) {
+      lastTx = allRecords[allRecords.length - 1];
+      currentStock = lastTx.stock;
+    }
+
+    const lots = aggregateLots(allRecords);
+    const { in_1y, out_1y, sample_1y } = compute1yTotals(allRecords, fileModifiedDate);
+    const primarySheet = sheetsProcessed.length ? sheetsProcessed[0].name : '';
+
+    return {
+      product:       product,
+      file:          fileName,
+      file_mtime:    fileModifiedDate instanceof Date ? fileModifiedDate.toISOString() : '',
+      sheet_name:    primarySheet,
+      sheets:        sheetsProcessed.map(s => s.name),
+      sheets_skipped: sheetsSkipped,
+      current_stock: currentStock,
+      in_1y:         in_1y,
+      out_1y:        out_1y,
+      sample_1y:     sample_1y,
+      lots:          lots,
+      history:       allRecords,
+      last_tx:       lastTx,
+    };
+  }
+
+  root.WALTS_SubstrateScanner = {
+    scanWorkbook,
+    detectHeader,
+    extractRecords,
+    aggregateLots,
+    compute1yTotals,
+    isExcludedSheet,
+    cellToString,
+    cellToNumber,
+    cellToIsoDate,
+    normalizeText,
+    HEADER_RULES,
+    EXCLUDED_SHEET_PATTERNS,
+    VERSION: '0.1.0',
+  };
+})(window);
+</script>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <h1>WALTS 在庫管理ツール <span class="sub">v5.0</span></h1>
+    <div class="index-info-wrap" id="changes-box">
+      <div class="changes-box" id="changes-display">
+        <div class="lbl">📂 SharePoint との同期</div>
+        <div class="summary" id="changes-summary">起動中...</div>
+      </div>
+      <div class="changes-list" id="changes-list"></div>
+    </div>
+    <div id="fetch-status-bar" style="margin-top:8px; padding:8px 12px; background:#f0f4f8; border-radius:6px; font-size:12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <span id="fetch-status-text" style="flex:1; min-width:200px;">SharePointへ接続中...</span>
+      <span id="fetch-counts" style="color:#555;"></span>
+      <button id="btn-refetch" disabled style="padding:4px 12px; font-size:12px; cursor:pointer;">🔄 再取得</button>
+      <button id="btn-export-json" disabled style="padding:4px 12px; font-size:12px; cursor:pointer; opacity:0.7;" title="デバッグ用: 現在の集計データをJSONで保存">📥 JSON出力</button>
+    </div>
+    <div id="fetch-error-panel" style="display:none; margin-top:8px; padding:10px 12px; background:#fff5f5; border:1px solid #fcc; border-radius:6px; font-size:12px;">
+      <div style="font-weight:bold; color:#c33; margin-bottom:6px;">⚠️ データ取得に失敗しました</div>
+      <div id="fetch-error-msg" style="color:#700;"></div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="wafer">🌀 ウエハ在庫<span class="count" id="wafer-count">0品名</span></div>
+    <div class="tab" data-tab="substrate">🟫 基板在庫<span class="count" id="substrate-count">0品名</span></div>
+  </div>
+  
+  <div class="tab-content active" id="tab-wafer">
+  
+  <div class="controls">
+    <div class="search">
+      <input id="search" type="text" placeholder="品名・ロット・顧客・保管場所で検索">
+    </div>
+    <label><input type="checkbox" id="show-empty"> 在庫0のロットも表示</label>
+  </div>
+
+  <div id="product-cards"></div>
+
+  </div><!-- /tab-wafer -->
+  
+  <div class="tab-content" id="tab-substrate">
+    <div class="controls" style="margin-top:14px">
+      <div class="search">
+        <input id="search-sub" type="text" placeholder="基板品名・顧客・Lot・備考で検索">
+      </div>
+      <label><input type="checkbox" id="show-dormant" checked> 1年以上動きのない基板も表示</label>
+    </div>
+    <div id="substrate-cards"></div>
+  </div>
+  
+  <div class="footer-note">
+    💡 「即在庫」=現有ロットの塗りつぶしなしslot / 「即在庫の予約」=現有ロットのベージュslot / 「入荷予定」=入荷待ちロットの全slot / 「入荷予定の予約」=入荷後すぐ出荷予定の予約済slot<br>
+    🔧 scanner.py が各エクセルから自動抽出。発注状態はブラウザの localStorage に保存(実運用ではNAS上の orders.csv へ保存)。
+  </div>
+</div>
+
+<!-- 発注ダイアログ -->
+<div class="modal-bg" id="order-modal">
+  <div class="modal">
+    <h3 id="modal-title">発注情報の入力</h3>
+    <div class="field"><label>発注数量</label><input type="number" id="m-qty"></div>
+    <div class="field"><label>納期予定 (任意)</label><input type="date" id="m-due"></div>
+    <div class="field"><label>依頼者</label><input type="text" id="m-by"></div>
+    <div class="field"><label>メモ (任意)</label><textarea id="m-memo" rows="2"></textarea></div>
+    <div class="modal-buttons">
+      <button class="btn" id="m-cancel">キャンセル</button>
+      <button class="btn primary" id="m-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// v5.0: INVENTORYはSharePointから取得 (起動時に集計、再取得ボタンで更新可能)
+let INVENTORY = [];
+const THRESHOLDS = {"FC150": {"warn": 30, "danger": 15}, "HPW": {"warn": 20, "danger": 10}, "SI0631_250120": {"warn": 15, "danger": 5}, "熱酸化膜_SiN付ウエハ": {"warn": 50, "danger": 25}};
+
+
+/* ============================================================
+   アコーディオン展開状態管理
+   ============================================================ */
+const EXPAND_KEY = 'walts_expanded_v1';
+let EXPANDED = new Set();
+try {
+  const stored = JSON.parse(localStorage.getItem(EXPAND_KEY) || '[]');
+  EXPANDED = new Set(stored);
+} catch (e) { EXPANDED = new Set(); }
+function saveExpanded() {
+  localStorage.setItem(EXPAND_KEY, JSON.stringify([...EXPANDED]));
+}
+window.toggleProduct = function(product) {
+  if (EXPANDED.has(product)) EXPANDED.delete(product);
+  else EXPANDED.add(product);
+  saveExpanded();
+  render();
+};
+window.expandAll = function() {
+  INVENTORY.forEach(p => EXPANDED.add(p.product));
+  saveExpanded();
+  render();
+};
+window.collapseAll = function() {
+  EXPANDED.clear();
+  saveExpanded();
+  render();
+};
+
+const TODAY = new Date('2026-05-13T09:35:00');
+const INDEX_UPDATE_TIME = new Date('2026-05-13T09:35:00');
+
+/* ============================================================
+   発注状態 (localStorage)
+   ============================================================ */
+const ORDER_KEY = 'walts_orders_v7';
+function loadOrders() {
+  try { return JSON.parse(localStorage.getItem(ORDER_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+function saveOrders(o) { localStorage.setItem(ORDER_KEY, JSON.stringify(o)); }
+let ORDERS = loadOrders();
+
+function orderKey(product, lot, sheet) {
+  return product + '|' + lot + '|' + sheet;
+}
+function getOrder(key) { return ORDERS[key] || { state: 'none' }; }
+function setOrder(key, data) {
+  if (data.state === 'none') delete ORDERS[key];
+  else ORDERS[key] = data;
+  saveOrders(ORDERS);
+}
+
+/* ============================================================
+   ヘルパー
+   ============================================================ */
+function escape(s) {
+  if (s === undefined || s === null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function daysBetween(isoStr) {
+  if (!isoStr) return null;
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return null;
+  return Math.floor((TODAY - d) / 86400000);
+}
+function agoLabel(days) {
+  if (days === null) return '';
+  if (days < 0) return Math.abs(days) + '日後';
+  if (days === 0) return '今日';
+  if (days === 1) return '昨日';
+  if (days < 30) return days + '日前';
+  if (days < 365) return Math.round(days / 30) + 'ヶ月前';
+  return Math.round(days / 365) + '年前';
+}
+function minutesAgo(date) {
+  const diff = Math.floor((TODAY - date) / 60000);
+  if (diff < 60) return diff + '分前';
+  if (diff < 1440) return Math.floor(diff / 60) + '時間前';
+  return Math.floor(diff / 1440) + '日前';
+}
+
+function statusOf(product) {
+  // 「自由に使える分」(即在庫の未予約 + 入荷予定の未予約) で判定
+  const total = totalAvailable(product);
+  if (total < 10) return 'danger';
+  if (total < 25) return 'warn';
+  return 'ok';
+}
+function totalAvailable(product) {
+  // 自由に使える分 = 即在庫(未予約) + 入荷予定(未予約)
+  // 予約済は他顧客に確保済みなので除外
+  return product.stock + product.incoming_unreserved;
+}
+
+
+function renderStatusBig(p) {
+  const st = statusOf(p);
+  const total = totalAvailable(p);
+  const labels = {
+    danger: '危険',
+    warn:   '警告',
+    ok:     '安全',
+    none:   '―'
+  };
+  return `
+    <div class="status-big ${st}">
+      <div class="label"><span class="lamp-big"></span>${labels[st]}</div>
+      <div class="num">${total}</div>
+      <div class="unit">使える分 (枚)</div>
+    </div>
+  `;
+}
+
+function renderStatusPill(p) {
+  const st = statusOf(p);
+  const total = totalAvailable(p);
+  const labels = {
+    danger: '🔴 危険',
+    warn:   '🟡 警告',
+    ok:     '🟢 安全',
+    none:   '⚪ ―'
+  };
+  const subText = {
+    danger: '使える分が10枚未満',
+    warn:   '使える分が25枚未満',
+    ok:     '使える分が25枚以上',
+    none:   ''
+  };
+  return `<span class="status-pill ${st}" title="${subText[st]}">${labels[st]} 使える分 <span class="num">${total}</span>枚</span>`;
+}
+
+
+
+/* ============================================================
+   グループ判定 (接頭辞ベース)
+   ============================================================ */
+const GROUP_DEFS = [
+  { id: 'FC',          label: 'FC シリーズ',         color: '#1a4d8f', test: p => /^FC\d/i.test(p) },
+  { id: 'CC',          label: 'CC シリーズ',         color: '#2d6a3e', test: p => /^CC\d/i.test(p) },
+  { id: 'HBM',         label: 'HBM / IPHBM 系',      color: '#5a4a8a', test: p => /^(HBM|IPHBM)/i.test(p) },
+  { id: 'IP',          label: 'IP シリーズ',         color: '#8a4a2e', test: p => /^IP\d/i.test(p) },
+  { id: 'MB',          label: 'MB シリーズ',         color: '#8a6d00', test: p => /^MB\d/i.test(p) },
+  { id: 'WM',          label: 'WM / IPWM 系',        color: '#2d5a8a', test: p => /^(WM|IPWM)\d/i.test(p) },
+  { id: 'HPW',         label: 'HPW シリーズ',        color: '#a02050', test: p => /^HPW/i.test(p) },
+  { id: 'thermal',     label: '熱酸化膜系',           color: '#2d8585', test: p => /熱酸化膜/.test(p) },
+  { id: 'mirror',      label: 'ミラー / TTV 系',     color: '#6e1535', test: p => /ミラーウエハ|TTV/.test(p) },
+  { id: 'generic',     label: '汎用ウエハ系',         color: '#2d8585', test: p => {
+      // 個別指定: Glass, ITO, AS8R, P-SiO P-SiN付ウエハ, SI0631 (2品種)
+      if (/^glass$/i.test(p)) return true;
+      if (/^ITO\b/i.test(p)) return true;
+      if (/^AS8R\b/i.test(p)) return true;
+      if (/^P-SiO\s+P-SiN/.test(p)) return true;
+      if (/^SI0631/i.test(p)) return true;
+      return false;
+  }},
+  { id: 'other',       label: 'その他',              color: '#555555', test: p => true },
+];
+function groupOf(product) {
+  for (const g of GROUP_DEFS) {
+    if (g.test(product)) return g;
+  }
+  return GROUP_DEFS[GROUP_DEFS.length - 1];
+}
+
+/* ============================================================
+   グループアコーディオン状態管理
+   ============================================================ */
+const GROUP_EXPAND_KEY = 'walts_group_expanded_v1';
+let GROUP_EXPANDED = new Set();
+try {
+  const stored = JSON.parse(localStorage.getItem(GROUP_EXPAND_KEY) || '[]');
+  GROUP_EXPANDED = new Set(stored);
+} catch (e) { GROUP_EXPANDED = new Set(); }
+function saveGroupExpanded() {
+  localStorage.setItem(GROUP_EXPAND_KEY, JSON.stringify([...GROUP_EXPANDED]));
+}
+window.toggleGroup = function(gid) {
+  if (GROUP_EXPANDED.has(gid)) GROUP_EXPANDED.delete(gid);
+  else GROUP_EXPANDED.add(gid);
+  saveGroupExpanded();
+  render();
+};
+
+
+function groupedInventory() {
+  // 各グループに品名を振り分け
+  const buckets = {};
+  GROUP_DEFS.forEach(g => buckets[g.id] = []);
+  INVENTORY.forEach(p => {
+    const g = groupOf(p.product);
+    buckets[g.id].push(p);
+  });
+  // グループ内はアルファベット順(将来アクセス頻度に切替)
+  Object.values(buckets).forEach(arr => {
+    arr.sort((a, b) => {
+      const c = a.product.localeCompare(b.product, 'ja');
+      if (c !== 0) return c;
+      return (a.location_origin || '').localeCompare(b.location_origin || '');
+    });
+  });
+  return buckets;
+}
+
+
+/* ============================================================
+   ファイル変更検出 (前回読み込み時との比較)
+   ============================================================ */
+const FILE_VER_KEY = 'walts_file_versions_v1';
+
+function loadPrevVersions() {
+  try { return JSON.parse(localStorage.getItem(FILE_VER_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+function savePrevVersions(versions) {
+  localStorage.setItem(FILE_VER_KEY, JSON.stringify(versions));
+}
+
+function detectChanges() {
+  const prev = loadPrevVersions();
+  const isFirstLoad = Object.keys(prev).length === 0;
+  const changes = [];
+  
+  INVENTORY.forEach(p => {
+    if (!p.file_mtime) return;
+    const prevMtime = prev[p.file];
+    if (isFirstLoad) return;  // 初回は差分判定しない
+    if (prevMtime !== p.file_mtime) {
+      changes.push({
+        product: p.product,
+        file: p.file,
+        origin: p.location_origin,
+        mtime: p.file_mtime,
+        prevMtime: prevMtime || null,
+        isNew: !prevMtime,
+      });
+    }
+  });
+  
+  // 最終更新が新しい順
+  changes.sort((a, b) => b.mtime.localeCompare(a.mtime));
+  
+  return { changes, isFirstLoad };
+}
+
+function renderChanges() {
+  const { changes, isFirstLoad } = detectChanges();
+  const box = document.getElementById('changes-box');
+  const summary = document.getElementById('changes-summary');
+  const list = document.getElementById('changes-list');
+  
+  if (isFirstLoad) {
+    summary.className = 'summary';
+    summary.innerHTML = '✓ 初回読込 (全' + INVENTORY.length + 'ファイル)';
+    list.innerHTML = '';
+    // 初回でも今の状態を保存
+    const newVersions = {};
+    INVENTORY.forEach(p => { if (p.file_mtime) newVersions[p.file] = p.file_mtime; });
+    savePrevVersions(newVersions);
+    return;
+  }
+  
+  if (changes.length === 0) {
+    summary.className = 'summary';
+    summary.innerHTML = '✓ 前回読込から変更なし';
+    list.innerHTML = '';
+    return;
+  }
+  
+  summary.className = 'summary has-changes';
+  summary.innerHTML = `📝 ${changes.length}ファイル更新あり <span class="toggle-arrow">▶</span>`;
+  
+  // リスト表示
+  let html = '<div class="change-section-label">📝 前回読込から変更されたファイル</div>';
+  changes.forEach(c => {
+    const dt = new Date(c.mtime);
+    const diffMin = Math.floor((TODAY - dt) / 60000);
+    let agoText;
+    if (c.isNew) agoText = '🆕新規';
+    else if (diffMin < 60) agoText = diffMin + '分前';
+    else if (diffMin < 1440) agoText = Math.floor(diffMin/60) + '時間前';
+    else agoText = Math.floor(diffMin/1440) + '日前';
+    
+    const origin = c.origin === 'itoshima'
+      ? '<span class="origin-badge itoshima">糸島</span>'
+      : '<span class="origin-badge honsha">本社</span>';
+    
+    html += `
+      <div class="change-item">
+        <span class="ago">${agoText}</span>
+        <span class="pname">${escape(c.product)}${origin}</span>
+      </div>
+    `;
+  });
+  list.innerHTML = html;
+  
+  // 差分検出後、今の状態を保存(次回のための基準)
+  const newVersions = {};
+  INVENTORY.forEach(p => { if (p.file_mtime) newVersions[p.file] = p.file_mtime; });
+  savePrevVersions(newVersions);
+}
+
+// 差分パネルの展開/折りたたみ
+let _changesToggleInitialized = false;
+function setupChangesToggle() {
+  if (_changesToggleInitialized) return;  // v5.1: 重複登録防止
+  _changesToggleInitialized = true;
+  const box = document.getElementById('changes-box');
+  // v5.1: summary 自身は innerHTML 書き換えで子要素が変わるので、
+  // 親 (#changes-display) に委譲して summary の click を拾う
+  const display = document.getElementById('changes-display');
+  display.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const summary = document.getElementById('changes-summary');
+    if (!summary) return;
+    if (summary.classList.contains('has-changes')) {
+      box.classList.toggle('expanded');
+      console.log('[ChangesToggle] clicked, expanded =', box.classList.contains('expanded'));
+    } else {
+      console.log('[ChangesToggle] clicked but no has-changes class');
+    }
+  });
+  // 外側クリックで閉じる
+  document.addEventListener('click', (e) => {
+    if (!box.contains(e.target)) {
+      box.classList.remove('expanded');
+    }
+  });
+}
+
+
+
+/* ============================================================
+   基板データ + 描画
+   ============================================================ */
+let SUBSTRATE = [];
+
+// 基板グループ判定
+// Pad Pitchベースの分類: 接頭辞(CC/FC/01A) + 数字 を見て判定
+// FBWはFull Bump Waferで別系統なので独立グループ
+function extractPitch(product) {
+  // FBW/LCD/STAC/WLPは Pitch分類対象外
+  if (/FBW|LCD|STAC|WLP/i.test(product)) return null;
+  // KIT の後の接頭辞+数字を抽出
+  const m = product.match(/^KIT\s+(?:01A|CC|FC)([0-9]{2,3})/i);
+  if (m) return parseInt(m[1], 10);
+  return null;
+}
+const SUB_GROUPS = [
+  { id: 'sub_80',   label: '80μm Pitch',  test: p => extractPitch(p) === 80 },
+  { id: 'sub_120',  label: '120μm Pitch', test: p => extractPitch(p) === 120 },
+  { id: 'sub_150',  label: '150μm Pitch', test: p => extractPitch(p) === 150 },
+  { id: 'sub_200',  label: '200μm Pitch', test: p => extractPitch(p) === 200 },
+  { id: 'sub_fbw',  label: 'FBW (Full Bump Wafer)', test: p => /^KIT\s+FBW/i.test(p) },
+  { id: 'sub_other',label: 'その他基板',   test: p => true },
+];
+
+// 基板の状態判定
+function substrateStatus(s) {
+  if (s.current_stock < 0) return 'danger';
+  if (s.current_stock === 0) return 'danger';
+  if (s.current_stock < 30) return 'warn';
+  return 'ok';
+}
+
+function substrateIsDormant(s) {
+  // 1年以上動きなし
+  if (!s.last_tx || !s.last_tx.date_iso) return true;
+  const last = new Date(s.last_tx.date_iso);
+  const days = (TODAY - last) / 86400000;
+  return days >= 365;
+}
+
+// 基板の展開状態 (localStorage)
+const SUB_EXPAND_KEY = 'walts_sub_expanded_v1';
+let SUB_EXPANDED = new Set();
+try {
+  SUB_EXPANDED = new Set(JSON.parse(localStorage.getItem(SUB_EXPAND_KEY) || '[]'));
+} catch (e) {}
+window.toggleSubCard = function(product) {
+  if (SUB_EXPANDED.has(product)) SUB_EXPANDED.delete(product);
+  else SUB_EXPANDED.add(product);
+  localStorage.setItem(SUB_EXPAND_KEY, JSON.stringify([...SUB_EXPANDED]));
+  renderSubstrate();
+};
+
+function renderSubCard(s) {
+  // v5.1: status / dormant 表示は廃止 (在庫数のみ表示)
+  const isExpanded = SUB_EXPANDED.has(s.product);
+  const minusClass = s.current_stock < 0 ? 'minus' : (s.current_stock === 0 ? 'zero' : '');
+  
+  // ロット別在庫ピル
+  const lotPills = (s.lots || []).map(l => {
+    const cls = l.stock < 0 ? 'minus' : (l.stock === 0 ? 'zero' : '');
+    return `<span class="lot-pill"><span class="pn">${escape(l.lot)}</span><span class="pq ${cls}">${l.stock}</span></span>`;
+  }).join('');
+  
+  // 履歴表 (新しい順 = 配列の逆順)
+  const historyRows = [...(s.history || [])].reverse().map(h => {
+    const stockCls = h.stock < 0 ? 'minus' : '';
+    const outTotal = h.out_sale + h.out_proc;
+    return `
+      <tr>
+        <td class="h-date">${escape(h.date)}</td>
+        <td class="h-company">
+          ${escape(h.company)}
+          ${h.note ? `<span class="note">${escape(h.note)}</span>` : ''}
+        </td>
+        <td class="h-lot">${escape(h.lot)}</td>
+        <td class="h-num h-in ${h.in_qty===0?'zero':''}">${h.in_qty || ''}</td>
+        <td class="h-num h-out ${outTotal===0?'zero':''}">${outTotal || ''}</td>
+        <td class="h-num h-sample ${h.out_sample===0?'zero':''}">${h.out_sample || ''}</td>
+        <td class="h-num h-stock ${stockCls}">${h.stock}</td>
+      </tr>
+    `;
+  }).join('');
+  
+  // 最終取引情報
+  const lastTx = s.last_tx;
+  let lastTxText = '取引履歴なし';
+  if (lastTx) {
+    lastTxText = `${lastTx.date} ${lastTx.company ? '(' + escape(lastTx.company) : ''}`;
+    if (lastTx.out_sale + lastTx.out_proc > 0) lastTxText += `, 出庫 ${lastTx.out_sale + lastTx.out_proc}`;
+    else if (lastTx.in_qty > 0) lastTxText += `, 入庫 ${lastTx.in_qty}`;
+    if (lastTx.company) lastTxText += ')';
+  }
+  
+  const dormantTag = '';  // v5.1: 基板の休眠タグは非表示
+  const minusWarn = s.current_stock < 0
+    ? '<div class="minus-warning">⚠️ 現在在庫がマイナス値です。エクセル元データの確認が必要です。</div>'
+    : '';
+  
+  return `
+    <div class="sub-card ${isExpanded?'expanded':''}">
+      <div class="sub-header" onclick="toggleSubCard('${escape(s.product)}')">
+        <span class="stoggle">▶</span>
+        <div class="sub-title">
+          <h3 class="name">${escape(s.product)}${dormantTag}${s.web_url ? `<span class="file-link-group">
+            <a class="file-link-btn web" href="#" onclick="openInExcelWeb(event, '${encodeURIComponent(s.web_url)}')" title="ブラウザのExcel Onlineでファイルを開く">📊 Excel on Browser</a>
+          </span>` : ''}</h3>
+          <div class="file">${escape(s.file)}</div>
+        </div>
+        <div class="sub-stats">
+          <div class="sub-meta">
+            <div class="row"><span class="lbl">最終取引</span><span class="val">${escape(lastTxText)}</span></div>
+            <div class="row">
+              <span class="lbl">過去1年</span>
+              <span class="val">入庫 <span class="num">${s.in_1y}</span> / 出庫 <span class="num">${s.out_1y}</span>${s.sample_1y > 0 ? ' / サンプル <span class="num">'+s.sample_1y+'</span>' : ''}</span>
+            </div>
+          </div>
+          <div class="sub-status">
+            <span class="num ${minusClass}">${s.current_stock}</span>
+            <span class="unit">現在在庫</span>
+          </div>
+        </div>
+      </div>
+      <div class="sub-body">
+        ${minusWarn}
+        ${s.lots.length > 0 ? `
+          <div class="sub-lots">
+            <span class="lbl">ロット別:</span>
+            ${lotPills}
+          </div>
+        ` : ''}
+        <div class="sub-history">
+          <table class="history-table">
+            <thead><tr>
+              <th>日付</th>
+              <th>顧客/補足</th>
+              <th>Lot</th>
+              <th style="text-align:right">入庫</th>
+              <th style="text-align:right">出庫</th>
+              <th style="text-align:right">サンプル</th>
+              <th style="text-align:right">在庫</th>
+            </tr></thead>
+            <tbody>${historyRows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function groupSubstrate() {
+  const buckets = {};
+  SUB_GROUPS.forEach(g => buckets[g.id] = []);
+  SUBSTRATE.forEach(s => {
+    for (const g of SUB_GROUPS) {
+      if (g.test(s.product)) { buckets[g.id].push(s); break; }
+    }
+  });
+  // グループ内は品名アルファベット順
+  Object.values(buckets).forEach(arr => {
+    arr.sort((a, b) => a.product.localeCompare(b.product));
+  });
+  return buckets;
+}
+
+// 基板グループ展開状態
+const SGROUP_EXPAND_KEY = 'walts_sgroup_expanded_v1';
+let SGROUP_EXPANDED = new Set();
+try {
+  SGROUP_EXPANDED = new Set(JSON.parse(localStorage.getItem(SGROUP_EXPAND_KEY) || '[]'));
+} catch (e) {}
+window.toggleSubGroup = function(gid) {
+  if (SGROUP_EXPANDED.has(gid)) SGROUP_EXPANDED.delete(gid);
+  else SGROUP_EXPANDED.add(gid);
+  localStorage.setItem(SGROUP_EXPAND_KEY, JSON.stringify([...SGROUP_EXPANDED]));
+  renderSubstrate();
+};
+
+function renderSubstrate() {
+  const q = (document.getElementById('search-sub')?.value || '').trim().toLowerCase();
+  const showDormant = document.getElementById('show-dormant')?.checked ?? true;
+  const buckets = groupSubstrate();
+  let out = '';
+  
+  for (const g of SUB_GROUPS) {
+    const list = buckets[g.id] || [];
+    if (list.length === 0) continue;
+    
+    const visible = list.filter(s => {
+      if (!showDormant && substrateIsDormant(s)) return false;
+      if (q) {
+        const hay = (s.product + ' ' + s.file + ' ' + 
+                     s.history.map(h => h.company + ' ' + h.lot + ' ' + h.note).join(' ')).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    if (visible.length === 0) continue;
+    
+    // 検索中は自動展開
+    const autoExpand = q && visible.length > 0;
+    const isExpanded = SGROUP_EXPANDED.has(g.id) || autoExpand;
+    
+    // 合計在庫 + プレビュー
+    let totalStock = 0;
+    const previewParts = visible.map(s => {
+      const stock = s.current_stock;
+      totalStock += stock;
+      return `<span class="pname-pill"><span class="pn">${escape(s.product)}</span><span class="pq">${stock}</span></span>`;
+    });
+    const previewHtml = previewParts.join('');
+    const allNames = visible.map(s => s.product + ':' + s.current_stock).join(', ');
+    
+    out += `
+      <div class="sgroup-block ${isExpanded?'expanded':''}">
+        <div class="sgroup-header-wrap" onclick="toggleSubGroup('${g.id}')" title="${escape(allNames)}">
+          <span class="sgtoggle">▶</span>
+          <span class="sgname">${escape(g.label)}</span>
+          <span class="sgcount">${visible.length}品名${q ? ' (検索ヒット)' : ''}</span>
+          <span class="sgpreview">${previewHtml}</span>
+          <span class="sgstock"><span class="lbl">合計</span>${totalStock}</span>
+        </div>
+        <div class="sgroup-body">
+          ${visible.map(renderSubCard).join('')}
+        </div>
+      </div>
+    `;
+  }
+  
+  if (!out.trim()) {
+    out = '<div style="padding:60px 20px;text-align:center;color:var(--ink-dim)">該当する基板がありません</div>';
+  }
+  document.getElementById('substrate-cards').innerHTML = out;
+}
+
+
+function matchSearch(text, query) {
+  if (!query) return true;
+  return text.toLowerCase().includes(query.toLowerCase());
+}
+
+/* ============================================================
+   ナビカード(品名ジャンプ)
+   ============================================================ */
+function renderNavCards() {
+  const html = INVENTORY.map(p => {
+    const st = statusOf(p);
+    let qtyCls = '';
+    if (st === 'danger') qtyCls = 'danger';
+    else if (st === 'warn') qtyCls = 'warn';
+    else if (st === 'ok') qtyCls = 'ok';
+    if (p.stock === 0) qtyCls = 'zero';
+    return `
+      <div class="nav-card ${st}" onclick="scrollToProduct('${escape(p.product)}')">
+        <div class="pname">${escape(p.product)}</div>
+        <div class="pqty ${qtyCls}">${p.stock}</div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('nav-cards').innerHTML = html;
+}
+window.scrollToProduct = function(product) {
+  const el = document.getElementById('pc-' + cssId(product));
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+function cssId(s) {
+  return s.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+/* ============================================================
+   品名カード描画
+   ============================================================ */
+function renderProductCard(p) {
+  const q = document.getElementById('search').value.trim();
+  const showEmpty = document.getElementById('show-empty').checked;
+  
+  // フィルタ判定: 検索クエリが入っている場合、ヒットがゼロならカードごと非表示
+  const filterLot = (l) => {
+    if (!showEmpty && l.stock === 0 && l.reserved === 0) return false;
+    if (q) {
+      const hay = p.product + ' ' + (p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '糸島' : '本社') + ' ' + l.lot + ' ' + l.sheet + ' ' +
+                  l.customers.join(' ') + ' ' + l.locations.join(' ');
+      if (!matchSearch(hay, q)) return false;
+    }
+    return true;
+  };
+  const filterIncoming = (l) => {
+    if (q) {
+      const hay = p.product + ' ' + (p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '糸島' : '本社') + ' ' + l.lot + ' ' + l.sheet + ' ' +
+                  l.customers.join(' ');
+      if (!matchSearch(hay, q)) return false;
+    }
+    return true;
+  };
+  
+  const lots = p.lots.filter(filterLot);  // scanner.pyのシート読み取り順を維持
+  const incoming = p.incoming_lots.filter(filterIncoming);
+  
+  // 検索/フィルタ中で両方0件、かつ品名自体も検索ヒットしないなら隠す
+  if (q && lots.length === 0 && incoming.length === 0 && !matchSearch(p.product, q)) {
+    return '';
+  }
+  
+  const st = statusOf(p);
+  let stockCls = '';
+  if (st === 'danger') stockCls = 'danger';
+  else if (st === 'warn') stockCls = 'warn';
+  else if (st === 'ok') stockCls = 'ok';
+  if (p.stock === 0) stockCls = 'zero';
+  
+  const t = THRESHOLDS[p.product];
+  const thresholdInfo = '警告: 使える分25枚未満 / 危険: 10枚未満';
+  
+  // 検索クエリがある場合、ヒット品名は自動展開
+  const isExpanded = EXPANDED.has(p.product) || (q && (lots.length > 0 || incoming.length > 0 || matchSearch(p.product, q)));
+  
+  return `
+    <div class="product-card ${isExpanded?'expanded':''}" id="pc-${cssId(p.product)}">
+      <div class="pc-header color-${(INVENTORY.indexOf(p) % 8) + 1}" onclick="toggleProduct('${escape(p.product)}')">
+        <div class="pc-title-wrap">
+          <span class="expand-toggle">▶</span>
+          <div class="pc-title">
+            <h2 class="name">${escape(p.product)}${p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '<span class="origin-badge itoshima">糸島</span>' : '<span class="origin-badge honsha">本社</span>'}${p.web_url ? `<span class="file-link-group">
+              <a class="file-link-btn web" href="#" onclick="openInExcelWeb(event, '${encodeURIComponent(p.web_url)}')" title="ブラウザのExcel Onlineでファイルを開く">📊 Excel on Browser</a>
+            </span>` : ''}</h2>
+            <div class="file">${escape(p.file)}</div>
+          </div>
+        </div>
+        <div class="pc-stats">
+          ${renderStatusBig(p)}
+          <div class="pc-stat in-stock">
+            <div class="label">即在庫 + 予約済 (出荷待ち)</div>
+            <div class="val-combo">
+              <span class="val ${stockCls}">${p.stock}</span>
+              <span class="val-plus">+</span>
+              <span class="val warn ${p.stock_reserved===0?'zero':''}">${p.stock_reserved}</span>
+            </div>
+            <div class="sub">${thresholdInfo}</div>
+          </div>
+          <div class="pc-stat ${(p.incoming_unreserved + p.incoming_reserved)===0?'zero':''}">
+            <div class="label">入荷予定 + 予約済 (入荷後出荷)</div>
+            <div class="val-combo">
+              <span class="val" style="color:var(--incoming)">${p.incoming_unreserved}</span>
+              <span class="val-plus">+</span>
+              <span class="val incoming ${p.incoming_reserved===0?'zero':''}">${p.incoming_reserved}</span>
+            </div>
+            <div class="sub">予約は入荷後すぐ出荷</div>
+          </div>
+          <div class="pc-stat dummy-mini ${((p.dummy_stock||0)+(p.dummy_reserved||0))===0?'zero':''}">
+            <div class="label">ダミー(3年以上前)</div>
+            <div class="val-combo">
+              <span class="val ${(p.dummy_stock||0)===0?'zero':''}">${p.dummy_stock||0}</span>
+              <span class="val-plus">+</span>
+              <span class="val ${(p.dummy_reserved||0)===0?'zero':''}">${p.dummy_reserved||0}</span>
+            </div>
+            <div class="sub">参考</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="lot-section">
+        ${incoming.length > 0 ? `
+          <div class="section-header incoming">
+            <span>🚚 入荷予定ロット</span>
+            <span class="badge">${incoming.length}件</span>
+          </div>
+          <div class="lot-table-wrap">${renderLotTable(p, incoming, 'incoming')}</div>
+        ` : ''}
+        
+        <div class="section-header stock">
+          <span>📦 現有在庫ロット</span>
+          <span class="badge">${lots.length}件 表示中 / 全${p.lots.length}件</span>
+        </div>
+        ${lots.length === 0
+          ? `<div class="empty">${showEmpty ? '該当ロットなし' : '在庫または予約のあるロットはありません (チェックで全件表示)'}</div>`
+          : `<div class="lot-table-wrap">${renderLotTable(p, lots, 'stock')}</div>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+function renderLotTable(product, lots, mode) {
+  // 隣接行の sheet 比較で区切りクラスを決定
+  // 'same-sheet' = 次の行と同じシート (下線を消す)
+  // 'sheet-boundary' = 次の行が別シート (下線を濃く)
+  const rowsWithCls = lots.map((l, i) => {
+    const next = lots[i + 1];
+    let cls = '';
+    if (next) {
+      if (next.sheet === l.sheet) cls = 'same-sheet';
+      else cls = 'sheet-boundary';
+    }
+    return { lot: l, cls: cls };
+  });
+  
+  if (mode === 'stock') {
+    return `
+      <table class="lot-table">
+        <thead><tr>
+          <th>ロット</th>
+          <th style="text-align:right">在庫 + 予約済</th>
+          <th>予約済の顧客</th>
+          <th>入荷日</th>
+          <th>保管場所</th>
+        </tr></thead>
+        <tbody>${rowsWithCls.map(({lot, cls}) => renderStockRow(product, lot, cls)).join('')}</tbody>
+      </table>
+    `;
+  } else {
+    return `
+      <table class="lot-table">
+        <thead><tr>
+          <th>ロット</th>
+          <th style="text-align:right">未予約 + 予約済</th>
+          <th>予約済の顧客</th>
+          <th>入荷予定日</th>
+        </tr></thead>
+        <tbody>${rowsWithCls.map(({lot, cls}) => renderIncomingRow(product, lot, cls)).join('')}</tbody>
+      </table>
+    `;
+  }
+}
+
+function renderStockRow(product, l, extraCls) {
+  const qtyCls = l.stock === 0 ? 'zero' : '';
+  let rowCls = (l.stock === 0 && l.reserved === 0) ? 'zero' : '';
+  if (l.is_dummy) rowCls += ' dummy-row';
+  if (extraCls) rowCls += ' ' + extraCls;
+  
+  // 在庫 + 予約済 を加算表記で
+  const qtyCombinedHtml = `
+    <span class="qty-num ${qtyCls}">${l.stock}</span>
+    <span style="font-size:14px;color:var(--ink-dim);font-weight:600;margin:0 4px">+</span>
+    <span class="qty-num" style="${l.reserved===0?'color:var(--ink-faint);opacity:0.4':'color:var(--ink-dim)'}">${l.reserved}</span>
+  `;
+  
+  // 予約顧客のみ表示 (数字は左セルに集約済み)
+  const reservedHtml = l.reserved > 0
+    ? `<div class="reserved-customers">${
+         l.customers.length > 0
+           ? l.customers.map(c => `<span class="item" title="${escape(c)}">${escape(c)}</span>`).join('')
+           : '<span style="font-style:italic;color:#bbb">顧客記載なし</span>'
+       }</div>`
+    : `<span style="color:var(--ink-faint)">―</span>`;
+  
+  // 入荷日
+  let dateHtml;
+  if (!l.arrival_disp) {
+    dateHtml = `<span class="placeholder">未記入</span>`;
+  } else if (l.arrival_iso) {
+    const days = daysBetween(l.arrival_iso);
+    dateHtml = `<span>${l.arrival_iso}</span><span class="ago">${agoLabel(days)}</span>`;
+  } else {
+    dateHtml = `<span class="raw-text">${escape(l.arrival_disp)}</span>`;
+  }
+  
+  // 保管場所
+  const locHtml = l.locations.length === 0
+    ? `<span class="placeholder">未記入</span>`
+    : l.locations.map(loc => `<span class="item" title="${escape(loc)}">${escape(loc)}</span>`).join('');
+  
+  // 発注状態
+  const oKey = orderKey(product.product, l.lot, l.sheet);
+  const order = getOrder(oKey);
+  const needOrder = l.stock === 0 && l.reserved > 0;
+  let badgeHtml;
+  let orderInfoHtml = '';
+  if (order.state === 'pending') {
+    badgeHtml = `<span class="order-badge pending">📋 依頼中</span>`;
+    const parts = [];
+    if (order.qty) parts.push(`数量<b>${order.qty}</b>`);
+    if (order.due) parts.push(`納期<b>${order.due}</b>`);
+    if (order.by) parts.push(`<b>${escape(order.by)}</b>`);
+    if (parts.length) orderInfoHtml = `<div class="order-info">${parts.join(' / ')}</div>`;
+  } else if (order.state === 'done') {
+    badgeHtml = `<span class="order-badge done">✅ 発注済</span>`;
+  } else if (needOrder) {
+    badgeHtml = `<span class="order-badge need">⚠️ 要発注</span>`;
+  } else {
+    badgeHtml = `<span class="order-badge none">―</span>`;
+  }
+  const orderActions = `
+    <div class="order-actions">
+      <button class="order-btn ${order.state==='pending'?'active':''}" onclick="openOrderModal('${escape(oKey)}','pending')">依頼中</button>
+      <button class="order-btn ${order.state==='done'?'active':''}" onclick="openOrderModal('${escape(oKey)}','done')">発注済</button>
+      <button class="order-btn" onclick="resetOrder('${escape(oKey)}')">取消</button>
+    </div>
+  `;
+  
+  // SharePoint Web リンクボタン (シート単位ジャンプ)
+  const webLinkBtn = product.web_url
+    ? `<a class="file-link-btn web" href="#" onclick="openInExcelWeb(event, '${encodeURIComponent(product.web_url)}', '${encodeURIComponent(l.sheet)}')" title="このシートをブラウザで開く">📊 Excel on Browser</a>`
+    : '';
+  
+  return `
+    <tr class="lot-row ${rowCls}">
+      <td class="lot-name">${escape(l.lot)}${l.is_dummy ? '<span class="dummy-tag">DUMMY</span>' : ''}<span class="sheet">${escape(l.sheet)}${webLinkBtn ? `<span class="file-link-group" style="margin-left:6px">${webLinkBtn}</span>` : ''}</span></td>
+      <td class="qty-cell" style="white-space:nowrap">${qtyCombinedHtml}</td>
+      <td class="reserved-cell">${reservedHtml}</td>
+      <td class="date-cell">${dateHtml}</td>
+      <td class="loc-cell">${locHtml}</td>
+    </tr>
+  `;
+}
+
+function renderIncomingRow(product, l, extraCls) {
+  let dateHtml;
+  if (!l.arrival_disp) {
+    dateHtml = `<span class="placeholder">未定</span>`;
+  } else if (l.arrival_iso) {
+    const days = daysBetween(l.arrival_iso);
+    dateHtml = `<span>${l.arrival_iso}</span><span class="ago">${agoLabel(days)}</span>`;
+  } else {
+    dateHtml = `<span class="raw-text">${escape(l.arrival_disp)}</span>`;
+  }
+  
+  const reservedHtml = l.reserved > 0
+    ? `<div><span class="reserved-num incoming">${l.reserved}</span>枚 予約済</div>
+       <div class="reserved-customers">${l.customers.length > 0
+         ? l.customers.map(c => `<span class="item incoming" title="${escape(c)}">${escape(c)}</span>`).join('')
+         : '<span style="font-style:italic;color:#bbb">顧客記載なし</span>'}</div>`
+    : `<span class="reserved-num zero">全枚 未予約</span>`;
+  
+  // 予定枚数: 未予約 + 予約済 を「12 + 13」表記で表示
+  const totalHtml = `
+    <span class="qty-num incoming">${l.unreserved}</span>
+    <span style="font-size:14px;color:var(--ink-dim);font-weight:600;margin:0 4px">+</span>
+    <span class="qty-num" style="color:var(--ink-dim);opacity:0.75">${l.reserved}</span>
+  `;
+  
+  // SharePoint Web リンクボタン (シート単位ジャンプ)
+  const webLinkBtn = product.web_url
+    ? `<a class="file-link-btn web" href="#" onclick="openInExcelWeb(event, '${encodeURIComponent(product.web_url)}', '${encodeURIComponent(l.sheet)}')" title="このシートをブラウザで開く">📊 Excel on Browser</a>`
+    : '';
+  
+  return `
+    <tr class="lot-row ${extraCls || ''}">
+      <td class="lot-name">${escape(l.lot)}<span class="sheet">${escape(l.sheet)}${webLinkBtn ? `<span class="file-link-group" style="margin-left:6px">${webLinkBtn}</span>` : ''}</span></td>
+      <td class="qty-cell" style="white-space:nowrap">${totalHtml}</td>
+      <td class="reserved-cell">${reservedHtml}</td>
+      <td class="date-cell">${dateHtml}</td>
+    </tr>
+  `;
+}
+
+/* ============================================================
+   v5.0: Excel/SharePoint リンク (ms-excel: プロトコル + Web Online)
+   ============================================================ */
+// Excelデスクトップで開く: ms-excel:ofe|u|<URL>
+// 注意: window.location.href = 'ms-excel:ofe|u|...' とすると Chrome が
+// パイプ | を %7C にエンコードしてしまい、Office が認識できないため、
+// 動的に <a> タグを作って click() する方式を使う (こちらはエンコードされない)
+window.openInExcelDesktop = function(event, encodedUrl) {
+  event.stopPropagation();
+  event.preventDefault();
+  if (!encodedUrl) return;
+  const url = decodeURIComponent(encodedUrl);
+  const protocolUrl = 'ms-excel:ofe|u|' + url;
+  console.log('[Excel直起動] URL:', url);
+  console.log('[Excel直起動] フルプロトコル:', protocolUrl);
+  // 動的アンカーで起動 (location.href を使うとパイプがエンコードされる)
+  const a = document.createElement('a');
+  a.href = protocolUrl;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
+// ブラウザのExcel Onlineで開く (シート指定オプションあり)
+window.openInExcelWeb = function(event, encodedUrl, sheetName) {
+  event.stopPropagation();
+  event.preventDefault();
+  if (!encodedUrl) return;
+  const url = decodeURIComponent(encodedUrl);
+  let target = url;
+  if (sheetName) {
+    const decodedSheet = decodeURIComponent(sheetName);
+    // SharePoint Excel Online のシート指定: ?web=1&activeCell='シート名'!A1
+    const sep = url.includes('?') ? '&' : '?';
+    target = url + sep + "web=1&activeCell='" + encodeURIComponent(decodedSheet).replace(/'/g, '%27') + "'!A1";
+  } else {
+    const sep = url.includes('?') ? '&' : '?';
+    target = url + sep + 'web=1';
+  }
+  console.log('[Web起動] URL:', target);
+  window.open(target, '_blank', 'noopener');
+};
+
+/* ============================================================
+   発注ダイアログ
+   ============================================================ */
+let modalKey = null, modalState = null;
+window.openOrderModal = function(key, state) {
+  modalKey = key; modalState = state;
+  const [product, lot, sheet] = key.split('|');
+  const existing = getOrder(key);
+  document.getElementById('modal-title').textContent =
+    (state === 'pending' ? '発注依頼の登録: ' : '発注済の登録: ') + product + ' / ' + lot;
+  document.getElementById('m-qty').value = existing.qty || '';
+  document.getElementById('m-due').value = existing.due || '';
+  document.getElementById('m-by').value = existing.by || localStorage.getItem('last_by') || '';
+  document.getElementById('m-memo').value = existing.memo || '';
+  document.getElementById('order-modal').classList.add('show');
+  document.getElementById('m-qty').focus();
+};
+window.resetOrder = function(key) {
+  const [product, lot] = key.split('|');
+  if (!confirm(product + ' / ' + lot + ' の発注情報をリセットしますか?')) return;
+  setOrder(key, { state: 'none' });
+  toast('発注情報をリセット');
+  render();
+};
+function closeModal() {
+  document.getElementById('order-modal').classList.remove('show');
+  modalKey = null;
+}
+function saveModal() {
+  if (!modalKey) return;
+  const by = document.getElementById('m-by').value || '';
+  if (by) localStorage.setItem('last_by', by);
+  const orderDate = new Date().toISOString().slice(0, 10);
+  const existing = getOrder(modalKey);
+  setOrder(modalKey, {
+    state: modalState,
+    qty: document.getElementById('m-qty').value || '',
+    due: document.getElementById('m-due').value || '',
+    by: by,
+    memo: document.getElementById('m-memo').value || '',
+    orderDate: existing.orderDate || orderDate,
+  });
+  toast('発注情報を保存');
+  closeModal();
+  render();
+}
+document.getElementById('m-cancel').addEventListener('click', closeModal);
+document.getElementById('m-save').addEventListener('click', saveModal);
+document.getElementById('order-modal').addEventListener('click', e => {
+  if (e.target.id === 'order-modal') closeModal();
+});
+
+/* ============================================================
+   その他
+   ============================================================ */
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._h);
+  toast._h = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function render() {
+  const buckets = groupedInventory();
+  const q = document.getElementById('search').value.trim();
+  let outHtml = '';
+  for (const g of GROUP_DEFS) {
+    const products = buckets[g.id] || [];
+    if (products.length === 0) continue;
+    
+    // 検索クエリ時は実際にヒットするかでカード描画。クエリなしならグループ全品名を描画
+    const cards = products.map(renderProductCard).filter(c => c && c.trim());
+    if (cards.length === 0) continue;
+    
+    // 検索中は自動展開、そうでなければlocalStorageの状態に従う
+    const autoExpand = q && cards.length > 0;
+    const isExpanded = GROUP_EXPANDED.has(g.id) || autoExpand;
+    
+    // 集計: 合計在庫数 + 状態判定 + 各品名のピル生成
+    let totalAvail = 0;
+    let groupStatus = 'ok';
+    const previewParts = [];
+    products.forEach(p => {
+      const avail = totalAvailable(p);
+      totalAvail += avail;
+      const st = statusOf(p);
+      if (st === 'danger' && groupStatus !== 'danger') groupStatus = 'danger';
+      else if (st === 'warn' && groupStatus === 'ok') groupStatus = 'warn';
+      const cls = st === 'danger' ? 'danger' : (st === 'warn' ? 'warn' : 'ok');
+      const originMini = p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '<span class="origin-mini">糸</span>' : '';
+      previewParts.push(`
+        <span class="pname-pill ${cls}">
+          <span class="pn">${escape(p.product)}</span>${originMini}
+          <span class="pq">${avail}</span>
+        </span>
+      `);
+    });
+    const previewHtml = previewParts.join('');
+    const allNames = products.map(p => p.product + (p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '(糸島)' : '') + ':' + totalAvailable(p)).join(', ');
+    const stockCls = groupStatus === 'danger' ? 'danger' : (groupStatus === 'warn' ? 'warn' : '');
+    
+    outHtml += `
+      <div class="group-block ${isExpanded?'expanded':''}">
+        <div class="group-header" style="border-left-color:${g.color}" onclick="toggleGroup('${g.id}')" title="${escape(allNames)}">
+          <span class="gtoggle">▶</span>
+          <span class="gname" style="color:${g.color}">${g.label}</span>
+          <span class="gcount">${cards.length}品名${q ? ' (検索ヒット)' : ''}</span>
+          <span class="gpreview">${previewHtml}</span>
+          <span class="gstock"><span class="lbl">在庫</span><span class="num ${stockCls}">${totalAvail}</span></span>
+        </div>
+        <div class="group-body">${cards.join('')}</div>
+      </div>
+    `;
+  }
+  if (!outHtml.trim()) {
+    outHtml = '<div style="padding:60px 20px;text-align:center;color:var(--ink-dim)">該当する品名がありません</div>';
+  }
+  document.getElementById('product-cards').innerHTML = outHtml;
+  // (index-ago は削除済み、v3.4より変更ファイル表示に置換)
+}
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('show-empty').addEventListener('change', render);
+
+// タブ切替 (これはINVENTORYに依存しないので即実行OK)
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+document.getElementById('search-sub').addEventListener('input', renderSubstrate);
+document.getElementById('show-dormant').addEventListener('change', renderSubstrate);
+
+// 基板タブは現状ハードコードのSUBSTRATE使用のため即描画
+renderSubstrate();
+document.getElementById('substrate-count').textContent = SUBSTRATE.length + '品名';
+
+// === v5.0: 全体再描画関数 ===
+// INVENTORY が更新されたら呼ぶ
+function renderAll() {
+  render();
+  renderChanges();
+  setupChangesToggle();
+  renderSubstrate();
+  document.getElementById('wafer-count').textContent = INVENTORY.length + '品名';
+  document.getElementById('substrate-count').textContent = SUBSTRATE.length + '品名';
+}
+
+/* ============================================================
+   v5.0 集計エンジン (WALTS_SharePoint_debug.html から移植)
+   ============================================================ */
+// TODAY は viewer 上部で既に宣言済み (1230行目あたり) のため再宣言しない
+const PARALLEL_LIMIT = 5;
+const PRODUCT_FILE_PATTERN = /^(?:[0-9]*★|φ\s*\d+\s*inch)/i;
+const SUBSTRATE_FILE_PATTERN = /^KIT\s/i;
+const EXCLUDE_FILE_KW = ['不良', '開発', '廃棄', '在庫外'];
+
+/* ============================================================ 色判定 ============================================================ */
+const OFFICE_THEME = { 0:{r:255,g:255,b:255},1:{r:0,g:0,b:0},2:{r:231,g:230,b:230},3:{r:68,g:84,b:106},4:{r:91,g:155,b:213},5:{r:237,g:125,b:49},6:{r:165,g:165,b:165},7:{r:255,g:192,b:0},8:{r:68,g:114,b:196},9:{r:112,g:173,b:71} };
+function applyTint(rgb,tint){
+  if(!tint||Math.abs(tint)<0.001)return rgb;
+  if(tint>0)return{r:Math.round(rgb.r+(255-rgb.r)*tint),g:Math.round(rgb.g+(255-rgb.g)*tint),b:Math.round(rgb.b+(255-rgb.b)*tint)};
+  return{r:Math.round(rgb.r*(1+tint)),g:Math.round(rgb.g*(1+tint)),b:Math.round(rgb.b*(1+tint))};
+}
+function fillToRGB(fill){
+  if(!fill||fill.type!=='pattern')return null;
+  if(!fill.pattern||fill.pattern==='none')return null;
+  const fg=fill.fgColor;if(!fg)return null;
+  if(fg.argb){const h=fg.argb.substring(2);return{r:parseInt(h.substring(0,2),16),g:parseInt(h.substring(2,4),16),b:parseInt(h.substring(4,6),16)};}
+  if(fg.theme!==undefined&&OFFICE_THEME[fg.theme])return applyTint(OFFICE_THEME[fg.theme],fg.tint);
+  return null;
+}
+function brightness(rgb){return(rgb.r*0.299+rgb.g*0.587+rgb.b*0.114)/255;}
+
+function rgbToHex(rgb){const h=n=>n.toString(16).padStart(2,'0');return '#'+h(rgb.r)+h(rgb.g)+h(rgb.b);}
+
+function classifyNormalWithReason(cell) {
+  const fill = cell.fill;
+  if (!fill || fill.type !== 'pattern') return { status: '在庫', reason: '塗装なし' };
+  if (!fill.pattern || fill.pattern === 'none') return { status: '在庫', reason: 'pattern=none (塗りつぶしなし)' };
+  const fg = fill.fgColor;
+  if (!fg) return { status: '在庫', reason: 'fgColorなし' };
+  // theme=0 + tint=0 は無条件で在庫(純白)
+  if (fg.theme === 0 && (!fg.tint || Math.abs(fg.tint) < 0.01)) return { status: '在庫', reason: 'theme=0完全白' };
+  // theme=2 や他のtheme/argbも、実際のRGBで判定する(下流に統一)
+  const rgb = fillToRGB(fill);
+  if (!rgb) {
+    // RGB取得不可だが何らかの塗装あり(indexed等の古い色形式)→ 使用済扱い
+    if (fg.indexed !== undefined) return { status: '使用済', reason: `indexed=${fg.indexed} (古い色形式、塗装あり)` };
+    return { status: '在庫', reason: 'RGB取得不可' };
+  }
+  const b = brightness(rgb);
+  const range = Math.max(rgb.r,rgb.g,rgb.b) - Math.min(rgb.r,rgb.g,rgb.b);
+  // 計算結果が「ほぼ白」(明るさ95%以上 かつ range<=10)なら在庫扱い
+  // ※ theme=2 でも tint=-0.1 とかで結果が白っぽいケースを救う
+  if (b >= 0.95 && range <= 10) {
+    return { status: '在庫', reason: `ほぼ白 (RGB=${rgbToHex(rgb)} 明=${(b*100).toFixed(0)}%) [${fillDesc(fill)}]` };
+  }
+  // ベージュ近傍: 明るさ60〜95% + 彩度低い + 青みが厳密に弱い
+  if (b >= 0.60 && b <= 0.95 && range <= 50 && rgb.b <= rgb.g && rgb.b <= rgb.r) {
+    return { status: '予約', reason: `ベージュ近傍 (RGB=${rgbToHex(rgb)} 明=${(b*100).toFixed(0)}% range=${range})` };
+  }
+  return { status: '使用済', reason: `その他色 (RGB=${rgbToHex(rgb)} 明=${(b*100).toFixed(0)}%)` };
+}
+function classifyPendingWithReason(cell) {
+  const fill = cell.fill;
+  if (!fill || fill.type !== 'pattern') return { status: '未予約', reason: '塗装なし' };
+  if (!fill.pattern || fill.pattern === 'none') return { status: '未予約', reason: 'pattern=none (塗りつぶしなし)' };
+  const fg = fill.fgColor;
+  if (!fg) return { status: '未予約', reason: 'fgColorなし' };
+  if (fg.theme === 0 && (!fg.tint || Math.abs(fg.tint) < 0.01)) return { status: '未予約', reason: 'theme=0完全白' };
+  return { status: '予約済', reason: '色あり' };
+}
+// 集計用 (理由不要)
+function classifyNormal(cell) { return classifyNormalWithReason(cell).status; }
+function classifyPending(cell) { return classifyPendingWithReason(cell).status; }
+
+function fillDesc(fill) {
+  if (!fill || fill.type !== 'pattern') return '塗装なし';
+  const parts = [];
+  if (fill.pattern) parts.push(`pattern=${fill.pattern}`);
+  // fgColor
+  const fg = fill.fgColor;
+  if (fg) {
+    const f = [];
+    if (fg.argb) f.push(`argb=${fg.argb}`);
+    if (fg.theme !== undefined) f.push(`theme=${fg.theme}`);
+    if (fg.tint !== undefined && fg.tint !== 0) f.push(`tint=${fg.tint.toFixed(3)}`);
+    if (fg.indexed !== undefined) f.push(`indexed=${fg.indexed}`);
+    parts.push('fg{' + (f.join(',') || '空') + '}');
+  } else parts.push('fg{なし}');
+  // bgColor
+  const bg = fill.bgColor;
+  if (bg) {
+    const b = [];
+    if (bg.argb) b.push(`argb=${bg.argb}`);
+    if (bg.theme !== undefined) b.push(`theme=${bg.theme}`);
+    if (bg.tint !== undefined && bg.tint !== 0) b.push(`tint=${bg.tint.toFixed(3)}`);
+    if (bg.indexed !== undefined) b.push(`indexed=${bg.indexed}`);
+    if (b.length) parts.push('bg{' + b.join(',') + '}');
+  }
+  return parts.join(',') || '(空)';
+}
+
+/* ============================================================ ヘッダー検出 ============================================================ */
+const HEADER_KEYWORDS = { slot: ['slot', 'Slot', 'W#', 'WF#'], '入荷日': ['入荷日', '完成日'], 'Lot': ['Lot#', 'Lot'], '顧客': ['顧客'], '保管': ['保管場所', '保管'], '備考': ['備考'] };
+function detectColumns(ws, maxRows = 6) {
+  const result = { slot:null, '入荷日':null, 'Lot':null, '顧客':null, '保管':null, '備考':null };
+  for (let r = 1; r <= Math.min(maxRows, ws.rowCount); r++) {
+    for (let c = 1; c <= Math.min(ws.columnCount, 25); c++) {
+      const v = ws.getCell(r, c).value;
+      if (v === null || v === undefined) continue;
+      const vStr = String(typeof v === 'object' && v.text ? v.text : v).trim();
+      if (!vStr) continue;
+      for (const key in HEADER_KEYWORDS) {
+        if (result[key] !== null) continue;
+        for (const kw of HEADER_KEYWORDS[key]) {
+          if (vStr === kw || vStr.startsWith(kw + '\n')) { result[key] = c; break; }
+        }
+      }
+    }
+  }
+  // slot列のヘッダーが見つからない場合、slot番号(1〜25が連続する列)を推定
+  if (!result.slot) {
+    result.slot = inferSlotColumn(ws);
+  }
+  return result;
+}
+
+// slot番号として有効な値を取り出す: 数値/数字文字列/数式結果 を受け入れる
+function toSlotNumber(v) {
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 25) return v;
+  if (typeof v === 'string') {
+    const s = v.trim();
+    if (/^\d{1,2}$/.test(s)) {
+      const n = parseInt(s, 10);
+      if (n >= 1 && n <= 25) return n;
+    }
+    return null;
+  }
+  if (typeof v === 'object') {
+    // 数式セル: { formula: '...', result: N }
+    if (typeof v.result === 'number' && Number.isInteger(v.result) && v.result >= 1 && v.result <= 25) return v.result;
+    if (typeof v.result === 'string') return toSlotNumber(v.result);
+  }
+  return null;
+}
+
+// slot列推定: 列ごとに「1〜25の連続する数値」を持つ列を探す
+function inferSlotColumn(ws) {
+  const maxC = Math.min(ws.columnCount, 25);
+  let bestCol = null, bestScore = 0;
+  for (let c = 1; c <= maxC; c++) {
+    let consecutive = 0, maxRun = 0, expected = 1;
+    for (let r = 1; r <= Math.min(ws.rowCount, 200); r++) {
+      const n = toSlotNumber(ws.getCell(r, c).value);
+      if (n === expected && n <= 25) {
+        consecutive++;
+        if (consecutive > maxRun) maxRun = consecutive;
+        expected++;
+      } else if (n === 1) {
+        // 新しい slotブロックの開始
+        consecutive = 1;
+        expected = 2;
+      } else if (n !== null && n !== expected) {
+        // 連続崩れ、リセット
+        consecutive = 0; expected = 1;
+      }
+    }
+    // 5個以上連続する列がスコア対象 (1,2,3,4,5 など最低限のslotブロック)
+    if (maxRun >= 5 && maxRun > bestScore) {
+      bestScore = maxRun;
+      bestCol = c;
+    }
+  }
+  return bestCol;
+}
+
+/* ============================================================ ユーティリティ ============================================================ */
+function cleanText(v) {
+  if (v === null || v === undefined) return '';
+  let s;
+  if (typeof v === 'object') {
+    if (v.text) s = v.text;
+    else if (v.richText) s = v.richText.map(r => r.text).join('');
+    else if (v.result) s = String(v.result);
+    else s = String(v);
+  } else s = String(v);
+  return s.split(/\s+/).filter(x => x).join(' ');
+}
+function parseDate(v) {
+  if (v === null || v === undefined || v === '') return { disp: '', dt: null, hasWildcard: false, isFuture: false, isEmpty: true };
+  if (v instanceof Date) return { disp: v.toISOString().substring(0,10), dt: v, hasWildcard: false, isFuture: v.getTime() > TODAY.getTime(), isEmpty: false };
+  if (typeof v === 'number' && v > 30000 && v < 60000) {
+    const dt = new Date(Date.UTC(1899, 11, 30 + Math.floor(v)));
+    return { disp: dt.toISOString().substring(0,10), dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false };
+  }
+  const s = cleanText(v);
+  if (s.includes('*')) return { disp: s, dt: null, hasWildcard: true, isFuture: false, isEmpty: false };
+  // 正規化: 「年月日」「年月」混じりの和文表記を /区切りに統一
+  //   例: "2011年3月15日" → "2011/3/15", "2011/3月" → "2011/3", "2011年3月" → "2011/3"
+  const norm = s
+    .replace(/[年]/g, '/')
+    .replace(/月\s*(\d)/g, '/$1')
+    .replace(/[月日]/g, '')
+    .replace(/\/+/g, '/')
+    .replace(/\/\s*$/, '')
+    .trim();
+  const m = norm.match(/^\s*(\d{4})[/\-\.](\d{1,2})[/\-\.](\d{1,2})/);
+  if (m) {
+    const dt = new Date(Date.UTC(+m[1], +m[2]-1, +m[3]));
+    return { disp: s, dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false };
+  }
+  // YYYY.M / YYYY/M / YYYY-M (月のみ、日省略) → 月の1日として扱う
+  const m2 = norm.match(/^\s*(\d{4})[/\-\.](\d{1,2})\s*$/);
+  if (m2) {
+    const dt = new Date(Date.UTC(+m2[1], +m2[2]-1, 1));
+    return { disp: s, dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false };
+  }
+  return { disp: s, dt: null, hasWildcard: false, isFuture: false, isEmpty: false };
+}
+
+// 候補値の「日付らしさ」スコア: 高いほど確かな日付
+function dateLikenessScore(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  if (v instanceof Date) return 100;
+  if (typeof v === 'object' && v.result instanceof Date) return 100;
+  // 裸の数値は単価などの紛れ込みが多いためスコアを低く抑える
+  // (本物の日付なら通常 Date型 か YYYY/MM/DD 文字列で入る)
+  if (typeof v === 'number' && v > 30000 && v < 60000) return 25;
+  const s = String(typeof v === 'object' && v.text ? v.text : v).trim();
+  if (!s) return 0;
+  // ワイルドカード入り (2026/*/*) は「日付未定だが入荷予定」の明確な意図 → 高優先
+  if (s.includes('*') && /\d/.test(s)) return 95;
+  if (/^\d{4}[/\-.]\d{1,2}[/\-.]\d{1,2}/.test(s)) return 80;     // YYYY/MM/DD
+  if (/^\d{4}年\d{1,2}月\d{1,2}日?/.test(s)) return 80;          // YYYY年MM月DD日
+  if (/^\d{4}[/\-.]\d{1,2}\s*$/.test(s)) return 60;              // YYYY/MM
+  if (/^\d{4}[年/\-.]\d{1,2}月\s*$/.test(s)) return 60;          // YYYY/MM月, YYYY年MM月
+  if (/^\d{4}\s*$/.test(s)) return 30;                           // YYYY単独（弱い候補）
+  return 10;
+}
+
+// YYYY単独セルの後続行から月日を拾って補完する
+// 取れない場合は YYYY/1/1 として扱う(案A)
+function enrichArrivalDate(parsed, ws, arrivalCol, arrivalRow) {
+  if (parsed.dt !== null || parsed.isEmpty || parsed.hasWildcard || arrivalRow === null) return parsed;
+  const yearMatch = String(parsed.disp).trim().match(/^(\d{4})$/);
+  if (!yearMatch) return parsed;
+  const year = parseInt(yearMatch[1], 10);
+  if (year < 1900 || year > 2100) return parsed;
+  // 後続最大3行を見て月日パターンを探す
+  let mo = null, dy = null;
+  for (let rr = arrivalRow + 1; rr <= Math.min(arrivalRow + 3, ws.rowCount); rr++) {
+    const v = ws.getCell(rr, arrivalCol).value;
+    if (v === null || v === undefined || v === '') continue;
+    const sStr = cleanText(v);
+    let m = sStr.match(/^(\d{1,2})月(\d{1,2})日?/);
+    if (m) { mo = +m[1]; dy = +m[2]; break; }
+    m = sStr.match(/^(\d{1,2})[/\-.](\d{1,2})\s*$/);
+    if (m) { mo = +m[1]; dy = +m[2]; break; }
+  }
+  if (mo !== null) {
+    const dt = new Date(Date.UTC(year, mo - 1, dy));
+    return { disp: `${year}/${mo}/${dy}`, dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false };
+  }
+  // 月日見つからず → 案A: YYYY/1/1
+  const dt = new Date(Date.UTC(year, 0, 1));
+  return { disp: `${year}/1/1 (年のみ)`, dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false };
+}
+const PENDING_SHEET_KEYWORDS = ['待ち', '購買', '依頼', '予定', '発注'];
+function isPendingSheet(name) { return PENDING_SHEET_KEYWORDS.some(kw => name.includes(kw)); }
+function isDuplicateSheet(name) { return /\s*\(\d{1,2}\)\s*$/.test(name); }
+function isExcludedSheet(name) { return ['不明品', 'Glass', 'テスト', 'test', 'フォーマット'].some(kw => name.includes(kw)); }
+function isExcludedFile(name, folderKey) {
+  const pattern = (folderKey && folderKey.startsWith('substrate'))
+    ? SUBSTRATE_FILE_PATTERN
+    : PRODUCT_FILE_PATTERN;
+  if (!pattern.test(name)) return true;
+  if (EXCLUDE_FILE_KW.some(kw => name.includes(kw))) return true;
+  return false;
+}
+function getExcludeReason(name, folderKey) {
+  const pattern = (folderKey && folderKey.startsWith('substrate'))
+    ? SUBSTRATE_FILE_PATTERN
+    : PRODUCT_FILE_PATTERN;
+  const patternLabel = (folderKey && folderKey.startsWith('substrate'))
+    ? 'KIT で始まらない'
+    : '品名識別子なし(★/2★/φXinch始まりでない)';
+  if (!pattern.test(name)) return patternLabel;
+  for (const kw of EXCLUDE_FILE_KW) if (name.includes(kw)) return `${kw} を含む`;
+  return '';
+}
+function extractProductName(filename) {
+  let name = filename.replace(/\.[^.]+$/, '');
+  name = name.replace(/^[0-9]*★\s*/, '');
+  name = name.replace(/^φ\s*\d+\s*inch\s+/i, '');
+  name = name.replace(/_\d{8}[A-Z]?\s*$/, '');
+  name = name.replace(/_\d{6}\s*$/, '');
+  return name.replace(/\s+/g, ' ').trim();
+}
+function findSlotBlocks(ws, slotCol) {
+  const blocks = []; let curStart = null, curEnd = null;
+  for (let r = 1; r <= ws.rowCount; r++) {
+    const row = ws.getRow(r);
+    if (row.hidden) {
+      if (curStart !== null) { blocks.push({ start: curStart, end: curEnd }); curStart = null; }
+      continue;
+    }
+    const n = toSlotNumber(ws.getCell(r, slotCol).value);
+    if (n !== null) {
+      if (curStart === null) curStart = r;
+      curEnd = r;
+    } else {
+      if (curStart !== null) { blocks.push({ start: curStart, end: curEnd }); curStart = null; }
+    }
+  }
+  if (curStart !== null) blocks.push({ start: curStart, end: curEnd });
+  return blocks;
+}
+
+/* ============================================================ ファイル分析 ============================================================ */
+
+// 基板用: WALTS_SubstrateScanner を ExcelJS Workbook 経由で呼ぶラッパー
+async function analyzeSubstrateWorkbook(arrayBuffer, filename, fileMeta) {
+  if (!window.WALTS_SubstrateScanner) {
+    throw new Error('WALTS_SubstrateScanner.js が読み込まれていません');
+  }
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(arrayBuffer);
+  const mtime = fileMeta?.lastModifiedDateTime ? new Date(fileMeta.lastModifiedDateTime) : null;
+  const summary = window.WALTS_SubstrateScanner.scanWorkbook(wb, filename, { fileModifiedDate: mtime });
+  // file_mtime を fileMeta から上書き (scanWorkbook はISO文字列にするが、念のため統一)
+  if (fileMeta?.lastModifiedDateTime) summary.file_mtime = fileMeta.lastModifiedDateTime;
+  // v5.1: SharePoint Excel on Browser リンク用に web_url を付与
+  summary.web_url = fileMeta?.webUrl || null;
+  summary.file_size = fileMeta?.size || null;
+  return summary;
+}
+
+async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) {
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(arrayBuffer);
+  
+  const product = extractProductName(filename) || filename;
+  const summary = {
+    product, file: filename,
+    location_origin: locationOrigin,
+    file_mtime: fileMeta?.lastModifiedDateTime || null,
+    file_size: fileMeta?.size || null,
+    web_url: fileMeta?.webUrl || null,
+    stock: 0, reserved: 0, used: 0,
+    dummy_stock: 0, dummy_reserved: 0,
+    incoming_unreserved: 0, incoming_reserved: 0,
+    reserved_customers: new Set(),
+    incoming_customers: new Set(),
+    locations: new Set(),
+    latest_arrival: null,
+    lots: [], incoming_lots: [],
+    sheet_count: wb.worksheets.length,
+    skipped_ancient: [], skipped_noinfo: [],
+  };
+  let latestArrivalDt = null;
+  
+  for (const ws of wb.worksheets) {
+    const sn = ws.name;
+    if (isDuplicateSheet(sn)) continue;
+    if (isExcludedSheet(sn)) continue;
+    
+    const cols = detectColumns(ws);
+    if (!cols.slot) continue;
+    
+    const sheetIsPending = isPendingSheet(sn);
+    const blocks = findSlotBlocks(ws, cols.slot);
+    
+    for (const block of blocks) {
+      const { start, end } = block;
+      let lotName = '';
+      if (cols.Lot) {
+        const v = ws.getCell(start, cols.Lot).value;
+        if (v) lotName = cleanText(v);
+        if (!lotName) {
+          // 上方向に探す(他のロットを越えない範囲で、空でない最初の値)
+          for (let rr = start - 1; rr >= 1; rr--) {
+            if (toSlotNumber(ws.getCell(rr, cols.slot).value) !== null) break;
+            const v2 = ws.getCell(rr, cols.Lot).value;
+            if (v2) {
+              const c = cleanText(v2);
+              // ヘッダー「Lot#」「Lot」自体は除外
+              if (c && c !== 'Lot#' && c !== 'Lot' && c !== 'lot') { lotName = c; break; }
+            }
+          }
+        }
+      }
+      if (!lotName) lotName = cleanText(sn);
+      
+      let arrivalRaw = null, arrivalRow = null;
+      if (cols['入荷日']) {
+        // STEP1: ロットブロック全体(start〜end)を走査し、最も日付らしい値を採用
+        let bestScore = 0;
+        for (let rr = start; rr <= end; rr++) {
+          const v = ws.getCell(rr, cols['入荷日']).value;
+          const score = dateLikenessScore(v);
+          if (score > bestScore) { arrivalRaw = v; arrivalRow = rr; bestScore = score; }
+        }
+        // STEP2: 見つからなければ上方向に探す(日付らしき値だけ拾う)
+        if (arrivalRaw === null) {
+          for (let rr = start - 1; rr >= 1; rr--) {
+            // 別のロットの slot番号(1-25)に達したら終了
+            if (toSlotNumber(ws.getCell(rr, cols.slot).value) !== null) break;
+            
+            const v = ws.getCell(rr, cols['入荷日']).value;
+            if (v === null || v === undefined || v === '') continue;
+            // 日付らしき値かチェック
+            if (v instanceof Date) { arrivalRaw = v; arrivalRow = rr; break; }
+            if (typeof v === 'number' && v > 30000 && v < 60000) { arrivalRaw = v; arrivalRow = rr; break; }
+            const sStr = String(typeof v === 'object' && v.text ? v.text : v).trim();
+            // 日付パターン: YYYY/MM/DD, YYYY/MM, YYYY/M, YYYY単独, *含む
+            if (/^\d{4}([/\-.]\d{1,2}([/\-.]\d{1,2})?)?\s*$/.test(sStr) || (sStr.includes('*') && /\d/.test(sStr))) {
+              arrivalRaw = v; arrivalRow = rr; break;
+            }
+          }
+        }
+      }
+      let parsed = parseDate(arrivalRaw);
+      if (cols['入荷日']) parsed = enrichArrivalDate(parsed, ws, cols['入荷日'], arrivalRow);
+      const { disp: arrivalDisp, dt: arrivalDt, hasWildcard, isFuture, isEmpty } = parsed;
+      
+      // 入荷予定判定 (案E: 日付ファースト):
+      //   1. 入荷日に * 含む → 入荷予定 (ワイルドカード)
+      //   2. 入荷日が未来 → 入荷予定
+      //   3. シート名に「待ち/購買/依頼/予定/発注」を含む & 確定日付なし → 入荷予定
+      //   4. シート名キーワードあり + 過去の確定日付 → 現有在庫 (実物が到着している)
+      //   5. 入荷日が完全空欄 + シート名キーワードなし → 除外 (古い記入漏れと判断)
+      const hasPastDate = arrivalDt && !isFuture;
+      const isIncoming = hasWildcard || isFuture || (sheetIsPending && !hasPastDate);
+      const isSkipNoInfo = isEmpty && !sheetIsPending && !hasWildcard && !isFuture;
+      // 色判定の反転ロジックも「日付ファースト」: 過去日付があれば通常の色判定に戻す
+      const useReverseLogic = sheetIsPending && !hasPastDate;
+      const classifier = useReverseLogic ? classifyPending : classifyNormal;
+      
+      // 入荷日空欄 + キーワードなし のロットは除外
+      if (isSkipNoInfo) {
+        if (!summary.skipped_noinfo) summary.skipped_noinfo = [];
+        summary.skipped_noinfo.push({ sheet: sn, lot: lotName });
+        continue;
+      }
+      
+      let isDummy = false, isTooOld = false;
+      if (arrivalDt) {
+        const years = (TODAY - arrivalDt) / (365.25 * 86400000);
+        if (years >= 5) isTooOld = true;
+        else if (years >= 2) isDummy = true;
+      }
+      if (isTooOld) { summary.skipped_ancient.push({ sheet: sn, lot: lotName, arrival: arrivalDisp }); continue; }
+      
+      const lotLocs = new Set();
+      if (cols['保管']) {
+        for (let r = start; r <= end; r++) {
+          if (ws.getRow(r).hidden) continue;
+          const v = ws.getCell(r, cols['保管']).value;
+          const c = cleanText(v);
+          if (c && c !== '-' && c !== '') lotLocs.add(c);
+        }
+      }
+      
+      let countA = 0, countB = 0, countC = 0;
+      const customers = [];
+      for (let r = start; r <= end; r++) {
+        if (ws.getRow(r).hidden) continue;
+        const status = classifier(ws.getCell(r, cols.slot));
+        if (useReverseLogic) { if (status === '未予約') countA++; else countB++; }
+        else { if (status === '在庫') countA++; else if (status === '予約') countB++; else countC++; }
+        const targetStatus = useReverseLogic ? '予約済' : '予約';
+        if (status === targetStatus && cols['顧客']) {
+          const cust = cleanText(ws.getCell(r, cols['顧客']).value);
+          if (cust && cust !== '-' && cust !== '') customers.push(cust);
+        }
+      }
+      
+      const uniqCustomers = [...new Set(customers)].sort();
+      const lotInfo = {
+        lot: lotName, sheet: sn,
+        arrival_disp: arrivalDisp,
+        arrival_iso: arrivalDt ? arrivalDt.toISOString().substring(0,10) : null,
+        arrival_wildcard: hasWildcard, arrival_empty: isEmpty, arrival_future: isFuture,
+        customers: uniqCustomers, locations: [...lotLocs].sort(),
+        is_dummy: isDummy, is_incoming: isIncoming,
+      };
+      
+      if (isIncoming) {
+        lotInfo.unreserved = countA; lotInfo.reserved = countB; lotInfo.total = countA + countB;
+        summary.incoming_unreserved += countA; summary.incoming_reserved += countB;
+        customers.forEach(c => summary.incoming_customers.add(c));
+        summary.incoming_lots.push(lotInfo);
+      } else {
+        lotInfo.stock = countA; lotInfo.reserved = countB; lotInfo.used = countC;
+        if (isDummy) { summary.dummy_stock += countA; summary.dummy_reserved += countB; }
+        else { summary.stock += countA; summary.reserved += countB; }
+        summary.used += countC;
+        customers.forEach(c => summary.reserved_customers.add(c));
+        lotLocs.forEach(l => summary.locations.add(l));
+        if (arrivalDt && (!latestArrivalDt || arrivalDt > latestArrivalDt)) {
+          latestArrivalDt = arrivalDt;
+          summary.latest_arrival = arrivalDt.toISOString().substring(0,10);
+        }
+        summary.lots.push(lotInfo);
+      }
+    }
+  }
+  
+  summary.locations = [...summary.locations].sort();
+  summary.reserved_customers = [...summary.reserved_customers].sort();
+  summary.incoming_customers = [...summary.incoming_customers].sort();
+  return summary;
+}
+
+/* ============================================================ 並列処理 ============================================================ */
+async function pMap(items, mapper, concurrency = 5) {
+  const results = new Array(items.length);
+  let idx = 0;
+  async function worker() {
+    while (idx < items.length) {
+      const i = idx++;
+      try { results[i] = { ok: true, value: await mapper(items[i], i) }; }
+      catch (e) { results[i] = { ok: false, error: e.message || String(e), item: items[i] }; }
+    }
+  }
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
+
+// === v5.0: SharePoint設定 ===
+const SP_CONFIG = {
+  clientId: 'a81b7c8f-58e0-429d-9713-e918c810b05b',
+  tenantId: 'c0496682-4f81-4b60-9e07-b53a4eb48641',
+  redirectUri: window.location.origin + window.location.pathname,
+  scopes: ['Files.Read.All', 'Sites.Read.All', 'User.Read'],
+  hostname: 'waltsjp.sharepoint.com',
+  sitePath: '/sites/msteams_ba5416',
+  folders: {
+    wafer_honsha: '本社/ウエハ管理表',
+    wafer_itoshima: '本社/ウエハ管理表/糸島保管ウエハ',
+    substrate_honsha: '本社/基板管理表',
+  },
+};
+
+// === v5.0: MSAL認証 ===
+let msalInstance = null;
+let cachedAccessToken = null;
+
+async function initMsal() {
+  if (msalInstance) return msalInstance;
+  msalInstance = new msal.PublicClientApplication({
+    auth: {
+      clientId: SP_CONFIG.clientId,
+      authority: `https://login.microsoftonline.com/${SP_CONFIG.tenantId}`,
+      redirectUri: SP_CONFIG.redirectUri,
+    },
+    cache: { cacheLocation: 'sessionStorage' },
+  });
+  await msalInstance.initialize();
+  return msalInstance;
+}
+
+async function getAccessToken() {
+  if (cachedAccessToken) return cachedAccessToken;
+  const instance = await initMsal();
+  const request = { scopes: SP_CONFIG.scopes };
+  let account = instance.getAllAccounts()[0];
+  let result;
+  if (account) {
+    try {
+      result = await instance.acquireTokenSilent({ ...request, account });
+    } catch (e) {
+      console.warn('Silent token acquisition failed, falling back to popup:', e);
+      result = await instance.acquireTokenPopup(request);
+    }
+  } else {
+    result = await instance.acquireTokenPopup(request);
+  }
+  cachedAccessToken = result.accessToken;
+  return cachedAccessToken;
+}
+
+/* ============================================================
+   v5.0 Step A: IndexedDB キャッシュ層
+   ============================================================ */
+const CACHE_DB_NAME = 'walts_viewer';
+const CACHE_STORE = 'inventory_cache';
+const CACHE_VERSION = 1;
+// 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
+// (キャッシュ全クリアになる)
+const CACHE_SCHEMA_VERSION = 'v5.0-substrate-scanner-2026-05-19';
+
+let _cacheDbPromise = null;
+function openCache() {
+  if (_cacheDbPromise) return _cacheDbPromise;
+  _cacheDbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(CACHE_DB_NAME, CACHE_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(CACHE_STORE)) {
+        db.createObjectStore(CACHE_STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return _cacheDbPromise;
+}
+
+async function cacheGet(id) {
+  const db = await openCache();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CACHE_STORE, 'readonly');
+    const req = tx.objectStore(CACHE_STORE).get(id);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function cacheGetAll() {
+  const db = await openCache();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CACHE_STORE, 'readonly');
+    const req = tx.objectStore(CACHE_STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function cachePut(item) {
+  const db = await openCache();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CACHE_STORE, 'readwrite');
+    tx.objectStore(CACHE_STORE).put(item);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function cacheDelete(id) {
+  const db = await openCache();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CACHE_STORE, 'readwrite');
+    tx.objectStore(CACHE_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function cacheClear() {
+  const db = await openCache();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CACHE_STORE, 'readwrite');
+    tx.objectStore(CACHE_STORE).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// スキーマバージョン管理 (古いキャッシュを自動廃棄)
+async function ensureCacheSchema() {
+  const stored = localStorage.getItem('walts_cache_schema');
+  if (stored !== CACHE_SCHEMA_VERSION) {
+    console.log(`[Cache] スキーマ更新 ${stored} → ${CACHE_SCHEMA_VERSION}, キャッシュをクリア`);
+    await cacheClear();
+    localStorage.setItem('walts_cache_schema', CACHE_SCHEMA_VERSION);
+  }
+}
+
+async function cacheStats() {
+  const all = await cacheGetAll();
+  const totalBytes = all.reduce((s, x) => s + (JSON.stringify(x).length || 0), 0);
+  return { count: all.length, totalBytes };
+}
+
+// グローバルから確認用
+window.cacheDebug = {
+  stats: cacheStats,
+  getAll: cacheGetAll,
+  clear: cacheClear,
+};
+
+/* ============================================================
+   SharePoint データ取得 (Step B 以降で差分判定対応予定)
+   ============================================================ */
+// === v5.0 Step B: SharePoint データ取得 (差分判定 + IndexedDBキャッシュ) ===
+// opts.forceRefresh = true でキャッシュ無視
+async function fetchInventoryFromSharePoint(progressCb, opts = {}) {
+  const forceRefresh = opts.forceRefresh === true;
+  await ensureCacheSchema();
+  
+  const token = await getAccessToken();
+  const allWafer = [];
+  const allSubstrate = [];
+  const stats = {
+    wafer_honsha: { ok: 0, fail: 0, skip: 0, cached: 0 },
+    wafer_itoshima: { ok: 0, fail: 0, skip: 0, cached: 0 },
+    substrate_honsha: { ok: 0, fail: 0, skip: 0, cached: 0 }
+  };
+  // folderKey から振り分け先配列を返すヘルパ
+  const targetOf = (fk) => fk.startsWith('substrate') ? allSubstrate : allWafer;
+
+  // サイト情報・ドライブIDは1回だけ取得して両フォルダで使い回し
+  if (progressCb) progressCb('🔍 サイト/ドライブ情報取得中...');
+  const r1 = await fetch(`https://graph.microsoft.com/v1.0/sites/${SP_CONFIG.hostname}:${SP_CONFIG.sitePath}`, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r1.ok) throw new Error(`サイト情報取得失敗: HTTP ${r1.status}`);
+  const site = await r1.json();
+  const r2 = await fetch(`https://graph.microsoft.com/v1.0/sites/${site.id}/drive`, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r2.ok) throw new Error(`ドライブ情報取得失敗: HTTP ${r2.status}`);
+  const drive = await r2.json();
+  const driveId = drive.id;
+
+  // 既存キャッシュ全件を取得 (削除判定用)
+  const allCached = await cacheGetAll();
+  const cacheMap = new Map(allCached.map(c => [c.id, c]));
+  const seenIds = new Set();
+  console.log(`[Cache] 既存キャッシュ: ${allCached.length}件 (forceRefresh=${forceRefresh})`);
+
+  // ウエハ本社・糸島・基板本社を順次処理
+  for (const folderKey of ['wafer_honsha', 'wafer_itoshima', 'substrate_honsha']) {
+    const folderPath = SP_CONFIG.folders[folderKey];
+    const folderLabel = 
+      folderKey === 'wafer_honsha' ? '本社ウエハ' :
+      folderKey === 'wafer_itoshima' ? '糸島ウエハ' :
+      folderKey === 'substrate_honsha' ? '本社基板' : folderKey;
+    
+    if (progressCb) progressCb(`📂 ${folderLabel}: ファイル一覧取得中...`);
+    const listUrl = `https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${encodeURIComponent(folderPath)}:/children?$top=200`;
+    const r3 = await fetch(listUrl, { headers: { Authorization: 'Bearer ' + token } });
+    if (!r3.ok) throw new Error(`${folderLabel} ファイル一覧取得失敗: HTTP ${r3.status}`);
+    const list = await r3.json();
+    const allEntries = list.value || [];
+    const allFiles = allEntries.filter(f => f.file);
+    const allFolders = allEntries.filter(f => f.folder);
+    console.log(`[Debug] ${folderLabel} (${folderPath}): エントリ総数=${allEntries.length} (ファイル=${allFiles.length}, フォルダ=${allFolders.length})`);
+    if (allFolders.length > 0) {
+      console.log(`[Debug] ${folderLabel} サブフォルダ:`, allFolders.map(f => f.name));
+    }
+    if (allFiles.length > 0) {
+      console.log(`[Debug] ${folderLabel} ファイル名:`, allFiles.map(f => f.name));
+    }
+
+    // 対象ファイル絞り込み
+    const targetFiles = [];
+    for (const f of allFiles) {
+      if (!f.name.toLowerCase().endsWith('.xlsx')) { stats[folderKey].skip++; continue; }
+      if (isExcludedFile(f.name, folderKey)) { stats[folderKey].skip++; continue; }
+      targetFiles.push(f);
+      seenIds.add(f.id);
+    }
+
+    // === キャッシュ Hit / Miss 判定 ===
+    const toFetch = [];
+    let hitCount = 0;
+    for (const fileMeta of targetFiles) {
+      const cached = cacheMap.get(fileMeta.id);
+      if (!forceRefresh && cached && cached.lastModifiedDateTime === fileMeta.lastModifiedDateTime) {
+        // キャッシュHit: そのまま使う
+        // v5.1: 旧キャッシュに web_url が無いケースを救済 (キャッシュレコード側の webUrl から補完)
+        if (!cached.summary.web_url && cached.webUrl) {
+          cached.summary.web_url = cached.webUrl;
+        }
+        targetOf(folderKey).push(cached.summary);
+        stats[folderKey].ok++;
+        stats[folderKey].cached++;
+        hitCount++;
+      } else {
+        toFetch.push(fileMeta);
+      }
+    }
+    
+    console.log(`[Cache] ${folderLabel}: 全${targetFiles.length}件 / キャッシュ命中${hitCount}件 / 取得必要${toFetch.length}件`);
+
+    if (toFetch.length === 0) {
+      if (progressCb) progressCb(`✅ ${folderLabel}: 全${targetFiles.length}件キャッシュ命中 (取得不要)`);
+      continue;
+    }
+
+    if (progressCb) progressCb(`⚙️ ${folderLabel}: ${toFetch.length}件取得中 (キャッシュ命中${hitCount}件)`);
+    let done = 0;
+    const results = await pMap(toFetch, async (fileMeta) => {
+      const filePath = folderPath + '/' + fileMeta.name;
+      const url = `https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${encodeURIComponent(filePath)}:/content`;
+      try {
+        const r = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const buf = await r.arrayBuffer();
+        const summary = folderKey.startsWith('substrate')
+          ? await analyzeSubstrateWorkbook(buf, fileMeta.name, fileMeta)
+          : await analyzeWorkbook(buf, fileMeta.name, fileMeta, folderKey);
+        // キャッシュに保存
+        try {
+          await cachePut({
+            id: fileMeta.id,
+            name: fileMeta.name,
+            lastModifiedDateTime: fileMeta.lastModifiedDateTime,
+            size: fileMeta.size || null,
+            webUrl: fileMeta.webUrl || null,
+            locationOrigin: folderKey,
+            summary: summary,
+            savedAt: new Date().toISOString(),
+          });
+        } catch (e) {
+          console.warn(`[Cache] put失敗 (${fileMeta.name}):`, e);
+        }
+        return summary;
+      } finally {
+        done++;
+        if (progressCb) progressCb(`⚙️ ${folderLabel}: ${done}/${toFetch.length}件取得中 (キャッシュ命中${hitCount}件)`);
+      }
+    }, PARALLEL_LIMIT);
+
+    for (const r of results) {
+      if (r.ok) { targetOf(folderKey).push(r.value); stats[folderKey].ok++; }
+      else { stats[folderKey].fail++; console.warn(`${folderLabel} 失敗: ${r.item?.name}: ${r.error}`); }
+    }
+  }
+
+  // === 削除されたファイルをキャッシュからも削除 ===
+  let deletedCount = 0;
+  for (const cached of allCached) {
+    if (!seenIds.has(cached.id)) {
+      try {
+        await cacheDelete(cached.id);
+        deletedCount++;
+      } catch (e) {
+        console.warn(`[Cache] delete失敗:`, e);
+      }
+    }
+  }
+  if (deletedCount > 0) {
+    console.log(`[Cache] ${deletedCount}件の削除済みファイルをキャッシュからも削除`);
+  }
+
+  // v4.4互換のため、不足フィールドを補完
+  for (const p of [...allWafer, ...allSubstrate]) {
+    if (p.stock_reserved === undefined) p.stock_reserved = p.reserved || 0;
+    if (!p.skipped_dup) p.skipped_dup = [];
+    if (!p.skipped_excl) p.skipped_excl = [];
+    if (!Array.isArray(p.lots)) p.lots = [];
+    if (!Array.isArray(p.history)) p.history = [];
+    if (!p.last_tx) p.last_tx = null;
+  }
+
+  return { wafer: allWafer, substrate: allSubstrate, stats };
+}
+
+// === v5.0: 起動フロー ===
+async function bootSharePointFlow() {
+  const statusText = document.getElementById('fetch-status-text');
+  const fetchCounts = document.getElementById('fetch-counts');
+  const refetchBtn = document.getElementById('btn-refetch');
+  const exportBtn = document.getElementById('btn-export-json');
+  const errorPanel = document.getElementById('fetch-error-panel');
+  const errorMsg = document.getElementById('fetch-error-msg');
+  errorPanel.style.display = 'none';
+  refetchBtn.disabled = true;
+  exportBtn.disabled = true;
+
+  try {
+    statusText.textContent = '🔐 認証中...';
+    const t0 = performance.now();
+    const { wafer, substrate, stats } = await fetchInventoryFromSharePoint(
+      (msg) => { statusText.textContent = msg; }
+    );
+    const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
+
+    INVENTORY = wafer;
+    SUBSTRATE = substrate;
+    const honshaCount = stats.wafer_honsha.ok;
+    const itoshimaCount = stats.wafer_itoshima.ok;
+    const substrateCount = stats.substrate_honsha.ok;
+    const failTotal = stats.wafer_honsha.fail + stats.wafer_itoshima.fail + stats.substrate_honsha.fail;
+    const ts = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    statusText.innerHTML = `✅ 取得完了 (${elapsed}秒) - 最終取得: ${ts}` + (failTotal > 0 ? ` <span style="color:#c33;">⚠️ ${failTotal}件失敗</span>` : '');
+    fetchCounts.textContent = `本社 ${honshaCount}品名 / 糸島 ${itoshimaCount}品名 / 基板 ${substrateCount}品名`;
+    refetchBtn.disabled = false;
+    exportBtn.disabled = (wafer.length + substrate.length === 0);
+
+    renderAll();
+  } catch (err) {
+    console.error('SharePoint fetch error:', err);
+    statusText.textContent = '❌ データ取得に失敗しました';
+    errorPanel.style.display = 'block';
+    errorMsg.textContent = err.message || String(err);
+    refetchBtn.disabled = false;
+    renderAll();  // 空のまま画面だけは出す
+  }
+}
+
+// === v5.0: ボタンイベント ===
+document.getElementById('btn-refetch').addEventListener('click', () => {
+  cachedAccessToken = null;  // 念のためトークン破棄して再取得
+  bootSharePointFlow();
+});
+
+document.getElementById('btn-export-json').addEventListener('click', () => {
+  if ((!INVENTORY || INVENTORY.length === 0) && (!SUBSTRATE || SUBSTRATE.length === 0)) {
+    alert('エクスポートできるデータがありません。');
+    return;
+  }
+  const exportObj = {
+    generated_at: new Date().toISOString(),
+    folder: 'combined',
+    inventory_count: INVENTORY.length,
+    substrate_count: SUBSTRATE.length,
+    inventory: INVENTORY,
+    substrate: SUBSTRATE,
+  };
+  const json = JSON.stringify(exportObj, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+  a.href = url;
+  a.download = `WALTS_inventory_combined_${ts}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+// === v5.0: 起動 ===
+// 初回はまず空で描画 (UIスケルトン表示) → 次にSharePoint取得
+renderAll();
+bootSharePointFlow();
+
+</script>
+</body>
+</html>
