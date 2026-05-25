@@ -266,6 +266,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   .section-header.stock { color: var(--accent); }
   .section-header.incoming { color: var(--incoming); }
+  .section-header.ancient { color: #8a6d00; background: #fdf6e3; border-top: 2px solid #e0c060; }
   .section-header .badge {
     background: rgba(0,0,0,0.06); padding: 1px 8px;
     font-size: 10px; font-weight: 600; border-radius: 2px;
@@ -562,6 +563,31 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     font-size: 8px; color: var(--ink-faint);
     margin-top: 2px;
   }
+
+  /* 棚卸し(5年以上) サマリ枠: dummy-mini を流用しつつアクセント */
+  .pc-stat.ancient-mini {
+    text-align: center; padding: 0 8px;
+  }
+  .pc-stat.ancient-mini .label {
+    font-size: 9px; color: #8a6d00;
+    letter-spacing: 0.05em; margin-bottom: 2px; font-weight: 700;
+  }
+  .pc-stat.ancient-mini .val-combo { gap: 2px; }
+  .pc-stat.ancient-mini .val-combo .val {
+    font-size: 18px; font-weight: 800; color: #8a6d00;
+    line-height: 1;
+  }
+  .pc-stat.ancient-mini .val-combo .val.zero { color: var(--ink-faint); }
+  .pc-stat.ancient-mini .val-combo .val-plus {
+    font-size: 11px; color: #b09030;
+  }
+  .pc-stat.ancient-mini .sub {
+    font-size: 8px; color: #8a6d00;
+    margin-top: 2px;
+  }
+  .pc-stat.ancient-mini.zero { opacity: 0.55; }
+  .pc-stat.ancient-mini.zero .label,
+  .pc-stat.ancient-mini.zero .sub { color: var(--ink-faint); }
 
 
   /* アコーディオン制御 */
@@ -1509,6 +1535,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
       <input id="search" type="text" placeholder="品名・ロット・顧客・保管場所で検索">
     </div>
     <label><input type="checkbox" id="show-empty"> 在庫0のロットも表示</label>
+    <label><input type="checkbox" id="show-ancient"> 🗃️ 5年以上の除外分も表示（棚卸し）</label>
   </div>
 
   <div id="product-cards"></div>
@@ -1583,8 +1610,9 @@ window.collapseAll = function() {
   render();
 };
 
-const TODAY = new Date('2026-05-13T09:35:00');
-const INDEX_UPDATE_TIME = new Date('2026-05-13T09:35:00');
+// v5.1: 固定日付 → 実行時の現在時刻に変更 (時間経過によるダミー判定や「○分前」表示のズレを解消)
+const TODAY = new Date();
+const INDEX_UPDATE_TIME = new Date();
 
 /* ============================================================
    発注状態 (localStorage)
@@ -1693,9 +1721,8 @@ function renderStatusPill(p) {
    ============================================================ */
 const GROUP_DEFS = [
   { id: 'FC',          label: 'FC シリーズ',         color: '#1a4d8f', test: p => /^FC\d/i.test(p) },
-  { id: 'CC',          label: 'CC シリーズ',         color: '#2d6a3e', test: p => /^CC\d/i.test(p) },
+  { id: 'CCIP',        label: 'CC / IP シリーズ',    color: '#2d6a3e', test: p => /^CC\d/i.test(p) || /^IP\d/i.test(p) },
   { id: 'HBM',         label: 'HBM / IPHBM 系',      color: '#5a4a8a', test: p => /^(HBM|IPHBM)/i.test(p) },
-  { id: 'IP',          label: 'IP シリーズ',         color: '#8a4a2e', test: p => /^IP\d/i.test(p) },
   { id: 'MB',          label: 'MB シリーズ',         color: '#8a6d00', test: p => /^MB\d/i.test(p) },
   { id: 'WM',          label: 'WM / IPWM 系',        color: '#2d5a8a', test: p => /^(WM|IPWM)\d/i.test(p) },
   { id: 'HPW',         label: 'HPW シリーズ',        color: '#a02050', test: p => /^HPW/i.test(p) },
@@ -1748,14 +1775,32 @@ function groupedInventory() {
     buckets[g.id].push(p);
   });
   // グループ内はアルファベット順(将来アクセス頻度に切替)
-  Object.values(buckets).forEach(arr => {
-    arr.sort((a, b) => {
-      const c = a.product.localeCompare(b.product, 'ja');
-      if (c !== 0) return c;
-      return (a.location_origin || '').localeCompare(b.location_origin || '');
-    });
+  Object.keys(buckets).forEach(gid => {
+    const arr = buckets[gid];
+    if (gid === 'CCIP') {
+      // v5.1: CC/IP統合グループは「数字(10/40/80...)昇順 → 同数字内はCC先・IP後 → 品名順」
+      arr.sort((a, b) => ccipSortKey(a.product).localeCompare(ccipSortKey(b.product), 'ja'));
+    } else {
+      arr.sort((a, b) => {
+        const c = a.product.localeCompare(b.product, 'ja');
+        if (c !== 0) return c;
+        return (a.location_origin || '').localeCompare(b.location_origin || '');
+      });
+    }
   });
   return buckets;
+}
+
+// v5.1: CC/IP の並び順キー生成
+// 「数字部分(3桁ゼロ埋め)」+「CC=0/IP=1」+「元品名」で、
+// 例: CC40系を全部並べた後に IP40系が来る
+function ccipSortKey(product) {
+  const m = product.match(/^(CC|IP)(\d+)/i);
+  if (!m) return 'zzz_' + product;  // 想定外は末尾
+  const prefix = m[1].toUpperCase();      // CC or IP
+  const num = m[2].padStart(4, '0');      // 数字を4桁ゼロ埋め (10→0010, 40→0040, 80→0080)
+  const prefixOrder = prefix === 'CC' ? '0' : '1';  // CC先, IP後
+  return `${num}_${prefixOrder}_${product}`;
 }
 
 
@@ -1830,9 +1875,11 @@ function renderChanges() {
   let html = '<div class="change-section-label">📝 前回読込から変更されたファイル</div>';
   changes.forEach(c => {
     const dt = new Date(c.mtime);
-    const diffMin = Math.floor((TODAY - dt) / 60000);
+    let diffMin = Math.floor((TODAY - dt) / 60000);
+    if (diffMin < 0) diffMin = 0;  // v5.1: 時計ズレ等で未来日時の場合のガード
     let agoText;
     if (c.isNew) agoText = '🆕新規';
+    else if (diffMin < 1) agoText = 'たった今';
     else if (diffMin < 60) agoText = diffMin + '分前';
     else if (diffMin < 1440) agoText = Math.floor(diffMin/60) + '時間前';
     else agoText = Math.floor(diffMin/1440) + '日前';
@@ -2162,6 +2209,7 @@ function cssId(s) {
 function renderProductCard(p) {
   const q = document.getElementById('search').value.trim();
   const showEmpty = document.getElementById('show-empty').checked;
+  const showAncient = document.getElementById('show-ancient')?.checked ?? false;
   
   // フィルタ判定: 検索クエリが入っている場合、ヒットがゼロならカードごと非表示
   const filterLot = (l) => {
@@ -2184,9 +2232,11 @@ function renderProductCard(p) {
   
   const lots = p.lots.filter(filterLot);  // scanner.pyのシート読み取り順を維持
   const incoming = p.incoming_lots.filter(filterIncoming);
+  // v5.1: 棚卸し用 5年以上ロット (showAncient ON時のみ)
+  const ancientLots = showAncient ? (p.ancient_lots || []).filter(filterIncoming) : [];
   
   // 検索/フィルタ中で両方0件、かつ品名自体も検索ヒットしないなら隠す
-  if (q && lots.length === 0 && incoming.length === 0 && !matchSearch(p.product, q)) {
+  if (q && lots.length === 0 && incoming.length === 0 && ancientLots.length === 0 && !matchSearch(p.product, q)) {
     return '';
   }
   
@@ -2244,6 +2294,17 @@ function renderProductCard(p) {
             </div>
             <div class="sub">参考</div>
           </div>
+          ${showAncient ? `
+          <div class="pc-stat ancient-mini ${((p.ancient_stock||0)+(p.ancient_reserved||0))===0?'zero':''}">
+            <div class="label">🗃️ 棚卸し(5年以上)</div>
+            <div class="val-combo">
+              <span class="val ${(p.ancient_stock||0)===0?'zero':''}">${p.ancient_stock||0}</span>
+              <span class="val-plus">+</span>
+              <span class="val ${(p.ancient_reserved||0)===0?'zero':''}">${p.ancient_reserved||0}</span>
+            </div>
+            <div class="sub">${(p.ancient_lots||[]).length}件</div>
+          </div>
+          ` : ''}
         </div>
       </div>
       
@@ -2264,6 +2325,13 @@ function renderProductCard(p) {
           ? `<div class="empty">${showEmpty ? '該当ロットなし' : '在庫または予約のあるロットはありません (チェックで全件表示)'}</div>`
           : `<div class="lot-table-wrap">${renderLotTable(p, lots, 'stock')}</div>`
         }
+        ${showAncient && ancientLots.length > 0 ? `
+          <div class="section-header ancient">
+            <span>🗃️ 要棚卸しロット（受入から5年以上）</span>
+            <span class="badge">${ancientLots.length}件 / 在庫${p.ancient_stock||0} + 予約${p.ancient_reserved||0}</span>
+          </div>
+          <div class="lot-table-wrap">${renderLotTable(p, ancientLots, 'stock')}</div>
+        ` : ''}
       </div>
     </div>
   `;
@@ -2600,6 +2668,7 @@ function render() {
 
 document.getElementById('search').addEventListener('input', render);
 document.getElementById('show-empty').addEventListener('change', render);
+document.getElementById('show-ancient').addEventListener('change', render);
 
 // タブ切替 (これはINVENTORYに依存しないので即実行OK)
 document.querySelectorAll('.tab').forEach(tab => {
@@ -2982,6 +3051,7 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
     lots: [], incoming_lots: [],
     sheet_count: wb.worksheets.length,
     skipped_ancient: [], skipped_noinfo: [],
+    ancient_stock: 0, ancient_reserved: 0, ancient_lots: [],
   };
   let latestArrivalDt = null;
   
@@ -3075,7 +3145,8 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
         if (years >= 5) isTooOld = true;
         else if (years >= 2) isDummy = true;
       }
-      if (isTooOld) { summary.skipped_ancient.push({ sheet: sn, lot: lotName, arrival: arrivalDisp }); continue; }
+      // v5.1: isTooOld(5年以上)も棚卸し用にカウントするため、ここでは continue しない
+      // (在庫・予約が0なら後段の振り分けでスキップする)
       
       const lotLocs = new Set();
       if (cols['保管']) {
@@ -3108,9 +3179,24 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
         arrival_iso: arrivalDt ? arrivalDt.toISOString().substring(0,10) : null,
         arrival_wildcard: hasWildcard, arrival_empty: isEmpty, arrival_future: isFuture,
         customers: uniqCustomers, locations: [...lotLocs].sort(),
-        is_dummy: isDummy, is_incoming: isIncoming,
+        is_dummy: isDummy, is_incoming: isIncoming, is_ancient: isTooOld,
       };
-      
+
+      // v5.1: 5年以上(isTooOld)は棚卸し枠へ。在庫・予約どちらかがあれば記録、両方0ならスキップ
+      if (isTooOld) {
+        if (countA > 0 || countB > 0) {
+          lotInfo.stock = countA; lotInfo.reserved = countB; lotInfo.used = countC;
+          summary.ancient_stock += countA;
+          summary.ancient_reserved += countB;
+          lotLocs.forEach(l => summary.locations.add(l));
+          summary.ancient_lots.push(lotInfo);
+        } else {
+          // 在庫も予約も無い古いロットは従来通り完全スキップ
+          summary.skipped_ancient.push({ sheet: sn, lot: lotName, arrival: arrivalDisp });
+        }
+        continue;
+      }
+
       if (isIncoming) {
         lotInfo.unreserved = countA; lotInfo.reserved = countB; lotInfo.total = countA + countB;
         summary.incoming_unreserved += countA; summary.incoming_reserved += countB;
