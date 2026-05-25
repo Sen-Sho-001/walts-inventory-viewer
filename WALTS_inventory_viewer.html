@@ -1722,12 +1722,6 @@ function renderStatusPill(p) {
 const GROUP_DEFS = [
   { id: 'FC',          label: 'FC シリーズ',         color: '#1a4d8f', test: p => /^FC\d/i.test(p) },
   { id: 'CCIP',        label: 'CC / IP シリーズ',    color: '#2d6a3e', test: p => /^CC\d/i.test(p) || /^IP\d/i.test(p) },
-  { id: 'HBM',         label: 'HBM / IPHBM 系',      color: '#5a4a8a', test: p => /^(HBM|IPHBM)/i.test(p) },
-  { id: 'MB',          label: 'MB シリーズ',         color: '#8a6d00', test: p => /^MB\d/i.test(p) },
-  { id: 'WM',          label: 'WM / IPWM 系',        color: '#2d5a8a', test: p => /^(WM|IPWM)\d/i.test(p) },
-  { id: 'HPW',         label: 'HPW シリーズ',        color: '#a02050', test: p => /^HPW/i.test(p) },
-  { id: 'thermal',     label: '熱酸化膜系',           color: '#2d8585', test: p => /熱酸化膜/.test(p) },
-  { id: 'mirror',      label: 'ミラー / TTV 系',     color: '#6e1535', test: p => /ミラーウエハ|TTV/.test(p) },
   { id: 'generic',     label: '汎用ウエハ系',         color: '#2d8585', test: p => {
       // 個別指定: Glass, ITO, AS8R, P-SiO P-SiN付ウエハ, SI0631 (2品種)
       if (/^glass$/i.test(p)) return true;
@@ -1737,6 +1731,12 @@ const GROUP_DEFS = [
       if (/^SI0631/i.test(p)) return true;
       return false;
   }},
+  { id: 'HBM',         label: 'HBM / IPHBM 系',      color: '#5a4a8a', test: p => /^(HBM|IPHBM)/i.test(p) },
+  { id: 'MB',          label: 'MB シリーズ',         color: '#8a6d00', test: p => /^MB\d/i.test(p) },
+  { id: 'WM',          label: 'WM / IPWM 系',        color: '#2d5a8a', test: p => /^(WM|IPWM)\d/i.test(p) },
+  { id: 'HPW',         label: 'HPW シリーズ',        color: '#a02050', test: p => /^HPW/i.test(p) },
+  { id: 'thermal',     label: '熱酸化膜系',           color: '#2d8585', test: p => /熱酸化膜/.test(p) },
+  { id: 'mirror',      label: 'ミラー / TTV 系',     color: '#6e1535', test: p => /ミラーウエハ|TTV/.test(p) },
   { id: 'other',       label: 'その他',              color: '#555555', test: p => true },
 ];
 function groupOf(product) {
