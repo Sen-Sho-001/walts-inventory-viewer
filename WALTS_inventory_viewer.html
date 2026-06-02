@@ -60,7 +60,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>WALTS 在庫管理ツール v5.0</title>
+<title>WALTS 在庫管理ツール v5.17</title>
 <style>
   :root {
     --bg: #eceef1;
@@ -266,7 +266,6 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   .section-header.stock { color: var(--accent); }
   .section-header.incoming { color: var(--incoming); }
-  .section-header.ancient { color: #8a6d00; background: #fdf6e3; border-top: 2px solid #e0c060; }
   .section-header .badge {
     background: rgba(0,0,0,0.06); padding: 1px 8px;
     font-size: 10px; font-weight: 600; border-radius: 2px;
@@ -563,31 +562,6 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     font-size: 8px; color: var(--ink-faint);
     margin-top: 2px;
   }
-
-  /* 棚卸し(5年以上) サマリ枠: dummy-mini を流用しつつアクセント */
-  .pc-stat.ancient-mini {
-    text-align: center; padding: 0 8px;
-  }
-  .pc-stat.ancient-mini .label {
-    font-size: 9px; color: #8a6d00;
-    letter-spacing: 0.05em; margin-bottom: 2px; font-weight: 700;
-  }
-  .pc-stat.ancient-mini .val-combo { gap: 2px; }
-  .pc-stat.ancient-mini .val-combo .val {
-    font-size: 18px; font-weight: 800; color: #8a6d00;
-    line-height: 1;
-  }
-  .pc-stat.ancient-mini .val-combo .val.zero { color: var(--ink-faint); }
-  .pc-stat.ancient-mini .val-combo .val-plus {
-    font-size: 11px; color: #b09030;
-  }
-  .pc-stat.ancient-mini .sub {
-    font-size: 8px; color: #8a6d00;
-    margin-top: 2px;
-  }
-  .pc-stat.ancient-mini.zero { opacity: 0.55; }
-  .pc-stat.ancient-mini.zero .label,
-  .pc-stat.ancient-mini.zero .sub { color: var(--ink-faint); }
 
 
   /* アコーディオン制御 */
@@ -1503,7 +1477,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 <div class="app">
 
   <header class="top">
-    <h1>WALTS 在庫管理ツール <span class="sub">v5.0</span></h1>
+    <h1>WALTS 在庫管理ツール <span class="sub">v5.17</span></h1>
     <div class="index-info-wrap" id="changes-box">
       <div class="changes-box" id="changes-display">
         <div class="lbl">📂 SharePoint との同期</div>
@@ -1535,7 +1509,6 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
       <input id="search" type="text" placeholder="品名・ロット・顧客・保管場所で検索">
     </div>
     <label><input type="checkbox" id="show-empty"> 在庫0のロットも表示</label>
-    <label><input type="checkbox" id="show-ancient"> 🗃️ 5年以上の除外分も表示（棚卸し）</label>
   </div>
 
   <div id="product-cards"></div>
@@ -1719,26 +1692,69 @@ function renderStatusPill(p) {
 /* ============================================================
    グループ判定 (接頭辞ベース)
    ============================================================ */
-const GROUP_DEFS = [
+// ベースのグループ定義 (CC/IP を除く)。CC/IP は数字tierごとに動的生成して FC の直後へ挿入する。
+const BASE_GROUP_DEFS = [
   { id: 'FC',          label: 'FC シリーズ',         color: '#1a4d8f', test: p => /^FC\d/i.test(p) },
-  { id: 'CCIP',        label: 'CC / IP シリーズ',    color: '#2d6a3e', test: p => /^CC\d/i.test(p) || /^IP\d/i.test(p) },
-  { id: 'generic',     label: '汎用ウエハ系',         color: '#2d8585', test: p => {
-      // 個別指定: Glass, ITO, AS8R, P-SiO P-SiN付ウエハ, SI0631 (2品種)
-      if (/^glass$/i.test(p)) return true;
-      if (/^ITO\b/i.test(p)) return true;
-      if (/^AS8R\b/i.test(p)) return true;
-      if (/^P-SiO\s+P-SiN/.test(p)) return true;
+  // ← ここに CC/IP の tier別グループ群が入る (rebuildGroupDefs)
+  // SIPOS(SI0631/熱酸化膜ウエハ) + ITO + 熱酸化膜系(熱酸化膜各種/P-SiO) を1グループに統合
+  { id: 'SIPOS',       label: 'SIPOS, ITO, 熱酸化膜グループ', color: '#7a5a2a', test: p => {
       if (/^SI0631/i.test(p)) return true;
+      if (/^ITO\b/i.test(p)) return true;
+      if (/熱酸化膜/.test(p)) return true;
+      if (/^P-SiO\s+P-SiN/.test(p)) return true;
       return false;
   }},
+  { id: 'glass',       label: 'Glass シリーズ',      color: '#3a78a8', test: p => /^Glass\b/i.test(p) },
   { id: 'HBM',         label: 'HBM / IPHBM 系',      color: '#5a4a8a', test: p => /^(HBM|IPHBM)/i.test(p) },
-  { id: 'MB',          label: 'MB シリーズ',         color: '#8a6d00', test: p => /^MB\d/i.test(p) },
+  // MB シリーズ。AS8R (ワイヤボンディング系) も含める
+  { id: 'MB',          label: 'MB シリーズ（Wire Bonding）', color: '#8a6d00', test: p => /^MB\d/i.test(p) || /^AS8R\b/i.test(p) },
   { id: 'WM',          label: 'WM / IPWM 系',        color: '#2d5a8a', test: p => /^(WM|IPWM)\d/i.test(p) },
   { id: 'HPW',         label: 'HPW シリーズ',        color: '#a02050', test: p => /^HPW/i.test(p) },
-  { id: 'thermal',     label: '熱酸化膜系',           color: '#2d8585', test: p => /熱酸化膜/.test(p) },
+  { id: 'WLP',         label: 'WLP シリーズ',        color: '#0f8a8a', test: p => /^WLP\b/i.test(p) },
   { id: 'mirror',      label: 'ミラー / TTV 系',     color: '#6e1535', test: p => /ミラーウエハ|TTV/.test(p) },
   { id: 'other',       label: 'その他',              color: '#555555', test: p => true },
 ];
+
+// v5.12: CC/IP を数字tierごとに別グループへ。
+//   現在の在庫に存在するtier(10/40/80…)を昇順で検出し、tierごとに GROUP_DEF を生成して
+//   FCの直後に差し込む。CC30等が増えれば自動で「CC30/IP30 系」グループが追加される。
+//   tierを持たない CC/IP (想定外) は「CC/IP その他」へ。
+const CCIP_GROUP_COLORS = ['#2d6a3e', '#1f7a5a', '#3a7a2d', '#2d7a6a', '#4a7a2d', '#2a6a4a'];
+function isCcip(p) { return /^CC\d/i.test(p) || /^IP\d/i.test(p); }
+function buildCcipGroups() {
+  const tiers = new Set();
+  let hasOther = false;
+  INVENTORY.forEach(p => {
+    if (!isCcip(p.product)) return;
+    const t = ccipTier(p.product);
+    if (t === '?') hasOther = true; else tiers.add(t);
+  });
+  const sorted = [...tiers].sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  const defs = sorted.map((t, i) => ({
+    id: `CCIP_${t}`,
+    label: `CC${t} / IP${t} 系`,
+    color: CCIP_GROUP_COLORS[i % CCIP_GROUP_COLORS.length],
+    test: p => isCcip(p) && ccipTier(p) === t,
+  }));
+  if (hasOther) {
+    defs.push({ id: 'CCIP_other', label: 'CC / IP その他', color: '#557755',
+                test: p => isCcip(p) && ccipTier(p) === '?' });
+  }
+  return defs;
+}
+
+// 実際に描画で使うグループ定義 (CC/IP tierグループを差し込んだもの)。
+// INVENTORY 確定後に rebuildGroupDefs() を呼んで更新する。
+let GROUP_DEFS = BASE_GROUP_DEFS.slice();
+function rebuildGroupDefs() {
+  const fcIdx = BASE_GROUP_DEFS.findIndex(g => g.id === 'FC');
+  const ccip = buildCcipGroups();
+  GROUP_DEFS = [
+    ...BASE_GROUP_DEFS.slice(0, fcIdx + 1),
+    ...ccip,
+    ...BASE_GROUP_DEFS.slice(fcIdx + 1),
+  ];
+}
 function groupOf(product) {
   for (const g of GROUP_DEFS) {
     if (g.test(product)) return g;
@@ -1777,9 +1793,19 @@ function groupedInventory() {
   // グループ内はアルファベット順(将来アクセス頻度に切替)
   Object.keys(buckets).forEach(gid => {
     const arr = buckets[gid];
-    if (gid === 'CCIP') {
-      // v5.1: CC/IP統合グループは「数字(10/40/80...)昇順 → 同数字内はCC先・IP後 → 品名順」
+    if (gid === 'CCIP' || gid.startsWith('CCIP_')) {
+      // v5.1/5.12: CC/IP系は「数字昇順 → 同数字内はCC先・IP後 → 品名順」
       arr.sort((a, b) => ccipSortKey(a.product).localeCompare(ccipSortKey(b.product), 'ja'));
+    } else if (gid === 'mirror') {
+      // v5.1: ミラー/TTV系は「TTV3um ミラーウエハ-TTV測定」を最後に、他はΦサイズ→品名順
+      arr.sort((a, b) => mirrorSortKey(a).localeCompare(mirrorSortKey(b), 'ja'));
+    } else if (gid === 'SIPOS') {
+      // v5.4: ITO → SI0631 → 熱酸化膜ウエハ → 熱酸化膜+SiN → 残り(Φサイズ順→品名順)
+      arr.sort((a, b) => siposSortKey(a).localeCompare(siposSortKey(b), 'ja'));
+    } else if (gid === 'WLP') {
+      // v5.16: WLPはピッチ昇順 (0.3P → 0.4P → 0.5P)
+      const pk = p => { const m = p.product.match(/([0-9]+\.[0-9]+)P/i); return m ? parseFloat(m[1]) : 999; };
+      arr.sort((a, b) => pk(a) - pk(b) || a.product.localeCompare(b.product, 'ja'));
     } else {
       arr.sort((a, b) => {
         const c = a.product.localeCompare(b.product, 'ja');
@@ -1789,6 +1815,15 @@ function groupedInventory() {
     }
   });
   return buckets;
+}
+
+// v5.1: ミラー/TTV系の並び順キー
+// 「TTV3um ミラーウエハ-TTV測定」(使用頻度低)は末尾。他はΦサイズ昇順 → 品名順
+function mirrorSortKey(p) {
+  if (/TTV3um/.test(p.product)) return 'zzz_' + p.product;  // 末尾へ
+  const m = (p.file || '').match(/φ\s*(\d+)\s*inch/i);
+  const size = m ? String(m[1]).padStart(4, '0') : '9998';  // サイズ不明はTTV3umより前・他より後
+  return `${size}_${p.product}`;
 }
 
 // v5.1: CC/IP の並び順キー生成
@@ -1801,6 +1836,25 @@ function ccipSortKey(product) {
   const num = m[2].padStart(4, '0');      // 数字を4桁ゼロ埋め (10→0010, 40→0040, 80→0080)
   const prefixOrder = prefix === 'CC' ? '0' : '1';  // CC先, IP後
   return `${num}_${prefixOrder}_${product}`;
+}
+// v5.12: CC/IP のサブグループ(数字tier)判定。例: CC40 Model I → '40', IP10 → '10'
+function ccipTier(product) {
+  const m = product.match(/^(?:CC|IP)(\d+)/i);
+  return m ? m[1] : '?';
+}
+
+// v5.4: SIPOS,ITO,熱酸化膜グループの並び順キー
+// 固定順: ITO → SI0631 → 熱酸化膜ウエハ → 熱酸化膜+SiN → 残り(Φサイズ昇順→品名順)
+function siposSortKey(p) {
+  const name = p.product;
+  if (/^ITO\b/i.test(name)) return '0_';
+  if (/^SI0631/i.test(name)) return '1_' + name;          // SI0631が複数なら品名順
+  if (/^熱酸化膜ウエハ$/.test(name)) return '2_';
+  if (/^熱酸化膜\+SiN付ウエハ/.test(name)) return '3_';
+  // 残り: Φサイズ昇順 → 品名順 (ファイル名のφ○○inchを参照)
+  const m = (p.file || '').match(/φ\s*(\d+)\s*inch/i);
+  const size = m ? String(m[1]).padStart(4, '0') : '9999';
+  return `4_${size}_${name}`;
 }
 
 
@@ -2209,7 +2263,6 @@ function cssId(s) {
 function renderProductCard(p) {
   const q = document.getElementById('search').value.trim();
   const showEmpty = document.getElementById('show-empty').checked;
-  const showAncient = document.getElementById('show-ancient')?.checked ?? false;
   
   // フィルタ判定: 検索クエリが入っている場合、ヒットがゼロならカードごと非表示
   const filterLot = (l) => {
@@ -2232,11 +2285,9 @@ function renderProductCard(p) {
   
   const lots = p.lots.filter(filterLot);  // scanner.pyのシート読み取り順を維持
   const incoming = p.incoming_lots.filter(filterIncoming);
-  // v5.1: 棚卸し用 5年以上ロット (showAncient ON時のみ)
-  const ancientLots = showAncient ? (p.ancient_lots || []).filter(filterIncoming) : [];
   
   // 検索/フィルタ中で両方0件、かつ品名自体も検索ヒットしないなら隠す
-  if (q && lots.length === 0 && incoming.length === 0 && ancientLots.length === 0 && !matchSearch(p.product, q)) {
+  if (q && lots.length === 0 && incoming.length === 0 && !matchSearch(p.product, q)) {
     return '';
   }
   
@@ -2259,7 +2310,7 @@ function renderProductCard(p) {
         <div class="pc-title-wrap">
           <span class="expand-toggle">▶</span>
           <div class="pc-title">
-            <h2 class="name">${escape(p.product)}${p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '<span class="origin-badge itoshima">糸島</span>' : '<span class="origin-badge honsha">本社</span>'}${p.web_url ? `<span class="file-link-group">
+            <h2 class="name">${escape(displayName(p))}${p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '<span class="origin-badge itoshima">糸島</span>' : '<span class="origin-badge honsha">本社</span>'}${p.web_url ? `<span class="file-link-group">
               <a class="file-link-btn web" href="#" onclick="openInExcelWeb(event, '${encodeURIComponent(p.web_url)}')" title="ブラウザのExcel Onlineでファイルを開く">📊 Excel on Browser</a>
             </span>` : ''}</h2>
             <div class="file">${escape(p.file)}</div>
@@ -2286,7 +2337,7 @@ function renderProductCard(p) {
             <div class="sub">予約は入荷後すぐ出荷</div>
           </div>
           <div class="pc-stat dummy-mini ${((p.dummy_stock||0)+(p.dummy_reserved||0))===0?'zero':''}">
-            <div class="label">ダミー(3年以上前)</div>
+            <div class="label">ダミー(5年経過)</div>
             <div class="val-combo">
               <span class="val ${(p.dummy_stock||0)===0?'zero':''}">${p.dummy_stock||0}</span>
               <span class="val-plus">+</span>
@@ -2294,17 +2345,6 @@ function renderProductCard(p) {
             </div>
             <div class="sub">参考</div>
           </div>
-          ${showAncient ? `
-          <div class="pc-stat ancient-mini ${((p.ancient_stock||0)+(p.ancient_reserved||0))===0?'zero':''}">
-            <div class="label">🗃️ 棚卸し(5年以上)</div>
-            <div class="val-combo">
-              <span class="val ${(p.ancient_stock||0)===0?'zero':''}">${p.ancient_stock||0}</span>
-              <span class="val-plus">+</span>
-              <span class="val ${(p.ancient_reserved||0)===0?'zero':''}">${p.ancient_reserved||0}</span>
-            </div>
-            <div class="sub">${(p.ancient_lots||[]).length}件</div>
-          </div>
-          ` : ''}
         </div>
       </div>
       
@@ -2325,13 +2365,6 @@ function renderProductCard(p) {
           ? `<div class="empty">${showEmpty ? '該当ロットなし' : '在庫または予約のあるロットはありません (チェックで全件表示)'}</div>`
           : `<div class="lot-table-wrap">${renderLotTable(p, lots, 'stock')}</div>`
         }
-        ${showAncient && ancientLots.length > 0 ? `
-          <div class="section-header ancient">
-            <span>🗃️ 要棚卸しロット（受入から5年以上）</span>
-            <span class="badge">${ancientLots.length}件 / 在庫${p.ancient_stock||0} + 予約${p.ancient_reserved||0}</span>
-          </div>
-          <div class="lot-table-wrap">${renderLotTable(p, ancientLots, 'stock')}</div>
-        ` : ''}
       </div>
     </div>
   `;
@@ -2608,6 +2641,7 @@ function toast(msg) {
 }
 
 function render() {
+  rebuildGroupDefs();  // v5.12: 現在の在庫から CC/IP tierグループを再構築
   const buckets = groupedInventory();
   const q = document.getElementById('search').value.trim();
   let outHtml = '';
@@ -2637,7 +2671,7 @@ function render() {
       const originMini = p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '<span class="origin-mini">糸</span>' : '';
       previewParts.push(`
         <span class="pname-pill ${cls}">
-          <span class="pn">${escape(p.product)}</span>${originMini}
+          <span class="pn">${escape(displayName(p))}</span>${originMini}
           <span class="pq">${avail}</span>
         </span>
       `);
@@ -2668,7 +2702,6 @@ function render() {
 
 document.getElementById('search').addEventListener('input', render);
 document.getElementById('show-empty').addEventListener('change', render);
-document.getElementById('show-ancient').addEventListener('change', render);
 
 // タブ切替 (これはINVENTORYに依存しないので即実行OK)
 document.querySelectorAll('.tab').forEach(tab => {
@@ -2964,6 +2997,43 @@ const PENDING_SHEET_KEYWORDS = ['待ち', '購買', '依頼', '予定', '発注'
 function isPendingSheet(name) { return PENDING_SHEET_KEYWORDS.some(kw => name.includes(kw)); }
 function isDuplicateSheet(name) { return /\s*\(\d{1,2}\)\s*$/.test(name); }
 function isExcludedSheet(name) { return ['不明品', 'Glass', 'テスト', 'test', 'フォーマット'].some(kw => name.includes(kw)); }
+// v5.11: シート名の「Model」表記から I / II … を判定 (IP40の品種分割用)
+//   多様な書き方に対応: ASCII(I, II)/ Unicodeローマ数字(Ⅰ, Ⅱ)/ Ⅰを2つ(ⅠⅠ)/
+//   全角(Ｉ, Ⅱ)/ アラビア数字(1, 2)/ 全角数字(１, ２)/ 区切り(Model-II, Model II 等)
+function modelLabelOf(sheetName) {
+  const m = sheetName.match(/Model[\s:：\-・]*([0-9０-９IVXivxⅠ-Ⅻⅰ-ⅻＩＶＸ]+)/i);
+  if (!m) return null;
+  let tok = m[1];
+  // 全角英数 → 半角 (Ｉ/Ｖ/Ｘ/全角数字 を含む)
+  tok = tok.replace(/[０-９Ａ-Ｚａ-ｚ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+  // 単一文字のUnicodeローマ数字 → ASCIIローマ字列へ展開 (Ⅱ→"II" 等)
+  const UNI_ROMAN = { 'Ⅰ':'I','Ⅱ':'II','Ⅲ':'III','Ⅳ':'IV','Ⅴ':'V','Ⅵ':'VI','Ⅶ':'VII','Ⅷ':'VIII','Ⅸ':'IX','Ⅹ':'X',
+                      'ⅰ':'I','ⅱ':'II','ⅲ':'III','ⅳ':'IV','ⅴ':'V','ⅵ':'VI','ⅶ':'VII','ⅷ':'VIII','ⅸ':'IX','ⅹ':'X' };
+  tok = tok.replace(/[Ⅰ-Ⅻⅰ-ⅻ]/g, ch => UNI_ROMAN[ch] || '');
+  tok = tok.trim().toUpperCase();
+  const LABEL = { 1:'I', 2:'II', 3:'III', 4:'IV', 5:'V' };
+  // アラビア数字 (1, 2, …)
+  if (/^\d+$/.test(tok)) return LABEL[parseInt(tok, 10)] || null;
+  // ASCIIローマ数字 (I, II, III, IV, V …) を数値化
+  if (/^[IVX]+$/.test(tok)) {
+    const VAL = { I:1, V:5, X:10 };
+    let total = 0, prev = 0;
+    for (let i = tok.length - 1; i >= 0; i--) {
+      const v = VAL[tok[i]] || 0;
+      if (v < prev) total -= v; else { total += v; prev = v; }
+    }
+    return LABEL[total] || null;
+  }
+  return null;
+}
+// v5.14: HPWの表面仕様をシート名の括弧書き (SiN)/(PI) から判定 (品種分割用)
+//   例: F4230-009J(SiN) → 'SiN', SAI24-0003(PI) → 'PI'
+//   ※品番中の I (SAI24等) に誤反応しないよう、括弧で囲まれた表記のみを見る
+function hpwSurfaceOf(sheetName) {
+  if (/[（(]\s*SiN\s*[）)]/i.test(sheetName)) return 'SiN';
+  if (/[（(]\s*PI\s*[）)]/i.test(sheetName)) return 'PI';
+  return null;
+}
 function isExcludedFile(name, folderKey) {
   const pattern = (folderKey && folderKey.startsWith('substrate'))
     ? SUBSTRATE_FILE_PATTERN
@@ -2990,6 +3060,24 @@ function extractProductName(filename) {
   name = name.replace(/_\d{8}[A-Z]?\s*$/, '');
   name = name.replace(/_\d{6}\s*$/, '');
   return name.replace(/\s+/g, ' ').trim();
+}
+
+// v5.1: 表示用の品名を返す。ミラーウエハ系でファイル名先頭に「φ○○inch」がある場合、
+// 「Φ○○ <品名>」と表示する (例: φ8inch ミラーウエハ-TTV2um → Φ8 ミラーウエハ-TTV2um)
+function displayName(p) {
+  // 既にΦ始まりなら二重付与しない
+  if (/^Φ/.test(p.product)) return p.product;
+  // 「熱酸化膜+SiN付ウエハ」は固定でΦ8 (ファイル名にφが無いため)
+  if (/^熱酸化膜\+SiN付ウエハ/.test(p.product)) return `Φ8 ${p.product}`;
+  // 「熱酸化膜ウエハ」(★熱酸化膜ウエハ.xlsx, ファイル名にφが無い) も固定でΦ8
+  if (/^熱酸化膜ウエハ$/.test(p.product)) return `Φ8 ${p.product}`;
+  // ミラーウエハ系・P-SiO P-SiN・熱酸化膜系・IP40: ファイル名先頭の「φ○○inch」を読み取ってΦ表示
+  //   (IP40は糸島 φ12inch IP40.xlsx のみΦ12が付き、本社 ★IP40.xlsx はφ無しのため無印のまま)
+  if (/ミラーウエハ|P-SiO|熱酸化膜|\bIP40\b/.test(p.product) && p.file) {
+    const m = p.file.match(/^[0-9]*★?\s*φ\s*(\d+)\s*inch/i);
+    if (m) return `Φ${m[1]} ${p.product}`;
+  }
+  return p.product;
 }
 function findSlotBlocks(ws, slotCol) {
   const blocks = []; let curStart = null, curEnd = null;
@@ -3034,26 +3122,44 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(arrayBuffer);
   
-  const product = extractProductName(filename) || filename;
-  const summary = {
-    product, file: filename,
-    location_origin: locationOrigin,
-    file_mtime: fileMeta?.lastModifiedDateTime || null,
-    file_size: fileMeta?.size || null,
-    web_url: fileMeta?.webUrl || null,
-    stock: 0, reserved: 0, used: 0,
-    dummy_stock: 0, dummy_reserved: 0,
-    incoming_unreserved: 0, incoming_reserved: 0,
-    reserved_customers: new Set(),
-    incoming_customers: new Set(),
-    locations: new Set(),
-    latest_arrival: null,
-    lots: [], incoming_lots: [],
-    sheet_count: wb.worksheets.length,
-    skipped_ancient: [], skipped_noinfo: [],
-    ancient_stock: 0, ancient_reserved: 0, ancient_lots: [],
-  };
-  let latestArrivalDt = null;
+  const baseProduct = extractProductName(filename) || filename;
+  // v5.10: 1ファイルを複数品名に分割できるよう summary をマップ管理。
+  //   既定は baseProduct 単一。IP40 は シート名の Model 表記で Model I / II に分割。
+  const summaries = {};
+  function getSummary(productName) {
+    if (!summaries[productName]) {
+      summaries[productName] = {
+        product: productName, file: filename,
+        location_origin: locationOrigin,
+        file_mtime: fileMeta?.lastModifiedDateTime || null,
+        file_size: fileMeta?.size || null,
+        web_url: fileMeta?.webUrl || null,
+        stock: 0, reserved: 0, used: 0,
+        dummy_stock: 0, dummy_reserved: 0,
+        incoming_unreserved: 0, incoming_reserved: 0,
+        reserved_customers: new Set(),
+        incoming_customers: new Set(),
+        locations: new Set(),
+        latest_arrival: null, _latestDt: null,
+        lots: [], incoming_lots: [],
+        sheet_count: 0,
+        skipped_ancient: [], skipped_noinfo: [],
+      };
+    }
+    return summaries[productName];
+  }
+  // シート名から品名を決定 (分割対象でなければ baseProduct)
+  function productNameForSheet(sn) {
+    if (/IP40/i.test(baseProduct)) {
+      const mdl = modelLabelOf(sn);
+      if (mdl) return `${baseProduct} Model ${mdl}`;
+    }
+    if (/^HPW/i.test(baseProduct)) {
+      const surf = hpwSurfaceOf(sn);
+      if (surf) return `${baseProduct} ${surf}`;
+    }
+    return baseProduct;
+  }
   
   for (const ws of wb.worksheets) {
     const sn = ws.name;
@@ -3062,6 +3168,9 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
     
     const cols = detectColumns(ws);
     if (!cols.slot) continue;
+    
+    const summary = getSummary(productNameForSheet(sn));
+    summary.sheet_count++;
     
     const sheetIsPending = isPendingSheet(sn);
     const blocks = findSlotBlocks(ws, cols.slot);
@@ -3139,14 +3248,11 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
         continue;
       }
       
-      let isDummy = false, isTooOld = false;
+      let isDummy = false;
       if (arrivalDt) {
         const years = (TODAY - arrivalDt) / (365.25 * 86400000);
-        if (years >= 5) isTooOld = true;
-        else if (years >= 2) isDummy = true;
+        if (years >= 5) isDummy = true;  // v5.2: 5年以上をダミーに (旧: 2年ダミー/5年除外を廃止)
       }
-      // v5.1: isTooOld(5年以上)も棚卸し用にカウントするため、ここでは continue しない
-      // (在庫・予約が0なら後段の振り分けでスキップする)
       
       const lotLocs = new Set();
       if (cols['保管']) {
@@ -3179,23 +3285,8 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
         arrival_iso: arrivalDt ? arrivalDt.toISOString().substring(0,10) : null,
         arrival_wildcard: hasWildcard, arrival_empty: isEmpty, arrival_future: isFuture,
         customers: uniqCustomers, locations: [...lotLocs].sort(),
-        is_dummy: isDummy, is_incoming: isIncoming, is_ancient: isTooOld,
+        is_dummy: isDummy, is_incoming: isIncoming,
       };
-
-      // v5.1: 5年以上(isTooOld)は棚卸し枠へ。在庫・予約どちらかがあれば記録、両方0ならスキップ
-      if (isTooOld) {
-        if (countA > 0 || countB > 0) {
-          lotInfo.stock = countA; lotInfo.reserved = countB; lotInfo.used = countC;
-          summary.ancient_stock += countA;
-          summary.ancient_reserved += countB;
-          lotLocs.forEach(l => summary.locations.add(l));
-          summary.ancient_lots.push(lotInfo);
-        } else {
-          // 在庫も予約も無い古いロットは従来通り完全スキップ
-          summary.skipped_ancient.push({ sheet: sn, lot: lotName, arrival: arrivalDisp });
-        }
-        continue;
-      }
 
       if (isIncoming) {
         lotInfo.unreserved = countA; lotInfo.reserved = countB; lotInfo.total = countA + countB;
@@ -3209,8 +3300,8 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
         summary.used += countC;
         customers.forEach(c => summary.reserved_customers.add(c));
         lotLocs.forEach(l => summary.locations.add(l));
-        if (arrivalDt && (!latestArrivalDt || arrivalDt > latestArrivalDt)) {
-          latestArrivalDt = arrivalDt;
+        if (arrivalDt && (!summary._latestDt || arrivalDt > summary._latestDt)) {
+          summary._latestDt = arrivalDt;
           summary.latest_arrival = arrivalDt.toISOString().substring(0,10);
         }
         summary.lots.push(lotInfo);
@@ -3218,13 +3309,361 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
     }
   }
   
-  summary.locations = [...summary.locations].sort();
-  summary.reserved_customers = [...summary.reserved_customers].sort();
-  summary.incoming_customers = [...summary.incoming_customers].sort();
-  return summary;
+  if (Object.keys(summaries).length === 0) getSummary(baseProduct);  // 空ファイルでも従来通り単一品名を返す
+  const out = Object.values(summaries).map(s => {
+    s.locations = [...s.locations].sort();
+    s.reserved_customers = [...s.reserved_customers].sort();
+    s.incoming_customers = [...s.incoming_customers].sort();
+    delete s._latestDt;
+    return s;
+  });
+  return out.length === 1 ? out[0] : out;  // 単一なら従来通りオブジェクト、分割時は配列
 }
 
-/* ============================================================ 並列処理 ============================================================ */
+/* ============================================================
+   Glass専用解析 (1ファイルを 材質×厚さ で複数品名に分割)
+   材質: 合成石英 / EAGLE XG / TEMPAX
+   列レイアウト2系統:
+     合成石英・EAGLE系: A=入荷日 B=Lot# C=slot D=glass厚 E=BG F=DC G=顧客 H=備考 I=取分日 J=保管場所
+     TEMPAX系(1列右):   B=入荷日 C=Lot# D=slot E=下地 F=マスク G=Cuバンプ I=BG J=DC K=顧客 L=備考 M=取分け日 N=保管場所
+   ============================================================ */
+function glassMaterialOf(sheetName) {
+  if (/合成石英/.test(sheetName)) return '合成石英';
+  if (/EAGLE/i.test(sheetName)) return 'EAGLE XG';
+  if (/TEMPAX/i.test(sheetName)) return 'TEMPAX';
+  return null;
+}
+
+async function analyzeGlassWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) {
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(arrayBuffer);
+
+  // 品名(材質×厚さ)ごとに summary を蓄積
+  const summaries = {};  // key=品名 → summary
+  function getSummary(product) {
+    if (!summaries[product]) {
+      summaries[product] = {
+        product, file: filename,
+        location_origin: locationOrigin,
+        file_mtime: fileMeta?.lastModifiedDateTime || null,
+        file_size: fileMeta?.size || null,
+        web_url: fileMeta?.webUrl || null,
+        stock: 0, reserved: 0, used: 0,
+        dummy_stock: 0, dummy_reserved: 0,
+        incoming_unreserved: 0, incoming_reserved: 0,
+        reserved_customers: new Set(),
+        incoming_customers: new Set(),
+        locations: new Set(),
+        latest_arrival: null,
+        lots: [], incoming_lots: [],
+        sheet_count: 0,
+        skipped_ancient: [], skipped_noinfo: [],
+      };
+    }
+    return summaries[product];
+  }
+
+  for (const ws of wb.worksheets) {
+    const sn = ws.name;
+    if (/フォーマット/.test(sn)) continue;
+    const material = glassMaterialOf(sn);
+    if (!material) continue;
+    if (ws.sheet_state === 'veryHidden') continue;
+
+    const isTempax = (material === 'TEMPAX');
+    // 列マッピング (1-indexed)
+    const C = isTempax
+      ? { date:2, lot:3, slot:4, thick:5, cust:11, note:12, loc:14 }
+      : { date:1, lot:2, slot:3, thick:4, cust:7, note:8, loc:10 };
+
+    // 厚さ抽出: slot列に1が入る行の thick列を見る (先頭ロット)
+    let thickness = null;
+    for (let r = 4; r <= Math.min(ws.rowCount, 14); r++) {
+      const tv = ws.getCell(r, C.thick).value;
+      if (tv != null) {
+        const s = cleanText(tv);
+        const m = s.match(/([0-9]+\.[0-9]+)/);  // 0.6 / 0.3 / 0.7 / 1.0
+        if (m) { thickness = m[1]; break; }
+      }
+    }
+    if (!thickness) thickness = '?';
+
+    const product = `Glass ${material}（${thickness}mm）`;
+    const summary = getSummary(product);
+    summary.sheet_count++;
+
+    // 入荷予定シート判定 (発注依頼済み 等)
+    const sheetIsPending = /発注|依頼|予定/.test(sn);
+
+    // ロット名: シート名から (材質+識別子)
+    const lotName = sn;
+
+    // 入荷日: date列で最初の日付
+    let arrivalDt = null, arrivalDisp = '';
+    for (let r = 4; r <= Math.min(ws.rowCount, 14); r++) {
+      const dv = ws.getCell(r, C.date).value;
+      if (dv != null) {
+        const p = parseDate(dv);
+        if (p.dt) { arrivalDt = p.dt; arrivalDisp = p.disp; break; }
+        if (p.disp && !arrivalDisp) arrivalDisp = p.disp;
+      }
+    }
+
+    // slot行を集計 (slot列が数値の行 = ウエハ1枚)
+    // v5.7: 顧客列の有無ではなく、slotセルの「色」で在庫/予約/使用済を判定
+    //   (本体ウエハ集計と同じ classifyNormal/classifyPending を使用)
+    //   灰色(theme3)・青系(theme4) など色付き = 使用済 / 純白 = 在庫
+    const useReverseLogic = sheetIsPending;
+    const classifier = useReverseLogic ? classifyPending : classifyNormal;
+    let stock = 0, reserved = 0, used = 0;  // 在庫(or未予約) / 予約(or予約済) / 使用済
+    const custList = [];
+    const locSet = new Set();
+    for (let r = 4; r <= ws.rowCount; r++) {
+      if (ws.getRow(r).hidden) continue;
+      const slotV = ws.getCell(r, C.slot).value;
+      const slotNum = (typeof slotV === 'number') ? slotV : parseInt(cleanText(slotV), 10);
+      if (!Number.isFinite(slotNum) || slotNum <= 0) continue;
+      const slotCell = ws.getCell(r, C.slot);
+      const status = classifier(slotCell);
+      if (useReverseLogic) {
+        if (status === '未予約') stock++; else reserved++;
+      } else {
+        if (status === '在庫') stock++;
+        else if (status === '予約') reserved++;
+        else used++;
+      }
+      // 顧客は「予約」スロットのみ拾う (使用済の使用先は予約済顧客に出さない)
+      const targetStatus = useReverseLogic ? '予約済' : '予約';
+      if (status === targetStatus) {
+        const custRaw = ws.getCell(r, C.cust).value;
+        const cust = custRaw ? cleanText(custRaw) : '';
+        if (cust && cust !== '-') custList.push(cust);
+      }
+      const locRaw = ws.getCell(r, C.loc).value;
+      const loc = locRaw ? cleanText(locRaw) : '';
+      if (loc && loc !== '-') locSet.add(loc);
+    }
+
+    if (stock === 0 && reserved === 0 && used === 0) continue;  // 空シートはスキップ
+
+    const uniqCust = [...new Set(custList)].sort();
+    const lotInfo = {
+      lot: lotName, sheet: sn,
+      arrival_disp: arrivalDisp,
+      arrival_iso: arrivalDt ? arrivalDt.toISOString().substring(0,10) : null,
+      arrival_wildcard: false, arrival_empty: !arrivalDt, arrival_future: false,
+      customers: uniqCust, locations: [...locSet].sort(),
+      is_dummy: false, is_incoming: sheetIsPending,
+      stock, reserved, used,
+    };
+
+    if (sheetIsPending) {
+      // v5.7: 入荷予定ロットの描画は l.unreserved/total を読むため本体ウエハと同形式に揃える
+      //   (reverseロジックでは stock=未予約, reserved=予約済)
+      lotInfo.unreserved = stock;
+      lotInfo.reserved = reserved;
+      lotInfo.total = stock + reserved;
+      summary.incoming_unreserved += stock;
+      summary.incoming_reserved += reserved;
+      uniqCust.forEach(c => summary.incoming_customers.add(c));
+      summary.incoming_lots.push(lotInfo);
+    } else {
+      summary.stock += stock;
+      summary.reserved += reserved;
+      summary.used += used;
+      uniqCust.forEach(c => summary.reserved_customers.add(c));
+      summary.lots.push(lotInfo);
+    }
+    locSet.forEach(l => summary.locations.add(l));
+    if (arrivalDt && (!summary._latestDt || arrivalDt > summary._latestDt)) {
+      summary._latestDt = arrivalDt;
+      summary.latest_arrival = arrivalDisp;
+    }
+  }
+
+  // Set→配列化して返す
+  const out = Object.values(summaries).map(s => {
+    s.locations = [...s.locations].sort();
+    s.reserved_customers = [...s.reserved_customers].sort();
+    s.incoming_customers = [...s.incoming_customers].sort();
+    delete s._latestDt;
+    return s;
+  });
+  return out;  // 配列で返す (複数品名)
+}
+
+// ============================================================
+//  WLP専用解析 (1ファイルを ピッチ で複数品名に分割)
+//   v5.16: ピッチはE列を最優先、行(ロット)単位で判定。E列が空ならシート名括弧(0.4P)で補完。
+//          1シート内でピッチが変わるケース(LK053_LK054)に対応するため行ごとに振り分ける。
+//   列レイアウト: C=入荷日 D=slot E=Pitch F=BG G=DC H=顧客 I=備考 J/I=保管
+// ============================================================
+function wlpPitchFromText(t) {
+  if (t == null) return null;
+  const s = cleanText(t);
+  let m = s.match(/([0-9]+\.[0-9]+)\s*P\b/i);          // 0.4P
+  if (m) return m[1] + 'P';
+  m = s.match(/([0-9]+\.[0-9]+)\s*mm[\s\S]*?Pitch/i);  // 0.4mm Pitch
+  if (m) return m[1] + 'P';
+  return null;
+}
+function wlpSheetPitch(sheetName) {
+  const m = sheetName.match(/[（(]\s*([0-9]+\.[0-9]+)\s*P\s*[）)]/i);
+  return m ? m[1] + 'P' : null;
+}
+
+async function analyzeWlpWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) {
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(arrayBuffer);
+
+  const baseProduct = extractProductName(filename) || filename;  // 通常 "WLP"
+  const summaries = {};  // key=品名(WLP 0.3P 等) → summary
+  function getSummary(product) {
+    if (!summaries[product]) {
+      summaries[product] = {
+        product, file: filename,
+        location_origin: locationOrigin,
+        file_mtime: fileMeta?.lastModifiedDateTime || null,
+        file_size: fileMeta?.size || null,
+        web_url: fileMeta?.webUrl || null,
+        stock: 0, reserved: 0, used: 0,
+        dummy_stock: 0, dummy_reserved: 0,
+        incoming_unreserved: 0, incoming_reserved: 0,
+        reserved_customers: new Set(),
+        incoming_customers: new Set(),
+        locations: new Set(),
+        latest_arrival: null, _latestDt: null,
+        lots: [], incoming_lots: [],
+        sheet_count: 0,
+        skipped_ancient: [], skipped_noinfo: [],
+      };
+    }
+    return summaries[product];
+  }
+
+  // 列マッピング (1-indexed) — 全シート共通
+  const C = { date: 3, slot: 4, pitch: 5, bg: 6, dc: 7, cust: 8, note: 9, loc: 10 };
+
+  for (const ws of wb.worksheets) {
+    const sn = ws.name;
+    if (/フォーマット/.test(sn)) continue;
+    if (isDuplicateSheet(sn)) continue;
+    if (ws.sheet_state === 'veryHidden') continue;
+
+    const sheetIsPending = /発注|依頼|予定/.test(sn);
+    const snPitch = wlpSheetPitch(sn);
+    const useReverseLogic = sheetIsPending;
+    const classifier = useReverseLogic ? classifyPending : classifyNormal;
+
+    // 入荷日: date列で最初の日付
+    let arrivalDt = null, arrivalDisp = '';
+    for (let r = 5; r <= Math.min(ws.rowCount, 15); r++) {
+      const dv = ws.getCell(r, C.date).value;
+      if (dv != null) {
+        const p = parseDate(dv);
+        if (p.dt) { arrivalDt = p.dt; arrivalDisp = p.disp; break; }
+        if (p.disp && !arrivalDisp) arrivalDisp = p.disp;
+      }
+    }
+
+    // 行を走査し、ピッチごとに集計をまとめる (1シート内で複数ピッチがありうる)
+    //   pitchAgg[pitch] = { stock, reserved, used, custList, locSet }
+    const pitchAgg = {};
+    let curPitch = null;
+    function bucket(pitch) {
+      if (!pitchAgg[pitch]) pitchAgg[pitch] = { stock: 0, reserved: 0, used: 0, custList: [], locSet: new Set() };
+      return pitchAgg[pitch];
+    }
+    for (let r = 5; r <= ws.rowCount; r++) {
+      if (ws.getRow(r).hidden) continue;
+      // ピッチ更新 (E列に記載があれば)
+      const pHere = wlpPitchFromText(ws.getCell(r, C.pitch).value);
+      if (pHere) curPitch = pHere;
+      // ウエハ行か判定: slot列が数値(連番想定なので1〜100)、または LKxxx-xx 等の非空識別子
+      //   v5.17: slot列の下に入庫番号(8桁)や@単価(5桁)が同じD列に入るケースがあり、
+      //          大きな数値を在庫として誤カウントしていた → slot番号は100以下に限定
+      const slotV = ws.getCell(r, C.slot).value;
+      const slotNum = (typeof slotV === 'number') ? slotV : parseInt(cleanText(slotV), 10);
+      const slotTxt = slotV != null ? cleanText(slotV) : '';
+      const isWaferRow = Number.isFinite(slotNum)
+        ? (slotNum > 0 && slotNum <= 100)
+        : (/^[A-Za-z]*\d+[-_]?\d*$/.test(slotTxt) && slotTxt !== '');
+      if (!isWaferRow) continue;
+
+      const effPitch = curPitch || snPitch;
+      if (!effPitch) continue;  // ピッチ不明行はスキップ (想定外)
+      const agg = bucket(effPitch);
+
+      const slotCell = ws.getCell(r, C.slot);
+      const status = classifier(slotCell);
+      if (useReverseLogic) {
+        if (status === '未予約') agg.stock++; else agg.reserved++;
+      } else {
+        if (status === '在庫') agg.stock++;
+        else if (status === '予約') agg.reserved++;
+        else agg.used++;
+      }
+      const targetStatus = useReverseLogic ? '予約済' : '予約';
+      if (status === targetStatus) {
+        const custRaw = ws.getCell(r, C.cust).value;
+        const cust = custRaw ? cleanText(custRaw) : '';
+        if (cust && cust !== '-') agg.custList.push(cust);
+      }
+      const locRaw = ws.getCell(r, C.loc).value;
+      const loc = locRaw ? cleanText(locRaw) : '';
+      if (loc && loc !== '-') agg.locSet.add(loc);
+    }
+
+    // ピッチごとに lotInfo を生成して該当品名の summary へ
+    for (const [pitch, agg] of Object.entries(pitchAgg)) {
+      if (agg.stock === 0 && agg.reserved === 0 && agg.used === 0) continue;
+      const product = `${baseProduct} ${pitch}`;
+      const summary = getSummary(product);
+      summary.sheet_count++;
+      const uniqCust = [...new Set(agg.custList)].sort();
+      const lotInfo = {
+        lot: sn, sheet: sn,
+        arrival_disp: arrivalDisp,
+        arrival_iso: arrivalDt ? arrivalDt.toISOString().substring(0,10) : null,
+        arrival_wildcard: false, arrival_empty: !arrivalDt, arrival_future: false,
+        customers: uniqCust, locations: [...agg.locSet].sort(),
+        is_dummy: false, is_incoming: sheetIsPending,
+        stock: agg.stock, reserved: agg.reserved, used: agg.used,
+      };
+      if (sheetIsPending) {
+        lotInfo.unreserved = agg.stock;
+        lotInfo.reserved = agg.reserved;
+        lotInfo.total = agg.stock + agg.reserved;
+        summary.incoming_unreserved += agg.stock;
+        summary.incoming_reserved += agg.reserved;
+        uniqCust.forEach(c => summary.incoming_customers.add(c));
+        summary.incoming_lots.push(lotInfo);
+      } else {
+        summary.stock += agg.stock;
+        summary.reserved += agg.reserved;
+        summary.used += agg.used;
+        uniqCust.forEach(c => summary.reserved_customers.add(c));
+        summary.lots.push(lotInfo);
+      }
+      agg.locSet.forEach(l => summary.locations.add(l));
+      if (arrivalDt && (!summary._latestDt || arrivalDt > summary._latestDt)) {
+        summary._latestDt = arrivalDt;
+        summary.latest_arrival = arrivalDisp;
+      }
+    }
+  }
+
+  const out = Object.values(summaries).map(s => {
+    s.locations = [...s.locations].sort();
+    s.reserved_customers = [...s.reserved_customers].sort();
+    s.incoming_customers = [...s.incoming_customers].sort();
+    delete s._latestDt;
+    return s;
+  });
+  return out;  // 配列で返す (複数品名)
+}
+
+
 async function pMap(items, mapper, concurrency = 5) {
   const results = new Array(items.length);
   let idx = 0;
@@ -3301,7 +3740,7 @@ const CACHE_STORE = 'inventory_cache';
 const CACHE_VERSION = 1;
 // 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
 // (キャッシュ全クリアになる)
-const CACHE_SCHEMA_VERSION = 'v5.0-substrate-scanner-2026-05-19';
+const CACHE_SCHEMA_VERSION = 'v5.17-wlp-slotguard-2026-06-02';
 
 let _cacheDbPromise = null;
 function openCache() {
@@ -3473,7 +3912,11 @@ async function fetchInventoryFromSharePoint(progressCb, opts = {}) {
         if (!cached.summary.web_url && cached.webUrl) {
           cached.summary.web_url = cached.webUrl;
         }
-        targetOf(folderKey).push(cached.summary);
+        if (Array.isArray(cached.summary)) {
+          cached.summary.forEach(s => targetOf(folderKey).push(s));
+        } else {
+          targetOf(folderKey).push(cached.summary);
+        }
         stats[folderKey].ok++;
         stats[folderKey].cached++;
         hitCount++;
@@ -3498,9 +3941,15 @@ async function fetchInventoryFromSharePoint(progressCb, opts = {}) {
         const r = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const buf = await r.arrayBuffer();
+        const isGlass = /glass/i.test(fileMeta.name);
+        const isWlp = /(^|[^A-Za-z])WLP([^A-Za-z]|$)/i.test(fileMeta.name.replace(/\.[^.]+$/, ''));
         const summary = folderKey.startsWith('substrate')
           ? await analyzeSubstrateWorkbook(buf, fileMeta.name, fileMeta)
-          : await analyzeWorkbook(buf, fileMeta.name, fileMeta, folderKey);
+          : isGlass
+            ? await analyzeGlassWorkbook(buf, fileMeta.name, fileMeta, folderKey)
+            : isWlp
+              ? await analyzeWlpWorkbook(buf, fileMeta.name, fileMeta, folderKey)
+              : await analyzeWorkbook(buf, fileMeta.name, fileMeta, folderKey);
         // キャッシュに保存
         try {
           await cachePut({
@@ -3524,7 +3973,15 @@ async function fetchInventoryFromSharePoint(progressCb, opts = {}) {
     }, PARALLEL_LIMIT);
 
     for (const r of results) {
-      if (r.ok) { targetOf(folderKey).push(r.value); stats[folderKey].ok++; }
+      if (r.ok) {
+        // Glassは配列(複数品名)を返すので展開してpush
+        if (Array.isArray(r.value)) {
+          r.value.forEach(s => targetOf(folderKey).push(s));
+          stats[folderKey].ok++;
+        } else {
+          targetOf(folderKey).push(r.value); stats[folderKey].ok++;
+        }
+      }
       else { stats[folderKey].fail++; console.warn(`${folderLabel} 失敗: ${r.item?.name}: ${r.error}`); }
     }
   }
@@ -3559,7 +4016,7 @@ async function fetchInventoryFromSharePoint(progressCb, opts = {}) {
 }
 
 // === v5.0: 起動フロー ===
-async function bootSharePointFlow() {
+async function bootSharePointFlow(forceRefresh = false) {
   const statusText = document.getElementById('fetch-status-text');
   const fetchCounts = document.getElementById('fetch-counts');
   const refetchBtn = document.getElementById('btn-refetch');
@@ -3574,11 +4031,13 @@ async function bootSharePointFlow() {
     statusText.textContent = '🔐 認証中...';
     const t0 = performance.now();
     const { wafer, substrate, stats } = await fetchInventoryFromSharePoint(
-      (msg) => { statusText.textContent = msg; }
+      (msg) => { statusText.textContent = msg; },
+      { forceRefresh }
     );
     const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
 
-    INVENTORY = wafer;
+    // v5.1: 「ミラーウエハ-TTV未保証」は表示しない
+    INVENTORY = wafer.filter(p => !/ミラーウエハ.*TTV未保証|TTV未保証/.test(p.product));
     SUBSTRATE = substrate;
     const honshaCount = stats.wafer_honsha.ok;
     const itoshimaCount = stats.wafer_itoshima.ok;
@@ -3605,7 +4064,7 @@ async function bootSharePointFlow() {
 // === v5.0: ボタンイベント ===
 document.getElementById('btn-refetch').addEventListener('click', () => {
   cachedAccessToken = null;  // 念のためトークン破棄して再取得
-  bootSharePointFlow();
+  bootSharePointFlow(true);  // v5.2: 再取得は必ずキャッシュを無視して全件再解析
 });
 
 document.getElementById('btn-export-json').addEventListener('click', () => {
