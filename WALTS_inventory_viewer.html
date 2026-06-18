@@ -60,7 +60,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>WALTS 在庫管理ツール v5.17</title>
+<title>WALTS 在庫管理ツール v5.24</title>
 <style>
   :root {
     --bg: #eceef1;
@@ -101,6 +101,24 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.02em; }
   h1 .sub { font-size: 11px; font-weight: 400; color: var(--ink-dim); margin-left: 10px; }
+  /* v5.19: 変更履歴 (最新1件は常時表示、過去は折りたたみ) */
+  .changelog { margin: 6px 0 4px; font-size: 12px; }
+  .changelog .cl-latest {
+    display: inline-block; background: #eef7f0; border-left: 3px solid #2d8a4e;
+    color: #1f5c34; padding: 4px 10px; border-radius: 4px; font-weight: 600;
+  }
+  .changelog .cl-latest .clv { color: #2d8a4e; margin-right: 6px; }
+  .changelog .cl-latest .cld { color: #6a8a76; font-weight: 400; margin-left: 6px; font-size: 11px; }
+  .changelog .cl-toggle {
+    display: inline-block; margin-left: 10px; color: #2d6a8a; cursor: pointer;
+    user-select: none; font-size: 11px;
+  }
+  .changelog .cl-toggle:hover { text-decoration: underline; }
+  .changelog .cl-past { display: none; margin-top: 6px; padding-left: 4px; }
+  .changelog.expanded .cl-past { display: block; }
+  .changelog .cl-past .cl-row { padding: 2px 0; color: var(--ink-dim); }
+  .changelog .cl-past .clv { display: inline-block; min-width: 46px; color: #2d6a8a; font-weight: 600; }
+  .changelog .cl-past .cld { color: #999; margin-left: 6px; font-size: 11px; }
   .index-info { text-align: right; line-height: 1.2; }
   .index-info .lbl { font-size: 10px; color: var(--ink-dim); letter-spacing: 0.08em; }
   .index-info .time {
@@ -1477,7 +1495,12 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 <div class="app">
 
   <header class="top">
-    <h1>WALTS 在庫管理ツール <span class="sub">v5.17</span></h1>
+    <h1>WALTS 在庫管理ツール <span class="sub">v5.24</span></h1>
+    <div class="changelog" id="changelog">
+      <div class="cl-latest" id="cl-latest"></div>
+      <div class="cl-toggle" id="cl-toggle" onclick="toggleChangelog()">過去の変更点を表示 ▼</div>
+      <div class="cl-past" id="cl-past"></div>
+    </div>
     <div class="index-info-wrap" id="changes-box">
       <div class="changes-box" id="changes-display">
         <div class="lbl">📂 SharePoint との同期</div>
@@ -1611,9 +1634,54 @@ function setOrder(key, data) {
 /* ============================================================
    ヘルパー
    ============================================================ */
+// === 変更履歴 (最新が先頭。先頭1件を常時表示、それ以前は折りたたみ) ===
+const CHANGELOG = [
+  { v: 'v5.24', date: '2026-06-15', text: '「開発品」シートは白slotも含め全て使用済扱い(在庫・予約にしない)' },
+  { v: 'v5.23', date: '2026-06-08', text: '白slotでも備考に消費系記載(廃棄/開発使用/サンプル/不良/DC等)があれば使用済として在庫から除外' },
+  { v: 'v5.22', date: '2026-06-02', text: '末尾(数字)シート((2)等)の重複除外を廃止し実在在庫としてカウント' },
+  { v: 'v5.21', date: '2026-06-02', text: 'JSON出力時に品名解決がUIと一致しているか自己チェック(不一致なら警告)' },
+  { v: 'v5.20', date: '2026-06-02', text: 'JSONエクスポートの品名をUI表示と一致(Φ口径+全分割反映、生品名はproduct_raw)' },
+  { v: 'v5.19', date: '2026-06-02', text: '画面上部に変更履歴を表示 (最新を常時表示、過去は折りたたみ)' },
+  { v: 'v5.18', date: '2026-06-02', text: 'MB130A を 下地(PI/SiN)×膜厚(x.xum) で品種分割' },
+  { v: 'v5.17', date: '2026-06-02', text: 'WLP 0.5P の在庫数を修正 (slot列に紛れる入庫番号/単価を除外)' },
+  { v: 'v5.16', date: '2026-06-02', text: 'WLP を独立グループ化し、ピッチ(0.3P/0.4P/0.5P)で品種分割' },
+  { v: 'v5.15', date: '2026-06-02', text: 'AS8R を「MBシリーズ（Wire Bonding）」へ移動' },
+  { v: 'v5.14', date: '2026-06-02', text: 'HPW を 表面仕様(SiN/PI) で品種分割' },
+  { v: 'v5.13', date: '2026-06-02', text: 'CC/IP を CC10/IP10・CC40/IP40・CC80/IP80 の独立グループに分割 (数字tier自動)' },
+  { v: 'v5.11', date: '2026-06-02', text: 'Model表記ゆれ(Ⅰ/Ⅱ・II・全角・数字)に対応' },
+  { v: 'v5.10', date: '2026-06-02', text: 'IP40 を Model I / Model II で品種分割' },
+  { v: 'v5.9',  date: '2026-06-02', text: '糸島 IP40 に Φ12 を表示' },
+  { v: 'v5.8',  date: '2026-06-02', text: '熱酸化膜ウエハ に Φ8 を表示' },
+  { v: 'v5.7',  date: '2026-06-01', text: 'Glass の在庫/予約/使用済を slotセルの色で判定するよう修正、入荷予定の表示を修正' },
+];
 function escape(s) {
   if (s === undefined || s === null) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+// v5.19: 変更履歴の描画 (最新1件は常時表示、過去は折りたたみ)
+function renderChangelog() {
+  if (typeof CHANGELOG === 'undefined' || !Array.isArray(CHANGELOG) || CHANGELOG.length === 0) return;
+  const latest = CHANGELOG[0];
+  const past = CHANGELOG.slice(1);
+  const elLatest = document.getElementById('cl-latest');
+  const elPast = document.getElementById('cl-past');
+  const elToggle = document.getElementById('cl-toggle');
+  if (elLatest) {
+    elLatest.innerHTML = `🆕 <span class="clv">${escape(latest.v)}</span>${escape(latest.text)}<span class="cld">${escape(latest.date)}</span>`;
+  }
+  if (elPast) {
+    elPast.innerHTML = past.map(c =>
+      `<div class="cl-row"><span class="clv">${escape(c.v)}</span>${escape(c.text)}<span class="cld">${escape(c.date)}</span></div>`
+    ).join('');
+  }
+  if (elToggle) elToggle.style.display = past.length ? 'inline-block' : 'none';
+}
+function toggleChangelog() {
+  const box = document.getElementById('changelog');
+  const tog = document.getElementById('cl-toggle');
+  if (!box) return;
+  const expanded = box.classList.toggle('expanded');
+  if (tog) tog.textContent = expanded ? '過去の変更点を隠す ▲' : '過去の変更点を表示 ▼';
 }
 function daysBetween(isoStr) {
   if (!isoStr) return null;
@@ -1806,6 +1874,14 @@ function groupedInventory() {
       // v5.16: WLPはピッチ昇順 (0.3P → 0.4P → 0.5P)
       const pk = p => { const m = p.product.match(/([0-9]+\.[0-9]+)P/i); return m ? parseFloat(m[1]) : 999; };
       arr.sort((a, b) => pk(a) - pk(b) || a.product.localeCompare(b.product, 'ja'));
+    } else if (gid === 'MB') {
+      // v5.18: MB130A系は 下地(PI先→SiN後) → 膜厚昇順、その後 品名順
+      const baseRank = p => /\bSiN\b/i.test(p.product) ? 1 : 0;
+      const thickVal = p => { const m = p.product.match(/([0-9]+\.[0-9]+)\s*um/i); return m ? parseFloat(m[1]) : 999; };
+      arr.sort((a, b) =>
+        baseRank(a) - baseRank(b) ||
+        thickVal(a) - thickVal(b) ||
+        a.product.localeCompare(b.product, 'ja'));
     } else {
       arr.sort((a, b) => {
         const c = a.product.localeCompare(b.product, 'ja');
@@ -2716,6 +2792,9 @@ document.querySelectorAll('.tab').forEach(tab => {
 document.getElementById('search-sub').addEventListener('input', renderSubstrate);
 document.getElementById('show-dormant').addEventListener('change', renderSubstrate);
 
+// 変更履歴を描画 (静的データなので即実行)
+renderChangelog();
+
 // 基板タブは現状ハードコードのSUBSTRATE使用のため即描画
 renderSubstrate();
 document.getElementById('substrate-count').textContent = SUBSTRATE.length + '品名';
@@ -2799,6 +2878,15 @@ function classifyPendingWithReason(cell) {
 // 集計用 (理由不要)
 function classifyNormal(cell) { return classifyNormalWithReason(cell).status; }
 function classifyPending(cell) { return classifyPendingWithReason(cell).status; }
+
+// v5.23: 白(在庫)でも備考に消費系キーワードがあれば在庫ではない(使用済)と判定する。
+//   開発品シート等で、色は白でも「廃棄/開発使用/展示サンプル/DC加工/不良」等の記載で消費済みのケース。
+//   ※ここを直したら core.js も再生成すること (python3 build_core.py)
+const CONSUMED_NOTE_KW = /廃棄|開発使用|展示|サンプル|不良|DC/;
+function isConsumedNote(v) {
+  const s = cleanText(v);
+  return s ? CONSUMED_NOTE_KW.test(s) : false;
+}
 
 function fillDesc(fill) {
   if (!fill || fill.type !== 'pattern') return '塗装なし';
@@ -2995,7 +3083,10 @@ function enrichArrivalDate(parsed, ws, arrivalCol, arrivalRow) {
 }
 const PENDING_SHEET_KEYWORDS = ['待ち', '購買', '依頼', '予定', '発注'];
 function isPendingSheet(name) { return PENDING_SHEET_KEYWORDS.some(kw => name.includes(kw)); }
-function isDuplicateSheet(name) { return /\s*\(\d{1,2}\)\s*$/.test(name); }
+// v5.22: 末尾(数字)シートの「重複コピー」除外を廃止。実在分として一律カウントする。
+//   (過去は /\s*\(\d{1,2}\)\s*$/ で末尾(2)等を除外していたが、(2)等も実在在庫のため無効化)
+//   呼び出し側(analyzeWorkbook/analyzeWlpWorkbook/analyzeGlassWorkbook)は変更不要。
+function isDuplicateSheet(name) { return false; }
 function isExcludedSheet(name) { return ['不明品', 'Glass', 'テスト', 'test', 'フォーマット'].some(kw => name.includes(kw)); }
 // v5.11: シート名の「Model」表記から I / II … を判定 (IP40の品種分割用)
 //   多様な書き方に対応: ASCII(I, II)/ Unicodeローマ数字(Ⅰ, Ⅱ)/ Ⅰを2つ(ⅠⅠ)/
@@ -3034,6 +3125,23 @@ function hpwSurfaceOf(sheetName) {
   if (/[（(]\s*PI\s*[）)]/i.test(sheetName)) return 'PI';
   return null;
 }
+// v5.18: MB130A の下地(PI/SiN)・膜厚(x.xum) を判定 (品種分割用)
+//   下地はF列(行4)、膜厚はG列(slot=1行のセル)に記載。シート名(_SiN / (x.xum))とも一致。
+//   セル値が取れない場合の保険としてシート名からも拾う。
+function mbBaseOf(cellText, sheetName) {
+  const s = cellText != null ? cleanText(cellText) : '';
+  if (/SiN/i.test(s)) return 'SiN';
+  if (/\bPI\b/i.test(s)) return 'PI';
+  // 保険: シート名 (_SiN があれば SiN, 無ければ PI)
+  if (/_SiN/i.test(sheetName)) return 'SiN';
+  return 'PI';
+}
+function mbThickOf(cellText, sheetName) {
+  let m = cellText != null ? cleanText(cellText).match(/([0-9]+\.[0-9]+)\s*um/i) : null;
+  if (m) return m[1] + 'um';
+  m = sheetName.match(/[（(]\s*([0-9]+\.[0-9]+)\s*um/i);
+  return m ? m[1] + 'um' : null;
+}
 function isExcludedFile(name, folderKey) {
   const pattern = (folderKey && folderKey.startsWith('substrate'))
     ? SUBSTRATE_FILE_PATTERN
@@ -3064,6 +3172,12 @@ function extractProductName(filename) {
 
 // v5.1: 表示用の品名を返す。ミラーウエハ系でファイル名先頭に「φ○○inch」がある場合、
 // 「Φ○○ <品名>」と表示する (例: φ8inch ミラーウエハ-TTV2um → Φ8 ミラーウエハ-TTV2um)
+// ★★ 品名解決の「唯一の正」(Single Source of Truth) ★★
+//   生品名(p.product) → UI表示名(口径Φプレフィックス付与など) を解決する唯一の関数。
+//   UI描画(製品カード/グループプレビュー) と JSONエクスポート の両方が必ずこの関数を通すこと。
+//   品名表示ルールを変えるときは ここだけ を直せば UI と JSON 両方に反映される。
+//   (品種"分割"のルールは analyzeWorkbook/productNameForSheet 等の解析側。こちらは表示名の加工のみ)
+//   export側がこの関数を通しているかは、JSON出力時に verifyExportNameSync() で自動検証する。
 function displayName(p) {
   // 既にΦ始まりなら二重付与しない
   if (/^Φ/.test(p.product)) return p.product;
@@ -3078,6 +3192,19 @@ function displayName(p) {
     if (m) return `Φ${m[1]} ${p.product}`;
   }
   return p.product;
+}
+// export整合性チェック: 各行の product が displayName() の出力と一致するか独立に再計算して検証。
+//   export側が displayName を通さず生品名を入れてしまう等のデグレを検知する (過去に発生したバグの再発防止)。
+//   返り値: 不一致行の配列 (空なら整合)。
+function verifyExportNameSync(rows) {
+  const issues = [];
+  for (const r of rows) {
+    const expected = displayName({ product: r.product_raw, file: r.file, location_origin: r.location_origin });
+    if (r.product !== expected) {
+      issues.push({ product_raw: r.product_raw, exported: r.product, expected });
+    }
+  }
+  return issues;
 }
 function findSlotBlocks(ws, slotCol) {
   const blocks = []; let curStart = null, curEnd = null;
@@ -3148,8 +3275,8 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
     }
     return summaries[productName];
   }
-  // シート名から品名を決定 (分割対象でなければ baseProduct)
-  function productNameForSheet(sn) {
+  // シート名(と必要ならシート内容)から品名を決定 (分割対象でなければ baseProduct)
+  function productNameForSheet(sn, ws) {
     if (/IP40/i.test(baseProduct)) {
       const mdl = modelLabelOf(sn);
       if (mdl) return `${baseProduct} Model ${mdl}`;
@@ -3157,6 +3284,33 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
     if (/^HPW/i.test(baseProduct)) {
       const surf = hpwSurfaceOf(sn);
       if (surf) return `${baseProduct} ${surf}`;
+    }
+    // v5.18: MB130A は F列「下地」(PI/SiN) × G列「膜厚」(x.xum) で分割
+    if (/^MB130A/i.test(baseProduct) && ws) {
+      // ヘッダー行から「下地」「膜厚」列を特定 (通常 F=下地, G=膜厚)
+      let baseCol = null, thickCol = null;
+      for (let r = 1; r <= Math.min(ws.rowCount, 6) && (!baseCol || !thickCol); r++) {
+        for (let c = 1; c <= Math.min(ws.columnCount, 25); c++) {
+          const hv = ws.getCell(r, c).value;
+          if (hv == null) continue;
+          const h = cleanText(hv);
+          if (!baseCol && /下地/.test(h)) baseCol = c;
+          if (!thickCol && /膜厚/.test(h)) thickCol = c;
+        }
+      }
+      // 値は通常ヘッダーの1〜2行下に入る。最初の非空セルを拾う
+      function firstBelow(col) {
+        if (!col) return null;
+        for (let r = 1; r <= Math.min(ws.rowCount, 10); r++) {
+          const v = ws.getCell(r, col).value;
+          if (v != null && cleanText(v) && !/下地|膜厚/.test(cleanText(v))) return v;
+        }
+        return null;
+      }
+      const base = mbBaseOf(firstBelow(baseCol), sn);
+      const thick = mbThickOf(firstBelow(thickCol), sn);
+      if (thick) return `${baseProduct} ${base} ${thick}`;
+      return `${baseProduct} ${base}`;
     }
     return baseProduct;
   }
@@ -3169,10 +3323,12 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
     const cols = detectColumns(ws);
     if (!cols.slot) continue;
     
-    const summary = getSummary(productNameForSheet(sn));
+    const summary = getSummary(productNameForSheet(sn, ws));
     summary.sheet_count++;
     
     const sheetIsPending = isPendingSheet(sn);
+    // v5.24: 「開発品」シートは白slotも含め全て使用済扱い (在庫・予約にしない)
+    const sheetIsDev = /開発品/.test(sn);
     const blocks = findSlotBlocks(ws, cols.slot);
     
     for (const block of blocks) {
@@ -3268,7 +3424,13 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
       const customers = [];
       for (let r = start; r <= end; r++) {
         if (ws.getRow(r).hidden) continue;
-        const status = classifier(ws.getCell(r, cols.slot));
+        let status = classifier(ws.getCell(r, cols.slot));
+        // v5.23: 白(在庫)でも備考に消費系キーワードがあれば使用済へ (開発品の消費済み等)
+        if (!useReverseLogic && status === '在庫' && cols['備考'] && isConsumedNote(ws.getCell(r, cols['備考']).value)) {
+          status = '使用済';
+        }
+        // v5.24: 開発品シートは在庫・予約も含め全て使用済扱い
+        if (sheetIsDev && !useReverseLogic) status = '使用済';
         if (useReverseLogic) { if (status === '未予約') countA++; else countB++; }
         else { if (status === '在庫') countA++; else if (status === '予約') countB++; else countC++; }
         const targetStatus = useReverseLogic ? '予約済' : '予約';
@@ -3740,7 +3902,9 @@ const CACHE_STORE = 'inventory_cache';
 const CACHE_VERSION = 1;
 // 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
 // (キャッシュ全クリアになる)
-const CACHE_SCHEMA_VERSION = 'v5.17-wlp-slotguard-2026-06-02';
+const CACHE_SCHEMA_VERSION = 'v5.24-dev-sheet-used-2026-06-15';
+
+
 
 let _cacheDbPromise = null;
 function openCache() {
@@ -4072,12 +4236,30 @@ document.getElementById('btn-export-json').addEventListener('click', () => {
     alert('エクスポートできるデータがありません。');
     return;
   }
+  // v5.21: UI表示と同じ品名解決を export にも適用。
+  //   product = displayName(p) (口径Φプレフィックス + 全分割ルール反映済みの表示名)
+  //   生の品名は product_raw に保持 (トレース用)。これで Φ無し同名衝突を解消。
+  const resolvedInventory = INVENTORY.map(p => ({
+    ...p,
+    product: displayName(p),
+    product_raw: p.product,
+  }));
+  // 自己チェック: exportの品名が「唯一の正」displayName() を確実に通っているか検証。
+  //   (将来 export側で displayName を外して生品名に戻す等のデグレを即検知する)
+  const issues = verifyExportNameSync(resolvedInventory);
+  if (issues.length) {
+    console.warn('[export整合性NG] 品名解決がUI(displayName)と不一致:', issues);
+    alert('⚠ エクスポートの品名がUI表示と不一致です(' + issues.length + '件)。\n'
+        + 'displayName() を通していない可能性があります。コンソールを確認してください。\n'
+        + '例: ' + issues.slice(0, 3).map(i => `${i.product_raw}→${i.exported}(期待:${i.expected})`).join(' / '));
+  }
   const exportObj = {
     generated_at: new Date().toISOString(),
     folder: 'combined',
+    schema_note: 'product = UI表示名(displayName: Φ口径+分割反映済). product_raw = 生品名. dummy=入荷5年以上(dummy_stock/dummy_reserved).',
     inventory_count: INVENTORY.length,
     substrate_count: SUBSTRATE.length,
-    inventory: INVENTORY,
+    inventory: resolvedInventory,
     substrate: SUBSTRATE,
   };
   const json = JSON.stringify(exportObj, null, 2);
