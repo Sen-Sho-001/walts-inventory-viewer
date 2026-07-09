@@ -60,7 +60,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>WALTS 在庫管理ツール v5.24</title>
+<title>WALTS 在庫管理ツール v5.26</title>
 <style>
   :root {
     --bg: #eceef1;
@@ -90,7 +90,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     background: var(--bg);
     color: var(--ink);
     font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", sans-serif;
-    font-size: 13px;
+    font-size: 15px;
     line-height: 1.5;
   }
   .app { max-width: 1700px; margin: 0 auto; padding: 16px 20px 40px; }
@@ -99,35 +99,35 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 14px;
   }
-  h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.02em; }
-  h1 .sub { font-size: 11px; font-weight: 400; color: var(--ink-dim); margin-left: 10px; }
+  h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.02em; }
+  h1 .sub { font-size: 13px; font-weight: 400; color: var(--ink-dim); margin-left: 10px; }
   /* v5.19: 変更履歴 (最新1件は常時表示、過去は折りたたみ) */
-  .changelog { margin: 6px 0 4px; font-size: 12px; }
+  .changelog { margin: 6px 0 4px; font-size: 14px; }
   .changelog .cl-latest {
     display: inline-block; background: #eef7f0; border-left: 3px solid #2d8a4e;
     color: #1f5c34; padding: 4px 10px; border-radius: 4px; font-weight: 600;
   }
   .changelog .cl-latest .clv { color: #2d8a4e; margin-right: 6px; }
-  .changelog .cl-latest .cld { color: #6a8a76; font-weight: 400; margin-left: 6px; font-size: 11px; }
+  .changelog .cl-latest .cld { color: #6a8a76; font-weight: 400; margin-left: 6px; font-size: 13px; }
   .changelog .cl-toggle {
     display: inline-block; margin-left: 10px; color: #2d6a8a; cursor: pointer;
-    user-select: none; font-size: 11px;
+    user-select: none; font-size: 13px;
   }
   .changelog .cl-toggle:hover { text-decoration: underline; }
   .changelog .cl-past { display: none; margin-top: 6px; padding-left: 4px; }
   .changelog.expanded .cl-past { display: block; }
   .changelog .cl-past .cl-row { padding: 2px 0; color: var(--ink-dim); }
   .changelog .cl-past .clv { display: inline-block; min-width: 46px; color: #2d6a8a; font-weight: 600; }
-  .changelog .cl-past .cld { color: #999; margin-left: 6px; font-size: 11px; }
+  .changelog .cl-past .cld { color: #999; margin-left: 6px; font-size: 13px; }
   .index-info { text-align: right; line-height: 1.2; }
-  .index-info .lbl { font-size: 10px; color: var(--ink-dim); letter-spacing: 0.08em; }
+  .index-info .lbl { font-size: 12px; color: var(--ink-dim); letter-spacing: 0.08em; }
   .index-info .time {
-    font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums;
+    font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums;
     color: var(--ink); margin-top: 2px;
     font-family: "Consolas", "Yu Gothic UI", monospace;
   }
   .index-info .time .ago {
-    font-size: 11px; color: var(--ink-dim); font-weight: 400;
+    font-size: 13px; color: var(--ink-dim); font-weight: 400;
     margin-left: 6px; font-family: inherit;
   }
 
@@ -147,11 +147,11 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   .nav-card.ok { border-left: 4px solid var(--ok); }
   .nav-card.none { border-left: 4px solid #999; }
   .nav-card .pname {
-    font-size: 11px; font-weight: 700; color: var(--ink);
+    font-size: 13px; font-weight: 700; color: var(--ink);
     flex: 1; line-height: 1.2;
   }
   .nav-card .pqty {
-    font-size: 22px; font-weight: 800; line-height: 1;
+    font-size: 24px; font-weight: 800; line-height: 1;
     font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
   }
   .nav-card .pqty.danger { color: var(--alert); }
@@ -170,16 +170,16 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   .search { position: relative; }
   .search input {
     width: 100%; padding: 8px 10px 8px 32px;
-    font-size: 13px; border: 1px solid var(--line);
+    font-size: 15px; border: 1px solid var(--line);
     background: #fff; font-family: inherit;
   }
   .search input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   .search::before {
     content: "🔍"; position: absolute; left: 10px; top: 50%;
-    transform: translateY(-50%); font-size: 12px; opacity: 0.5;
+    transform: translateY(-50%); font-size: 14px; opacity: 0.5;
   }
   .controls label {
-    font-size: 11px; color: var(--ink-dim);
+    font-size: 13px; color: var(--ink-dim);
     display: flex; align-items: center; gap: 6px; white-space: nowrap;
     cursor: pointer;
   }
@@ -201,7 +201,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     border-top: 6px solid #7eb6e6;  /* パステルブルー(1色統一) */
     background: #f4f7fa;             /* ほのかにブルーがかった淡いグレー */
   }
-  .pc-header .pc-title .name { font-size: 20px; color: var(--ink); }
+  .pc-header .pc-title .name { font-size: 22px; color: var(--ink); }
   /* color-1〜8 のクラスは付与され続けるが見た目は全て同じ */
   .pc-header.color-1, .pc-header.color-2, .pc-header.color-3, .pc-header.color-4,
   .pc-header.color-5, .pc-header.color-6, .pc-header.color-7, .pc-header.color-8 {
@@ -212,11 +212,11 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     flex: 0 0 auto;
   }
   .pc-title .name {
-    font-size: 18px; font-weight: 700; color: var(--ink);
+    font-size: 20px; font-weight: 700; color: var(--ink);
     margin: 0;
   }
   .pc-title .file {
-    font-size: 10px; color: var(--ink-faint);
+    font-size: 12px; color: var(--ink-faint);
     font-family: "Consolas", monospace; margin-top: 2px;
   }
   .pc-stats {
@@ -234,16 +234,16 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   .pc-stat:last-child { border-right: none; }
   .pc-stat .label {
-    font-size: 9px; color: var(--ink-dim);
+    font-size: 11px; color: var(--ink-dim);
     letter-spacing: 0.08em; text-transform: uppercase;
     margin-bottom: 2px;
   }
   .pc-stat .val {
-    font-size: 28px; font-weight: 800; line-height: 1;
+    font-size: 30px; font-weight: 800; line-height: 1;
     font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
   }
   .pc-stat .sub {
-    font-size: 10px; color: var(--ink-faint);
+    font-size: 12px; color: var(--ink-faint);
     margin-top: 2px; font-family: "Consolas", monospace;
   }
   /* 詳細パネルの数字は全て黒、状態0(在庫切れ)のみ赤、ゼロ表記のみ薄く */
@@ -259,12 +259,12 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     gap: 4px;
   }
   .pc-stat .val-plus {
-    font-size: 14px; font-weight: 600;
+    font-size: 16px; font-weight: 600;
     color: var(--ink-dim);
     font-variant-numeric: tabular-nums;
   }
   .pc-stat .val-extra {
-    font-size: 18px; font-weight: 700;
+    font-size: 20px; font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
     color: var(--ink);
@@ -275,7 +275,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   /* セクションヘッダー */
   .section-header {
     padding: 8px 18px 6px;
-    font-size: 11px; font-weight: 700;
+    font-size: 13px; font-weight: 700;
     letter-spacing: 0.05em;
     color: var(--ink-dim);
     background: #f4f5f7;
@@ -286,19 +286,19 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   .section-header.incoming { color: var(--incoming); }
   .section-header .badge {
     background: rgba(0,0,0,0.06); padding: 1px 8px;
-    font-size: 10px; font-weight: 600; border-radius: 2px;
+    font-size: 12px; font-weight: 600; border-radius: 2px;
     color: var(--ink-dim);
   }
 
   /* ロット表 */
   .lot-table-wrap { overflow-x: auto; }
   table.lot-table {
-    width: 100%; border-collapse: collapse; font-size: 12px;
+    width: 100%; border-collapse: collapse; font-size: 14px;
   }
   table.lot-table thead th {
     background: #f1f3f5; border-bottom: 1px solid var(--line);
     padding: 6px 10px; text-align: left;
-    font-weight: 600; font-size: 10px;
+    font-weight: 600; font-size: 12px;
     letter-spacing: 0.04em; white-space: nowrap;
     color: var(--ink-dim);
   }
@@ -317,17 +317,17 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   table.lot-table tbody tr.zero:hover { background: var(--hover); }
 
   .lot-name {
-    font-weight: 600; font-size: 12px; min-width: 130px;
+    font-weight: 600; font-size: 14px; min-width: 130px;
   }
   .lot-name .sheet {
-    display: block; font-size: 10px;
+    display: block; font-size: 12px;
     color: var(--ink-dim); font-weight: 400;
     margin-top: 1px;
   }
 
   .qty-cell { text-align: right; min-width: 60px; padding-right: 16px !important; }
   .qty-num {
-    font-size: 22px; font-weight: 800; line-height: 1;
+    font-size: 24px; font-weight: 800; line-height: 1;
     font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
   }
   .qty-num.zero { color: var(--ink-faint); }
@@ -337,20 +337,20 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 
   .reserved-cell { min-width: 180px; }
   .reserved-num {
-    font-size: 15px; font-weight: 700; color: var(--ink-dim);
+    font-size: 17px; font-weight: 700; color: var(--ink-dim);
     font-variant-numeric: tabular-nums;
   }
   .reserved-num.incoming { color: var(--ink-dim); }
-  .reserved-num.zero { color: var(--ink-faint); font-weight: 400; font-size: 12px; }
+  .reserved-num.zero { color: var(--ink-faint); font-weight: 400; font-size: 14px; }
   .reserved-customers {
-    font-size: 10px; color: var(--ink-dim);
+    font-size: 12px; color: var(--ink-dim);
     margin-top: 2px;
   }
   .reserved-customers .item {
     display: inline-block; background: #eef0f3;
     padding: 1px 5px; margin: 1px 2px 1px 0;
     border-radius: 2px; color: var(--ink-dim);
-    font-size: 9px; max-width: 220px;
+    font-size: 11px; max-width: 220px;
     overflow: hidden; text-overflow: ellipsis;
     white-space: nowrap; vertical-align: middle;
   }
@@ -359,32 +359,32 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
 
   .date-cell {
-    font-family: "Consolas", monospace; font-size: 11px;
+    font-family: "Consolas", monospace; font-size: 13px;
     color: var(--ink); white-space: nowrap; min-width: 120px;
   }
   .date-cell .ago {
     display: block; color: var(--ink-dim);
-    font-size: 9px; font-family: inherit;
+    font-size: 11px; font-family: inherit;
   }
-  .date-cell .raw-text { color: var(--warn); font-family: inherit; font-size: 11px; }
+  .date-cell .raw-text { color: var(--warn); font-family: inherit; font-size: 13px; }
   .date-cell .placeholder {
     font-style: italic; color: var(--ink-faint);
-    font-family: inherit; font-size: 11px;
+    font-family: inherit; font-size: 13px;
   }
 
-  .loc-cell { min-width: 140px; font-size: 11px; line-height: 1.4; }
+  .loc-cell { min-width: 140px; font-size: 13px; line-height: 1.4; }
   .loc-cell .item {
     display: inline-block; background: #eef0f3;
     padding: 1px 6px; margin: 1px 2px 1px 0;
-    border-radius: 2px; color: var(--ink); font-size: 10px;
+    border-radius: 2px; color: var(--ink); font-size: 12px;
   }
-  .loc-cell .placeholder { color: var(--ink-faint); font-style: italic; font-size: 10px; }
+  .loc-cell .placeholder { color: var(--ink-faint); font-style: italic; font-size: 12px; }
 
   /* 発注状態 */
   .order-cell { min-width: 140px; }
   .order-badge {
     display: inline-block; padding: 3px 8px;
-    font-size: 10px; font-weight: 700;
+    font-size: 12px; font-weight: 700;
     border-radius: 3px; letter-spacing: 0.03em;
     white-space: nowrap;
   }
@@ -397,13 +397,13 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   .order-badge.pending { background: var(--order-pending); color: #fff; }
   .order-badge.done { background: var(--order-done); color: #fff; }
   .order-info {
-    display: block; font-size: 10px; color: var(--ink-dim);
+    display: block; font-size: 12px; color: var(--ink-dim);
     margin-top: 3px; font-family: "Consolas", monospace;
   }
   .order-info b { color: var(--ink); font-weight: 600; }
   .order-actions { display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap; }
   .order-btn {
-    padding: 2px 6px; font-size: 10px;
+    padding: 2px 6px; font-size: 12px;
     border: 1px solid var(--line); background: #fff;
     cursor: pointer; font-family: inherit;
     color: var(--ink-dim); border-radius: 2px;
@@ -413,11 +413,11 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 
   .empty {
     padding: 30px 20px; text-align: center;
-    color: var(--ink-faint); font-style: italic; font-size: 12px;
+    color: var(--ink-faint); font-style: italic; font-size: 14px;
   }
 
   .footer-note {
-    margin-top: 14px; font-size: 10px; color: var(--ink-dim);
+    margin-top: 14px; font-size: 12px; color: var(--ink-dim);
     padding: 8px 4px; border-top: 1px dashed var(--line);
   }
 
@@ -425,7 +425,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     position: fixed; bottom: 24px; left: 50%;
     transform: translateX(-50%) translateY(20px);
     background: var(--ink); color: #fff;
-    padding: 10px 18px; font-size: 12px;
+    padding: 10px 18px; font-size: 14px;
     opacity: 0; pointer-events: none;
     transition: all 0.25s ease; z-index: 100;
   }
@@ -433,7 +433,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 
   .mock-banner {
     background: #fff8d6; border: 1px solid #d4c870; color: #6b5b00;
-    padding: 6px 12px; font-size: 11px; margin-bottom: 12px;
+    padding: 6px 12px; font-size: 13px; margin-bottom: 12px;
   }
   .mock-banner b { color: #4a3f00; }
 
@@ -449,17 +449,17 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     min-width: 380px; border: 1px solid var(--line);
     box-shadow: 0 8px 30px rgba(0,0,0,0.2);
   }
-  .modal h3 { margin: 0 0 12px; font-size: 14px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  .modal h3 { margin: 0 0 12px; font-size: 16px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
   .modal .field { margin-bottom: 10px; }
-  .modal .field label { display: block; font-size: 11px; color: var(--ink-dim); margin-bottom: 3px; }
+  .modal .field label { display: block; font-size: 13px; color: var(--ink-dim); margin-bottom: 3px; }
   .modal .field input, .modal .field textarea {
     width: 100%; padding: 6px 8px;
-    border: 1px solid var(--line); font-family: inherit; font-size: 12px;
+    border: 1px solid var(--line); font-family: inherit; font-size: 14px;
   }
   .modal-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
   .btn {
     display: inline-block; padding: 5px 11px;
-    font-size: 11px; font-family: inherit;
+    font-size: 13px; font-family: inherit;
     border: 1px solid var(--line); background: #fff;
     cursor: pointer; text-decoration: none; color: var(--ink);
   }
@@ -471,7 +471,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   .status-pill {
     display: inline-flex; align-items: center; gap: 5px;
     padding: 4px 11px; border-radius: 14px;
-    font-size: 12px; font-weight: 700;
+    font-size: 14px; font-weight: 700;
     letter-spacing: 0.03em; white-space: nowrap;
   }
   .status-pill .num { font-variant-numeric: tabular-nums; }
@@ -507,7 +507,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     text-align: center;
   }
   .status-big .label {
-    font-size: 14px; font-weight: 700;
+    font-size: 16px; font-weight: 700;
     letter-spacing: 0.05em;
     line-height: 1.1; margin-bottom: 4px;
     color: var(--ink);
@@ -522,13 +522,13 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     flex-shrink: 0;
   }
   .status-big .num {
-    font-size: 32px; font-weight: 800;
+    font-size: 34px; font-weight: 800;
     line-height: 1; font-variant-numeric: tabular-nums;
     letter-spacing: -0.03em;
     color: var(--ink);
   }
   .status-big .unit {
-    font-size: 11px;
+    font-size: 13px;
     opacity: 0.65; margin-top: 2px;
     font-weight: 600; letter-spacing: 0.05em;
     color: var(--ink-dim);
@@ -550,7 +550,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   tr.dummy-row .lot-name { font-style: italic; }
   .dummy-tag {
     display: inline-block;
-    font-size: 9px; font-weight: 700;
+    font-size: 11px; font-weight: 700;
     background: #999; color: #fff;
     padding: 1px 5px; margin-left: 6px;
     border-radius: 2px; letter-spacing: 0.05em;
@@ -564,20 +564,20 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     opacity: 0.7;
   }
   .pc-stat.dummy-mini .label {
-    font-size: 9px; color: var(--ink-faint);
+    font-size: 11px; color: var(--ink-faint);
     letter-spacing: 0.05em; margin-bottom: 2px;
   }
   .pc-stat.dummy-mini .val-combo { gap: 2px; }
   .pc-stat.dummy-mini .val-combo .val {
-    font-size: 18px; font-weight: 700; color: #777;
+    font-size: 20px; font-weight: 700; color: #777;
     line-height: 1;
   }
   .pc-stat.dummy-mini .val-combo .val.zero { color: var(--ink-faint); }
   .pc-stat.dummy-mini .val-combo .val-plus {
-    font-size: 11px; color: var(--ink-faint);
+    font-size: 13px; color: var(--ink-faint);
   }
   .pc-stat.dummy-mini .sub {
-    font-size: 8px; color: var(--ink-faint);
+    font-size: 10px; color: var(--ink-faint);
     margin-top: 2px;
   }
 
@@ -594,7 +594,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     align-items: center; justify-content: center;
     width: 24px; height: 24px;
     margin-right: 8px;
-    font-size: 14px; color: var(--ink-dim);
+    font-size: 16px; color: var(--ink-dim);
     transition: transform 0.2s ease;
     flex-shrink: 0;
   }
@@ -625,21 +625,21 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     padding: 10px 24px;
     background: #dfe2e6;
     color: var(--ink-dim);
-    font-size: 14px; font-weight: 700;
+    font-size: 16px; font-weight: 700;
     cursor: pointer; border: 1px solid var(--line);
     border-bottom: none; border-radius: 4px 4px 0 0;
     user-select: none;
   }
   .tab:hover { background: #cfd3d8; color: var(--ink); }
   .tab.active { background: var(--ink); color: #fff; border-color: var(--ink); }
-  .tab .count { font-size: 11px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
+  .tab .count { font-size: 13px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
   .tab.active .count { opacity: 0.85; }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
   /* 出所バッジ */
   .origin-badge {
     display: inline-block; padding: 2px 9px;
-    font-size: 10px; font-weight: 700;
+    font-size: 12px; font-weight: 700;
     border-radius: 10px; margin-left: 10px;
     letter-spacing: 0.06em; vertical-align: 3px;
   }
@@ -653,7 +653,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   .file-link-btn {
     display: inline-flex; align-items: center; gap: 3px;
-    padding: 2px 8px; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; font-size: 13px; font-weight: 600;
     border-radius: 4px; border: 1px solid var(--line);
     background: #fff; color: var(--ink);
     text-decoration: none; cursor: pointer;
@@ -663,7 +663,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   .file-link-btn.web { color: #2d5a8a; }
   .file-link-btn.web:hover { background: #e8f0fa; border-color: #5a85b8; }
   /* ロット行内では少し小さく */
-  .lot-row .file-link-btn { padding: 1px 6px; font-size: 10px; }
+  .lot-row .file-link-btn { padding: 1px 6px; font-size: 12px; }
 
 
   /* グループ区切り (アコーディオン) */
@@ -682,7 +682,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   .group-header .gtoggle {
     display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px;
-    font-size: 12px; color: var(--ink-dim);
+    font-size: 14px; color: var(--ink-dim);
     transition: transform 0.2s ease;
     flex-shrink: 0;
   }
@@ -691,11 +691,11 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     color: var(--ink);
   }
   .group-header .gname {
-    font-size: 16px; font-weight: 800;
+    font-size: 18px; font-weight: 800;
     letter-spacing: 0.02em;
   }
   .group-header .gcount {
-    font-size: 11px; color: var(--ink-dim);
+    font-size: 13px; color: var(--ink-dim);
     font-weight: 600;
     flex-shrink: 0;
   }
@@ -718,7 +718,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     padding: 3px 10px 3px 8px;
     background: #fff;
     border-radius: 12px;
-    font-size: 11px;
+    font-size: 13px;
     color: var(--ink);
     flex-shrink: 0;
     line-height: 1.4;
@@ -752,18 +752,18 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     font-variant-numeric: tabular-nums;
     font-weight: 700;
     color: var(--ink);
-    font-size: 11px;
+    font-size: 13px;
     margin-left: 2px;
   }
   .group-header .gpreview .pname-pill .origin-mini {
-    font-size: 8px;
+    font-size: 10px;
     opacity: 0.55;
     margin-left: 2px;
     color: var(--ink-dim);
   }
   .group-header .gstock {
     flex-shrink: 0;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
@@ -775,7 +775,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     text-align: right;
   }
   .group-header .gstock .lbl {
-    font-size: 9px;
+    font-size: 11px;
     color: var(--ink-dim);
     font-weight: 500;
     margin-right: 4px;
@@ -793,10 +793,10 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     text-align: right; line-height: 1.3;
   }
   .changes-box .lbl {
-    font-size: 10px; color: var(--ink-dim); letter-spacing: 0.06em;
+    font-size: 12px; color: var(--ink-dim); letter-spacing: 0.06em;
   }
   .changes-box .summary {
-    font-size: 13px; font-weight: 700; margin-top: 2px;
+    font-size: 15px; font-weight: 700; margin-top: 2px;
     color: var(--ink);
   }
   .changes-box .summary.has-changes {
@@ -805,7 +805,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   .changes-box .summary.has-changes:hover { text-decoration: underline; }
   .changes-box .summary .toggle-arrow {
-    font-size: 10px; margin-left: 4px;
+    font-size: 12px; margin-left: 4px;
     display: inline-block;
     transition: transform 0.2s ease;
   }
@@ -835,7 +835,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   #changes-box.expanded > .changes-list { display: block; }
   .changes-list .change-item {
     padding: 5px 14px;
-    font-size: 11px;
+    font-size: 13px;
     display: flex; align-items: center; gap: 10px;
     border-bottom: 1px solid #f4f2eb;
   }
@@ -843,7 +843,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   .changes-list .change-item:hover { background: var(--hover); }
   .changes-list .change-item .ago {
     flex-shrink: 0; width: 75px;
-    font-size: 10px; color: var(--warn); font-weight: 700;
+    font-size: 12px; color: var(--warn); font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
   .changes-list .change-item .pname {
@@ -853,19 +853,19 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .changes-list .change-item .origin-badge {
-    font-size: 9px; padding: 1px 6px;
+    font-size: 11px; padding: 1px 6px;
     margin-left: 4px;
     vertical-align: 1px;
   }
   .changes-list .change-empty {
     padding: 14px 18px;
     text-align: center;
-    color: var(--ink-dim); font-size: 11px;
+    color: var(--ink-dim); font-size: 13px;
     font-style: italic;
   }
   .changes-list .change-section-label {
     padding: 6px 14px 2px;
-    font-size: 9px; letter-spacing: 0.08em;
+    font-size: 11px; letter-spacing: 0.08em;
     color: var(--ink-faint);
     font-weight: 700;
     text-transform: uppercase;
@@ -892,7 +892,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   .sub-header .stoggle {
     display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px;
-    font-size: 12px; color: var(--ink-dim);
+    font-size: 14px; color: var(--ink-dim);
     transition: transform 0.2s ease;
   }
   .sub-card.expanded .sub-header .stoggle {
@@ -900,11 +900,11 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   .sub-title { flex-shrink: 0; max-width: 50%; }
   .sub-title .name {
-    font-size: 16px; font-weight: 700; margin: 0;
+    font-size: 18px; font-weight: 700; margin: 0;
     color: var(--ink);
   }
   .sub-title .file {
-    font-size: 10px; color: var(--ink-faint);
+    font-size: 12px; color: var(--ink-faint);
     margin-top: 2px;
   }
   .sub-stats {
@@ -920,7 +920,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     min-width: 110px;
   }
   .sub-status .label {
-    font-size: 13px; font-weight: 700;
+    font-size: 15px; font-weight: 700;
     display: inline-flex; align-items: center; gap: 6px;
   }
   .sub-status .lamp-big {
@@ -937,30 +937,30 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   .sub-status.dormant .lamp-big { background: #999; }
   .sub-status .num {
-    font-size: 26px; font-weight: 800;
+    font-size: 28px; font-weight: 800;
     font-variant-numeric: tabular-nums;
     color: var(--ink);
   }
   .sub-status .num.minus { color: var(--alert); }
   .sub-status .unit {
-    font-size: 10px; color: var(--ink-dim);
+    font-size: 12px; color: var(--ink-dim);
   }
   .sub-meta {
     flex: 1; min-width: 0;
     display: flex; flex-direction: column;
     gap: 4px;
-    font-size: 13px;
+    font-size: 15px;
     color: #16a34a !important;
   }
   .sub-meta .row { display: flex; gap: 8px; align-items: baseline; }
   .sub-meta .row .lbl {
-    font-size: 13px; letter-spacing: 0.05em;
+    font-size: 15px; letter-spacing: 0.05em;
     color: #16a34a !important; min-width: 70px;
     font-weight: 700;
   }
   .sub-meta .row .val {
     color: #16a34a !important;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     overflow: hidden; text-overflow: ellipsis;
     white-space: nowrap;
@@ -973,7 +973,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     display: inline-block;
     padding: 1px 7px; background: #e8f5ed;
     color: var(--ink-dim);
-    font-size: 9px; font-weight: 700;
+    font-size: 11px; font-weight: 700;
     border-radius: 9px;
     margin-left: 4px;
   }
@@ -988,7 +988,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     align-items: center;
   }
   .sub-lots .lbl {
-    font-size: 10px; color: var(--ink-dim);
+    font-size: 12px; color: var(--ink-dim);
     font-weight: 700; letter-spacing: 0.05em;
     margin-right: 6px;
   }
@@ -997,7 +997,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     padding: 3px 10px;
     background: #fff;
     border-radius: 12px;
-    font-size: 11px;
+    font-size: 13px;
   }
   .sub-lots .lot-pill .pn {
     font-weight: 600;
@@ -1007,6 +1007,38 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   .sub-lots .lot-pill .pq.zero { color: var(--ink-faint); }
   .sub-lots .lot-pill .pq.minus { color: var(--alert); }
+  /* v5.25: ロット入庫日からの経過期間 */
+  .lot-age {
+    font-size: 12px;
+    color: var(--ink-dim);
+    padding: 1px 6px;
+    background: #f0f2f0;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  .lot-age.age-warn  { color: #8a6200; background: #fdf3d7; }
+  .lot-age.age-alert { color: #a13030; background: #fbe3e3; font-weight: 600; }
+  /* v5.26: 最古在庫の経過時間 大型表示 (ヘッダー右側) */
+  .sub-age-big {
+    text-align: center;
+    padding: 6px 16px;
+    border-radius: 8px;
+    background: #f0f2f0;
+    color: var(--ink-dim);
+    white-space: nowrap;
+  }
+  .sub-age-big .age-elapsed {
+    font-size: 28px; font-weight: 800; line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+  }
+  .sub-age-big .age-elapsed .age-suffix {
+    font-size: 14px; font-weight: 600; margin-left: 4px;
+  }
+  .sub-age-big .age-detail {
+    font-size: 12px; font-weight: 600;
+  }
+  .sub-age-big.age-warn  { color: #8a6200; background: #fdf3d7; }
+  .sub-age-big.age-alert { color: #a13030; background: #fbe3e3; }
   /* 履歴表 */
   .sub-history {
     padding: 0;
@@ -1014,14 +1046,14 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   table.history-table {
     width: 100%; border-collapse: collapse;
-    font-size: 11px;
+    font-size: 13px;
   }
   table.history-table thead th {
     position: sticky; top: 0;
     background: #f1f3f5;
     padding: 6px 10px; text-align: left;
     font-weight: 600; color: var(--ink-dim);
-    font-size: 10px; letter-spacing: 0.04em;
+    font-size: 12px; letter-spacing: 0.04em;
     border-bottom: 1px solid var(--line);
   }
   table.history-table tbody td {
@@ -1031,26 +1063,26 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     vertical-align: top;
   }
   table.history-table tbody tr:hover { background: var(--hover); }
-  table.history-table .h-date { white-space: nowrap; font-family: "Consolas", monospace; font-size: 11px; }
+  table.history-table .h-date { white-space: nowrap; font-family: "Consolas", monospace; font-size: 13px; }
   table.history-table .h-company { font-weight: 600; min-width: 180px; }
   table.history-table .h-company .note {
-    display: block; font-size: 10px;
+    display: block; font-size: 12px;
     color: var(--ink-dim); font-weight: 400;
     margin-top: 2px;
   }
-  table.history-table .h-lot { font-family: "Consolas", monospace; font-size: 10px; color: var(--ink-dim); }
+  table.history-table .h-lot { font-family: "Consolas", monospace; font-size: 12px; color: var(--ink-dim); }
   table.history-table .h-num { text-align: right; font-weight: 600; }
   table.history-table .h-num.zero { color: var(--ink-faint); font-weight: 400; }
   table.history-table .h-in { color: #2d6a3e; }
   table.history-table .h-out { color: #8a2d3e; }
   table.history-table .h-sample { color: #8a6d00; }
-  table.history-table .h-stock { font-size: 13px; font-weight: 700; }
+  table.history-table .h-stock { font-size: 15px; font-weight: 700; }
   table.history-table .h-stock.minus { color: var(--alert); }
   .minus-warning {
     background: #fef0f0;
     padding: 8px 14px;
     color: var(--alert);
-    font-size: 11px;
+    font-size: 13px;
     border-bottom: 1px solid #f5d199;
   }
   /* 基板グループヘッダー */
@@ -1059,7 +1091,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     padding: 8px 14px;
     border-left: 6px solid #4a9b6e;
     background: #e8f5ed;
-    font-size: 13px; font-weight: 700;
+    font-size: 15px; font-weight: 700;
     color: #1a5c3e;
     letter-spacing: 0.02em;
   }
@@ -1081,7 +1113,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   .sgroup-block .sgtoggle {
     display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px;
-    font-size: 12px; color: var(--ink-dim);
+    font-size: 14px; color: var(--ink-dim);
     transition: transform 0.2s ease;
     flex-shrink: 0;
   }
@@ -1089,13 +1121,13 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     transform: rotate(90deg); color: var(--ink);
   }
   .sgroup-block .sgname {
-    font-size: 22px; font-weight: 900;
+    font-size: 24px; font-weight: 900;
     color: #1a5c3e;
     flex-shrink: 0;
     letter-spacing: 0.02em;
   }
   .sgroup-block .sgcount {
-    font-size: 14px; color: var(--ink-dim);
+    font-size: 16px; color: var(--ink-dim);
     font-weight: 700;
     flex-shrink: 0;
   }
@@ -1117,7 +1149,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     padding: 3px 10px 3px 8px;
     background: #fff;
     border-radius: 12px;
-    font-size: 11px;
+    font-size: 13px;
     color: var(--ink);
     flex-shrink: 0;
     line-height: 1.4;
@@ -1130,12 +1162,12 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   .sgroup-block .sgpreview .pname-pill .pq {
     font-variant-numeric: tabular-nums;
     font-weight: 700; color: var(--ink);
-    font-size: 11px;
+    font-size: 13px;
     margin-left: 2px;
   }
   .sgroup-block .sgstock {
     flex-shrink: 0;
-    font-size: 13px; font-weight: 700;
+    font-size: 15px; font-weight: 700;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
     padding: 3px 12px;
@@ -1145,7 +1177,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     text-align: right;
   }
   .sgroup-block .sgstock .lbl {
-    font-size: 9px; color: var(--ink-dim);
+    font-size: 11px; color: var(--ink-dim);
     font-weight: 500; margin-right: 4px;
     letter-spacing: 0.04em;
   }
@@ -1292,6 +1324,20 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     return colMap;
   }
 
+  // v5.26: 入庫セルに "300⏎10/16 260入荷" のようなテキストがある場合、
+  // 「入荷」直前の数値を実入庫数として採用 (なければ通常の数値解釈)
+  function parseInQty(v) {
+    const s = cellToString(v);
+    if (s && /入荷/.test(s)) {
+      const all = s.match(/(\d+)\s*入荷/g);
+      if (all && all.length) {
+        const m = all[all.length - 1].match(/(\d+)/);
+        if (m) return parseInt(m[1], 10);
+      }
+    }
+    return cellToNumber(v);
+  }
+
   function extractRecords(ws, colMap, sheetName) {
     const records = [];
     if (ws.rowCount < 5) return records;
@@ -1316,8 +1362,11 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
       if (!hasData) { r += 1; continue; }
 
       let compB = null;
-      if (r + 1 <= ws.rowCount && colMap.company) {
-        compB = getCellValue(ws, r + 1, colMap.company);
+      let lotB = null;
+      if (r + 1 <= ws.rowCount) {
+        if (colMap.company) compB = getCellValue(ws, r + 1, colMap.company);
+        // v5.26: 下段行にもLot記載がある場合 (上段0005(5pcs)/下段0007(5pcs)で計10 等)
+        lotB = getCellValue(ws, r + 1, colMap.lot);
       }
 
       const dateIso = cellToIsoDate(dateV);
@@ -1343,7 +1392,8 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
         company:    normalizeText(compT),
         note:       normalizeText(compB),
         lot:        normalizeText(lotV),
-        in_qty:     cellToNumber(inV),
+        lot2:       normalizeText(lotB),
+        in_qty:     parseInQty(inV),
         out_sale:   cellToNumber(saleV),
         out_proc:   cellToNumber(procV),
         out_sample: cellToNumber(smpV),
@@ -1356,22 +1406,134 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     return records;
   }
 
+  // v5.25: Lot列テキストの正規化 (全角→半角、カンマ統一、引用符除去)
+  function normalizeLotCellText(s) {
+    if (!s) return '';
+    let t = String(s);
+    try { t = t.normalize('NFKC'); } catch (e) {}
+    return t
+      .replace(/[，、]/g, ',')
+      .replace(/['’‘`]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // v5.25: 1セル分のLot記載を [{lot, qty|null}] に分解
+  // 対応: "A-0007(326pcs) A-0008(174pcs)" / "A-0004，A-0005" / "0001" /
+  //       "A-0001 (YK-xxxx)←PWS登録" (注記は捨てる) / "(47個)" "(3個)" 等
+  function parseLotEntries(raw) {
+    let t = normalizeLotCellText(raw);
+    if (!t) return [];
+    // 注記の除去: 入庫番号+数字、"←…" 以降
+    t = t.replace(/入庫番号\s*[0-9\-]*/g, ' ');
+    t = t.replace(/←[^,]*/g, ' ');
+    // ハイフン内訳記法 "0002-15pcs" → "0002(15)"
+    t = t.replace(/[-‐‑–]\s*(\d+)\s*(?:pcs|pc|p|個|枚|コ)/gi, '($1)');
+    // 括弧なし内訳記法 "04KS451-0013 225個" → "04KS451-0013(225)"
+    t = t.replace(/\s+(\d+)\s*(?:pcs|pc|p|個|枚|コ)(?![A-Za-z0-9])/gi, '($1)');
+    // 数量でない括弧 ((YK-H21405-0001)等) は捨て、数量括弧は残す
+    // 数字+短い単位文字なら単位のタイプミス((46cs)等)も数量とみなす
+    t = t.replace(/\(([^)]*)\)/g, (m, inner) => {
+      const q = inner.trim().match(/^(\d+)\s*[A-Za-z個枚コ]{0,4}\.?$/);
+      return q ? `(${q[1]})` : ' ';
+    });
+    const entries = [];
+    const re = /([A-Za-z0-9][A-Za-z0-9\-]*)\s*(?:\((\d+)\))?/g;
+    let m;
+    while ((m = re.exec(t)) !== null) {
+      entries.push({ lot: m[1], qty: m[2] != null ? parseInt(m[2], 10) : null });
+    }
+    return entries;
+  }
+
+  // v5.25: 省略形ロット(例:"0001")を既知フルロット(例:"06KS364-0001")へ解決
+  // 直近に出現したフルロットから逆順に "-0001" 終端一致を探す
+  function resolveLotShorthand(lot, knownOrder) {
+    if (/-/.test(lot) || !/^\d{1,6}$/.test(lot)) return lot;
+    for (let i = knownOrder.length - 1; i >= 0; i--) {
+      if (knownOrder[i].endsWith('-' + lot)) return knownOrder[i];
+    }
+    // フルロットに解決できない純数字ロットは4桁ゼロ埋めで正規化 ("4"→"0004")
+    if (lot.length < 4) return lot.padStart(4, '0');
+    return lot;
+  }
+
   function aggregateLots(history) {
     const lotsMap = new Map();
     const order = [];
-    for (const rec of history) {
-      const lot = rec.lot;
-      if (!lot) continue;
+    const knownOrder = [];  // フル形式ロットの出現順 (省略形解決用)
+    const ensure = (lot) => {
       if (!lotsMap.has(lot)) {
-        lotsMap.set(lot, { in_total: 0, out_total: 0, sample_total: 0 });
+        lotsMap.set(lot, { in_total: 0, out_total: 0, sample_total: 0, first_in_iso: null, last_in_iso: null, estimated: false });
         order.push(lot);
       }
-      const d = lotsMap.get(lot);
-      d.in_total     += rec.in_qty;
-      d.out_total    += rec.out_sale + rec.out_proc;
-      d.sample_total += rec.out_sample;
+      return lotsMap.get(lot);
+    };
+    let unattributedOut = 0;  // v5.26: Lot未記載の出庫・サンプル合計
+    for (const rec of history) {
+      // v5.26: 下段行のLot記載を結合 (同一文字列=セル結合の重複は無視)
+      let rawLot = rec.lot || '';
+      if (rec.lot2 && rec.lot2 !== rec.lot) {
+        rawLot = rawLot ? rawLot + ',' + rec.lot2 : rec.lot2;
+      }
+      let entries = parseLotEntries(rawLot);
+      if (!entries.length) {
+        unattributedOut += rec.out_sale + rec.out_proc + rec.out_sample;
+        continue;
+      }
+      // 省略形解決 → フルロットを既知リストへ登録
+      entries = entries.map(e => ({ lot: resolveLotShorthand(e.lot, knownOrder), qty: e.qty }));
+      for (const e of entries) {
+        if (/-/.test(e.lot) && knownOrder.indexOf(e.lot) === -1) knownOrder.push(e.lot);
+      }
+      // 同一ロットが重複したら統合 (qtyは合算、片方nullならnull)
+      const merged = [];
+      for (const e of entries) {
+        const hit = merged.find(x => x.lot === e.lot);
+        if (hit) {
+          hit.qty = (hit.qty != null && e.qty != null) ? hit.qty + e.qty : null;
+        } else merged.push({ lot: e.lot, qty: e.qty });
+      }
+      entries = merged;
+      // 配分ウェイト: 内訳あり→内訳比、単一→全量、内訳なし複数→均等割(推定)
+      const n = entries.length;
+      const allQty = entries.every(e => e.qty != null);
+      const qtySum = allQty ? entries.reduce((a, e) => a + e.qty, 0) : 0;
+      let weights, estimated = false;
+      if (n === 1) {
+        weights = [1];
+      } else if (allQty && qtySum > 0) {
+        weights = entries.map(e => e.qty / qtySum);
+      } else {
+        weights = entries.map(() => 1 / n);
+        estimated = true;
+      }
+      // 整数配分 (端数は先頭ロットから+1)
+      const alloc = (total) => {
+        if (!total || total <= 0) return entries.map(() => 0);
+        const out = weights.map(w => Math.floor(total * w + 1e-9));
+        let rem = total - out.reduce((a, b) => a + b, 0);
+        for (let i = 0; rem > 0; i = (i + 1) % out.length) { out[i] += 1; rem -= 1; }
+        return out;
+      };
+      const ins   = alloc(rec.in_qty);
+      const sales = alloc(rec.out_sale);
+      const procs = alloc(rec.out_proc);
+      const smps  = alloc(rec.out_sample);
+      entries.forEach((e, i) => {
+        const d = ensure(e.lot);
+        d.in_total     += ins[i];
+        d.out_total    += sales[i] + procs[i];
+        d.sample_total += smps[i];
+        if (estimated) d.estimated = true;
+        // 入庫行(配分後in>0)の日付を捕捉 (経過期間表示用)
+        if (ins[i] > 0 && rec.date_iso) {
+          if (!d.first_in_iso || rec.date_iso < d.first_in_iso) d.first_in_iso = rec.date_iso;
+          if (!d.last_in_iso  || rec.date_iso > d.last_in_iso)  d.last_in_iso  = rec.date_iso;
+        }
+      });
     }
-    return order.map(lot => {
+    const res = order.map(lot => {
       const d = lotsMap.get(lot);
       return {
         lot: lot,
@@ -1379,8 +1541,48 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
         out_total:    d.out_total,
         sample_total: d.sample_total,
         stock:        d.in_total - d.out_total - d.sample_total,
+        first_in_iso: d.first_in_iso,
+        last_in_iso:  d.last_in_iso,
+        estimated:    d.estimated,
       };
     });
+    // v5.25: マイナス残ロット(出庫の帰属ズレ)を古い正残ロットからFIFOで相殺
+    // 例: 0001が-19 / 0002が+19 → 0002から19を引き両方0にする (合計は不変)
+    const byOldest = (a, b) => {
+      const ka = a.last_in_iso || '0000-00-00';
+      const kb = b.last_in_iso || '0000-00-00';
+      return ka < kb ? -1 : (ka > kb ? 1 : 0);
+    };
+    const negatives = res.filter(l => l.stock < 0);
+    if (negatives.length) {
+      const positives = res.filter(l => l.stock > 0).sort(byOldest);
+      for (const neg of negatives) {
+        let deficit = -neg.stock;
+        for (const pos of positives) {
+          if (deficit <= 0) break;
+          if (pos.stock <= 0) continue;
+          const take = Math.min(pos.stock, deficit);
+          pos.stock -= take;
+          neg.stock += take;
+          deficit   -= take;
+          pos.reconciled = true;
+          neg.reconciled = true;
+        }
+      }
+    }
+    // v5.26: Lot未記載の出庫は「古い在庫から消費された」とみなしFIFOで控除
+    if (unattributedOut > 0) {
+      const positives = res.filter(l => l.stock > 0).sort(byOldest);
+      let remain = unattributedOut;
+      for (const pos of positives) {
+        if (remain <= 0) break;
+        const take = Math.min(pos.stock, remain);
+        pos.stock -= take;
+        remain    -= take;
+        pos.reconciled = true;
+      }
+    }
+    return res;
   }
 
   function compute1yTotals(history, fileModifiedDate) {
@@ -1495,7 +1697,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 <div class="app">
 
   <header class="top">
-    <h1>WALTS 在庫管理ツール <span class="sub">v5.24</span></h1>
+    <h1>WALTS 在庫管理ツール <span class="sub">v5.26</span></h1>
     <div class="changelog" id="changelog">
       <div class="cl-latest" id="cl-latest"></div>
       <div class="cl-toggle" id="cl-toggle" onclick="toggleChangelog()">過去の変更点を表示 ▼</div>
@@ -1508,13 +1710,13 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
       </div>
       <div class="changes-list" id="changes-list"></div>
     </div>
-    <div id="fetch-status-bar" style="margin-top:8px; padding:8px 12px; background:#f0f4f8; border-radius:6px; font-size:12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <div id="fetch-status-bar" style="margin-top:8px; padding:8px 12px; background:#f0f4f8; border-radius:6px; font-size: 14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
       <span id="fetch-status-text" style="flex:1; min-width:200px;">SharePointへ接続中...</span>
       <span id="fetch-counts" style="color:#555;"></span>
-      <button id="btn-refetch" disabled style="padding:4px 12px; font-size:12px; cursor:pointer;">🔄 再取得</button>
-      <button id="btn-export-json" disabled style="padding:4px 12px; font-size:12px; cursor:pointer; opacity:0.7;" title="デバッグ用: 現在の集計データをJSONで保存">📥 JSON出力</button>
+      <button id="btn-refetch" disabled style="padding:4px 12px; font-size: 14px; cursor:pointer;">🔄 再取得</button>
+      <button id="btn-export-json" disabled style="padding:4px 12px; font-size: 14px; cursor:pointer; opacity:0.7;" title="デバッグ用: 現在の集計データをJSONで保存">📥 JSON出力</button>
     </div>
-    <div id="fetch-error-panel" style="display:none; margin-top:8px; padding:10px 12px; background:#fff5f5; border:1px solid #fcc; border-radius:6px; font-size:12px;">
+    <div id="fetch-error-panel" style="display:none; margin-top:8px; padding:10px 12px; background:#fff5f5; border:1px solid #fcc; border-radius:6px; font-size: 14px;">
       <div style="font-weight:bold; color:#c33; margin-bottom:6px;">⚠️ データ取得に失敗しました</div>
       <div id="fetch-error-msg" style="color:#700;"></div>
     </div>
@@ -1636,6 +1838,8 @@ function setOrder(key, data) {
    ============================================================ */
 // === 変更履歴 (最新が先頭。先頭1件を常時表示、それ以前は折りたたみ) ===
 const CHANGELOG = [
+  { v: 'v5.26', date: '2026-07-08', text: '基板Lot記載の追加パターン対応(Lot未記載出庫のFIFO控除、入庫番号混入・省略形・各種内訳記法対応)、最古在庫の経過時間をヘッダー右側に大型表示、全体フォントサイズ2Up' },
+  { v: 'v5.25', date: '2026-07-08', text: '基板(KIT)の入庫日からの経過日数表示を追加(ロット別在庫に入庫日+経過期間、カードに最古在庫行、Lot列の複数ロット内訳/省略形/記入ズレ対応)' },
   { v: 'v5.24', date: '2026-06-15', text: '「開発品」シートは白slotも含め全て使用済扱い(在庫・予約にしない)' },
   { v: 'v5.23', date: '2026-06-08', text: '白slotでも備考に消費系記載(廃棄/開発使用/サンプル/不良/DC等)があれば使用済として在庫から除外' },
   { v: 'v5.22', date: '2026-06-02', text: '末尾(数字)シート((2)等)の重複除外を廃止し実在在庫としてカウント' },
@@ -2117,16 +2321,70 @@ window.toggleSubCard = function(product) {
   renderSubstrate();
 };
 
+// v5.25: 入庫日からの経過期間ラベル (基板ロット用)
+// ISO日付(YYYY-MM-DD)を受け取り { label:'1年10ヶ月', cls:'age-warn' } を返す
+function subElapsed(iso) {
+  if (!iso) return null;
+  const from = new Date(iso + 'T00:00:00');
+  if (isNaN(from)) return null;
+  const now = new Date();
+  let months = (now.getFullYear() - from.getFullYear()) * 12 + (now.getMonth() - from.getMonth());
+  if (now.getDate() < from.getDate()) months -= 1;
+  if (months < 0) months = 0;
+  let label;
+  if (months < 1) {
+    const days = Math.max(0, Math.floor((now - from) / 86400000));
+    label = `${days}日`;
+  } else if (months < 12) {
+    label = `${months}ヶ月`;
+  } else {
+    const y = Math.floor(months / 12), m = months % 12;
+    label = m > 0 ? `${y}年${m}ヶ月` : `${y}年`;
+  }
+  const cls = months >= 36 ? 'age-alert' : (months >= 24 ? 'age-warn' : '');
+  return { label, cls, months };
+}
+
+// ISO日付 → 'YYYY/MM' 短縮表示
+function subDateShort(iso) {
+  if (!iso) return '';
+  return iso.slice(0, 7).replace('-', '/');
+}
+
 function renderSubCard(s) {
   // v5.1: status / dormant 表示は廃止 (在庫数のみ表示)
   const isExpanded = SUB_EXPANDED.has(s.product);
   const minusClass = s.current_stock < 0 ? 'minus' : (s.current_stock === 0 ? 'zero' : '');
   
-  // ロット別在庫ピル
-  const lotPills = (s.lots || []).map(l => {
-    const cls = l.stock < 0 ? 'minus' : (l.stock === 0 ? 'zero' : '');
-    return `<span class="lot-pill"><span class="pn">${escape(l.lot)}</span><span class="pq ${cls}">${l.stock}</span></span>`;
+  // ロット別在庫ピル (v5.25: 入庫日+経過期間 / v5.25: 在庫が残っているロットのみ表示)
+  // v5.25: 品名の現在在庫が0以下なら経過表示しない (在庫にない品の入庫時期は非表示)
+  const hasStock = s.current_stock > 0;
+  const stockedLots = (s.lots || []).filter(l => l.stock > 0);
+  const lotPills = stockedLots.map(l => {
+    const cls = '';
+    let ageHtml = '';
+    if (hasStock && l.last_in_iso) {
+      const e = subElapsed(l.last_in_iso);
+      if (e) ageHtml = `<span class="lot-age ${e.cls}" title="入庫 ${escape(l.last_in_iso)}">${subDateShort(l.last_in_iso)}入庫・${e.label}</span>`;
+    }
+    return `<span class="lot-pill"${l.estimated || l.reconciled ? ' title="' + (l.reconciled ? 'マイナス残ロット(出庫の帰属ズレ)との相殺調整を含む推定値' : '複数ロット一括記載(内訳なし)を含むため均等割りの推定値') + '"' : ''}><span class="pn">${escape(l.lot)}</span><span class="pq ${cls}">${l.estimated || l.reconciled ? '≈' : ''}${l.stock}</span>${ageHtml}</span>`;
   }).join('');
+
+  // v5.25: 最古在庫 (在庫ありロットの中で最も古い入庫日)
+  // v5.26: 縦並びの行ではなく、ヘッダー右側の空きスペースに大きく表示
+  let oldestBig = '';
+  const stocked = hasStock ? (s.lots || []).filter(l => l.stock > 0 && l.last_in_iso) : [];
+  if (stocked.length) {
+    const oldest = stocked.reduce((a, b) => (a.last_in_iso <= b.last_in_iso ? a : b));
+    const e = subElapsed(oldest.last_in_iso);
+    if (e) {
+      oldestBig = `
+        <div class="sub-age-big ${e.cls}">
+          <div class="age-elapsed">${e.label}<span class="age-suffix">経過</span></div>
+          <div class="age-detail">${subDateShort(oldest.last_in_iso)}入庫 (${escape(oldest.lot)})</div>
+        </div>`;
+    }
+  }
   
   // 履歴表 (新しい順 = 配列の逆順)
   const historyRows = [...(s.history || [])].reverse().map(h => {
@@ -2181,6 +2439,7 @@ function renderSubCard(s) {
               <span class="val">入庫 <span class="num">${s.in_1y}</span> / 出庫 <span class="num">${s.out_1y}</span>${s.sample_1y > 0 ? ' / サンプル <span class="num">'+s.sample_1y+'</span>' : ''}</span>
             </div>
           </div>
+          ${oldestBig}
           <div class="sub-status">
             <span class="num ${minusClass}">${s.current_stock}</span>
             <span class="unit">現在在庫</span>
@@ -2189,7 +2448,7 @@ function renderSubCard(s) {
       </div>
       <div class="sub-body">
         ${minusWarn}
-        ${s.lots.length > 0 ? `
+        ${stockedLots.length > 0 ? `
           <div class="sub-lots">
             <span class="lbl">ロット別:</span>
             ${lotPills}
@@ -2497,7 +2756,7 @@ function renderStockRow(product, l, extraCls) {
   // 在庫 + 予約済 を加算表記で
   const qtyCombinedHtml = `
     <span class="qty-num ${qtyCls}">${l.stock}</span>
-    <span style="font-size:14px;color:var(--ink-dim);font-weight:600;margin:0 4px">+</span>
+    <span style="font-size: 16px;color:var(--ink-dim);font-weight:600;margin:0 4px">+</span>
     <span class="qty-num" style="${l.reserved===0?'color:var(--ink-faint);opacity:0.4':'color:var(--ink-dim)'}">${l.reserved}</span>
   `;
   
@@ -2591,7 +2850,7 @@ function renderIncomingRow(product, l, extraCls) {
   // 予定枚数: 未予約 + 予約済 を「12 + 13」表記で表示
   const totalHtml = `
     <span class="qty-num incoming">${l.unreserved}</span>
-    <span style="font-size:14px;color:var(--ink-dim);font-weight:600;margin:0 4px">+</span>
+    <span style="font-size: 16px;color:var(--ink-dim);font-weight:600;margin:0 4px">+</span>
     <span class="qty-num" style="color:var(--ink-dim);opacity:0.75">${l.reserved}</span>
   `;
   
@@ -3902,7 +4161,7 @@ const CACHE_STORE = 'inventory_cache';
 const CACHE_VERSION = 1;
 // 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
 // (キャッシュ全クリアになる)
-const CACHE_SCHEMA_VERSION = 'v5.24-dev-sheet-used-2026-06-15';
+const CACHE_SCHEMA_VERSION = 'v5.26-lot-fifo-c-2026-07-08';
 
 
 
