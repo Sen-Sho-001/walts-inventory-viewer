@@ -60,7 +60,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>WALTS 在庫管理ツール v5.26</title>
+<title>WALTS 在庫管理ツール v5.29</title>
 <style>
   :root {
     --bg: #eceef1;
@@ -670,8 +670,8 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   .group-block { margin: 14px 0 0; }
   .group-block:first-child { margin-top: 6px; }
   .group-header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 14px;
+    display: flex; flex-direction: column; align-items: stretch; gap: 9px;
+    padding: 12px 16px;
     border-left: 8px solid var(--ink);
     background: #e5e7eb;
     cursor: pointer;
@@ -679,6 +679,9 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     transition: background 0.15s;
   }
   .group-header:hover { background: #d8dadf; }
+  .group-header .gh-top {
+    display: flex; align-items: center; gap: 14px;
+  }
   .group-header .gtoggle {
     display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px;
@@ -691,26 +694,64 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
     color: var(--ink);
   }
   .group-header .gname {
-    font-size: 18px; font-weight: 800;
+    font-size: 20px; font-weight: 900;
     letter-spacing: 0.02em;
+    flex-shrink: 0;
   }
   .group-header .gcount {
     font-size: 13px; color: var(--ink-dim);
     font-weight: 600;
     flex-shrink: 0;
   }
+  /* v5.27: シリーズ見出しの所属品名プレビュー (【A / B / C】) */
   .group-header .gpreview {
     flex: 1;
-    overflow: hidden;
-    white-space: nowrap;
-    margin: 0 8px;
     min-width: 0;
-    display: flex;
-    gap: 4px;
-    align-items: center;
+    margin: 0 4px;
+    font-size: 13px;
+    color: var(--ink-dim);
+    line-height: 1.5;
+    white-space: normal;
   }
-  .group-block.expanded .group-header .gpreview {
-    opacity: 0.45;
+  .group-header .gpreview .gp-bracket { color: var(--ink-faint); font-weight: 700; }
+  .group-header .gpreview .gp-name { color: var(--ink-dim); }  /* v5.28: 色分けなし(ハイライト削除) */
+  .group-block.expanded .group-header .gpreview { opacity: 0.5; }
+
+  /* v5.27: シリーズ見出し内の危険/警告バッジ (品名+数量・赤カード白抜き) ※ウエハ・基板共通 */
+  .group-header .gh-alerts, .sgroup-header-wrap .gh-alerts {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  }
+  /* v5.28: 危険/警告品なしのシリーズはバッジ1段分の高さだけ確保して不可視化(帯の高さ統一) */
+  .group-header .gh-alerts.gh-alerts-empty, .sgroup-header-wrap .gh-alerts.gh-alerts-empty { visibility: hidden; }
+  .group-header .gh-alert, .sgroup-header-wrap .gh-alert {
+    display: inline-flex; align-items: baseline; gap: 7px;
+    background: #e53935;               /* v5.28: しっかりした赤背景 */
+    border: 1px solid #b71c1c;
+    border-radius: 8px;
+    padding: 9px 14px;                 /* v5.28: 高さ約1.3倍 */
+  }
+  .group-header .gh-alert .db-name, .sgroup-header-wrap .gh-alert .db-name {
+    font-size: 14px; font-weight: 700; color: #ffffff;   /* 白抜き */
+  }
+  .group-header .gh-alert .db-num, .sgroup-header-wrap .gh-alert .db-num {
+    font-size: 22px; font-weight: 900; color: #ffffff;   /* 白抜き */
+    line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+  }
+  .group-header .gh-alert .db-unit, .sgroup-header-wrap .gh-alert .db-unit {
+    font-size: 12px; font-weight: 700; color: #ffffff;   /* 白抜き */
+  }
+  /* v5.28: 警告品はオレンジ寄りの黄カード(濃い茶系の文字) */
+  .group-header .gh-alert.warn {
+    background: #ffdf9e; border-color: #e39400;
+  }
+  .group-header .gh-alert.warn .db-name,
+  .group-header .gh-alert.warn .db-num,
+  .group-header .gh-alert.warn .db-unit { color: #6b4300; }
+
+  /* シリーズ一覧の見出し */
+  .series-section-title {
+    font-size: 18px; font-weight: 800; color: var(--ink);
+    margin: 4px 0 10px; letter-spacing: 0.02em;
   }
   .group-header .gpreview .pname-pill {
     display: inline-flex; align-items: center;
@@ -763,6 +804,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   .group-header .gstock {
     flex-shrink: 0;
+    margin-left: auto;
     font-size: 15px;
     font-weight: 700;
     color: var(--ink);
@@ -1183,6 +1225,830 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   .sgroup-body { display: none; padding-top: 8px; }
   .sgroup-block.expanded .sgroup-body { display: block; }
+
+/* ============================================================================
+   ▼▼▼ v5.28 実験テーマ (配色＋レイアウト) ▼▼▼
+   ここから下の「THEME START」〜「THEME END」を丸ごと削除すれば v5.27 の見た目に戻る。
+   バックアップ: WALTS_inventory_viewer_backup_v5.27.html
+   ============================================================================ */
+/* THEME START */
+:root {
+  /* 新しいカラーパレット */
+  --bg: #22314a; /* v5.28: ダークネイビー(白カードを際立たせる) */
+  --panel: #ffffff;
+  --ink: #2c3e50; /* 少し柔らかい黒、青みのあるグレー */
+  --ink-dim: #7f8c8d;
+  --ink-faint: #b0bec5;
+  --line: #e0e6ed; /* より柔らかい線 */
+  --accent: #3498db; /* より鮮やかでモダンな青 */
+  --accent-soft: #ecf0f1;
+  --warn: #f39c12; /* 鮮やかなオレンジ */
+  --warn-soft: #fef5e7;
+  --alert: #e74c3c; /* 鮮やかな赤 */
+  --alert-soft: #fadbd8;
+  --alert-strong: #f1948a;
+  --ok: #2ecc71; /* 鮮やかな緑 */
+  --ok-soft: #e8f8f5;
+  --incoming: #9b59b6; /* 鮮やかな紫 */
+  --incoming-soft: #f4ecf7;
+  --order-pending: #f1c40f;
+  --order-done: #2980b9;
+  --hover: #fcfcfc;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", sans-serif;
+  font-size: 16px; /* わずかに大きく */
+  line-height: 1.6;
+}
+.app { max-width: 1600px; margin: 0 auto; padding: 20px 30px 50px; } /* 余白調整 */
+
+header.top {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; /* v5.28: タイトルを1行目フル幅にして残りを下段へ */
+  margin-bottom: 20px;
+  background: #e3edf7; /* v5.28: 帯と同じ薄い青 */
+  padding: 20px;
+  border: 1px solid #b9c6d6; /* v5.28: 帯と同じ枠線 */
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+/* v5.28: タイトルは折り返さず最上部にフル幅表示 */
+h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.02em; flex: 1 1 100%; white-space: nowrap; }
+h1 .sub { font-size: 14px; font-weight: 400; color: var(--ink-dim); margin-left: 10px; }
+
+/* 変更履歴 */
+.changelog { margin: 6px 0 4px; font-size: 14px; }
+.changelog .cl-latest {
+  display: inline-block; background: #eef7f0; border-left: 3px solid #2d8a4e;
+  color: #1f5c34; padding: 4px 10px; border-radius: 4px; font-weight: 600;
+}
+.changelog .cl-latest .clv { color: #2d8a4e; margin-right: 6px; }
+.changelog .cl-latest .cld { color: #6a8a76; font-weight: 400; margin-left: 6px; font-size: 13px; }
+.changelog .cl-toggle {
+  display: inline-block; margin-left: 10px; color: #2d6a8a; cursor: pointer;
+  user-select: none; font-size: 13px;
+}
+.changelog .cl-toggle:hover { text-decoration: underline; }
+.changelog .cl-past { display: none; margin-top: 6px; padding-left: 4px; }
+.changelog.expanded .cl-past { display: block; }
+.changelog .cl-past .cl-row { padding: 2px 0; color: var(--ink-dim); }
+.changelog .cl-past .clv { display: inline-block; min-width: 46px; color: #2d6a8a; font-weight: 600; }
+.changelog .cl-past .cld { color: #999; margin-left: 6px; font-size: 13px; }
+
+.index-info { text-align: right; line-height: 1.2; }
+.index-info .lbl { font-size: 12px; color: var(--ink-dim); letter-spacing: 0.08em; }
+.index-info .time {
+  font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--ink); margin-top: 2px;
+  font-family: "Consolas", "Yu Gothic UI", monospace;
+}
+.index-info .time .ago {
+  font-size: 13px; color: var(--ink-dim); font-weight: 400;
+  margin-left: 6px; font-family: inherit;
+}
+
+/* タブUI */
+.tabs {
+  display: flex; gap: 5px; /* 間隔 */
+  border-bottom: none; /* ボーダーを消す */
+  margin-bottom: 20px;
+}
+.tab {
+  padding: 12px 28px;
+  background: #e0e6ed;
+  color: var(--ink-dim);
+  font-size: 16px; font-weight: 700;
+  cursor: pointer; border: none; /* ボーダーを消す */
+  border-radius: 8px 8px 0 0; /* 角を丸く */
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
+}
+.tab:hover { background: #d0d6dd; color: var(--ink); }
+.tab.active { background: var(--panel); color: var(--accent); border-color: var(--ink); }
+.tab .count { font-size: 13px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
+.tab.active .count { opacity: 0.85; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* コントロールバー */
+.controls {
+  display: grid; grid-template-columns: 1fr auto auto;
+  gap: 15px; align-items: center;
+  background: #e3edf7; border: none; /* v5.28: 帯と同じ薄い青 */
+  padding: 15px 20px; margin-bottom: 20px;
+  position: sticky; top: 10px; z-index: 5;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* 影 */
+}
+.search { position: relative; }
+.search input {
+  width: 100%; padding: 10px 15px 10px 40px;
+  font-size: 16px; border: 1px solid var(--line);
+  background: #fff; font-family: inherit;
+  border-radius: 6px;
+}
+.search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.search::before {
+  content: "🔍"; position: absolute; left: 15px; top: 50%;
+  transform: translateY(-50%); font-size: 16px; opacity: 0.5;
+}
+.controls label {
+  font-size: 14px; color: var(--ink-dim);
+  display: flex; align-items: center; gap: 8px; white-space: nowrap;
+  cursor: pointer;
+}
+
+/* 品名カード(メイン) */
+.product-card {
+  background: var(--panel); border: none; /* ボーダーを消す */
+  margin-bottom: 20px; padding: 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.03); /* 影 */
+  overflow: hidden;
+}
+.pc-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 30px;
+  border-top: none; /* 上線を消す */
+  background: #fbfcfd; /* わずかに明るく */
+  cursor: pointer; user-select: none;
+  position: relative;
+  transition: background 0.1s;
+}
+/* 既存の高詳細度ルール (.pc-header.color-1〜8) を上書き */
+.pc-header.color-1, .pc-header.color-2, .pc-header.color-3, .pc-header.color-4,
+.pc-header.color-5, .pc-header.color-6, .pc-header.color-7, .pc-header.color-8 {
+  border-top: none; background: #fbfcfd;
+}
+.pc-header:hover { background: #f8fafc; }
+.pc-title .name {
+  font-size: 22px; font-weight: 700; color: var(--ink);
+  margin: 0;
+}
+.pc-title .file {
+  font-size: 13px; color: var(--ink-dim);
+  font-family: "Consolas", monospace; margin-top: 3px;
+}
+.pc-stats {
+  display: flex; align-items: center; gap: 30px;
+  flex: 1; justify-content: flex-end; flex-wrap: nowrap;
+}
+.pc-stat {
+  text-align: center;
+  padding: 0 15px;
+  border-right: 1px dashed var(--line);
+}
+.pc-stat:last-child { border-right: none; }
+.pc-stat .label {
+  font-size: 12px; color: var(--ink-dim);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.pc-stat .val {
+  font-size: 36px; font-weight: 800; line-height: 1;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.pc-stat .sub {
+  font-size: 12px; color: var(--ink-faint);
+  margin-top: 3px; font-family: "Consolas", monospace;
+}
+/* ステータス別の数値色 */
+.pc-stat.in-stock .val.zero { color: var(--alert); } /* 即在庫0は危険なので赤 */
+.pc-stat.stock-reserved .val { color: var(--warn); }
+.pc-stat.incoming-unreserved .val { color: var(--incoming); }
+.pc-stat.incoming-reserved .val { color: var(--incoming); opacity: 0.75; }
+.pc-stat.zero .val { color: var(--ink-faint); }
+.pc-stat .val-combo {
+  display: flex; align-items: baseline; justify-content: center;
+  gap: 5px;
+}
+.pc-stat .val-plus {
+  font-size: 18px; font-weight: 600;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+.pc-stat .val-extra {
+  font-size: 24px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.pc-stat .val-extra.zero { color: var(--ink-faint); font-weight: 400; }
+
+/* アコーディオン制御 */
+.expand-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  margin-right: 10px;
+  font-size: 16px; color: var(--ink-dim);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.product-card.expanded .expand-toggle {
+  transform: rotate(90deg); color: var(--ink);
+}
+.lot-section { display: none; }
+.product-card.expanded .lot-section { display: block; }
+.pc-title-wrap { display: flex; align-items: center; flex-shrink: 0; }
+
+/* セクションヘッダー */
+.section-header {
+  padding: 10px 20px 8px;
+  font-size: 14px; font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--ink-dim);
+  background: #f8f9fa;
+  border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.section-header.stock { color: var(--accent); }
+.section-header.incoming { color: var(--incoming); }
+.section-header .badge {
+  background: rgba(0,0,0,0.06); padding: 2px 10px;
+  font-size: 13px; font-weight: 600; border-radius: 4px;
+  color: var(--ink-dim);
+}
+
+/* ロット表 */
+.lot-table-wrap { overflow-x: auto; }
+table.lot-table {
+  width: 100%; border-collapse: collapse; font-size: 15px;
+}
+table.lot-table thead th {
+  background: #f8f9fa; border-bottom: 1px solid var(--line);
+  padding: 10px 15px; text-align: left;
+  font-weight: 600; font-size: 13px;
+  letter-spacing: 0.04em; white-space: nowrap;
+  color: var(--ink-dim);
+}
+table.lot-table tbody td {
+  padding: 12px 15px; border-bottom: 1px solid var(--line);
+  font-variant-numeric: tabular-nums; vertical-align: middle;
+}
+table.lot-table tbody tr.same-sheet td { border-bottom: none; }
+table.lot-table tbody tr.sheet-boundary td {
+  border-bottom: 2px solid var(--ink-dim);
+}
+table.lot-table tbody tr:hover { background: var(--hover); }
+table.lot-table tbody tr.zero { color: var(--ink-dim); background: #fbfcfc; }
+table.lot-table tbody tr.zero:hover { background: var(--hover); }
+
+.lot-name { font-weight: 600; font-size: 15px; min-width: 130px; }
+.lot-name .sheet {
+  display: block; font-size: 13px;
+  color: var(--ink-dim); font-weight: 400;
+  margin-top: 2px;
+}
+
+.qty-cell { text-align: right; min-width: 60px; padding-right: 20px !important; }
+.qty-num {
+  font-size: 26px; font-weight: 800; line-height: 1;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
+}
+.qty-num.zero { color: var(--ink-faint); }
+.qty-num.ok, .qty-num.warn, .qty-num.incoming { color: var(--ink); }
+
+.reserved-cell { min-width: 180px; }
+.reserved-num {
+  font-size: 18px; font-weight: 700; color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+.reserved-num.incoming { color: var(--ink-dim); }
+.reserved-num.zero { color: var(--ink-faint); font-weight: 400; font-size: 15px; }
+.reserved-customers { font-size: 13px; color: var(--ink-dim); margin-top: 3px; }
+.reserved-customers .item {
+  display: inline-block; background: #eef0f3;
+  padding: 2px 6px; margin: 1px 2px 1px 0;
+  border-radius: 4px; color: var(--ink-dim);
+  font-size: 12px; max-width: 220px;
+  overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; vertical-align: middle;
+}
+.reserved-customers .item.incoming { background: #eef0f3; color: var(--ink-dim); }
+
+.date-cell {
+  font-family: "Consolas", monospace; font-size: 14px;
+  color: var(--ink); white-space: nowrap; min-width: 120px;
+}
+.date-cell .ago {
+  display: block; color: var(--ink-dim);
+  font-size: 12px; font-family: inherit;
+}
+.date-cell .raw-text { color: var(--warn); font-family: inherit; font-size: 14px; }
+.date-cell .placeholder {
+  font-style: italic; color: var(--ink-faint);
+  font-family: inherit; font-size: 14px;
+}
+
+.loc-cell { min-width: 140px; font-size: 14px; line-height: 1.4; }
+.loc-cell .item {
+  display: inline-block; background: #eef0f3;
+  padding: 2px 7px; margin: 1px 2px 1px 0;
+  border-radius: 4px; color: var(--ink); font-size: 13px;
+}
+.loc-cell .placeholder { color: var(--ink-faint); font-style: italic; font-size: 13px; }
+
+/* 発注状態 */
+.order-cell { min-width: 140px; }
+.order-badge {
+  display: inline-block; padding: 4px 10px;
+  font-size: 13px; font-weight: 700;
+  border-radius: 4px; letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.order-badge.none { background: #f0eee7; color: var(--ink-dim); }
+.order-badge.need {
+  background: var(--alert); color: #fff;
+  animation: blink 1.6s ease-in-out infinite;
+}
+.order-badge.pending { background: var(--order-pending); color: #fff; }
+.order-badge.done { background: var(--order-done); color: #fff; }
+.order-info {
+  display: block; font-size: 13px; color: var(--ink-dim);
+  margin-top: 4px; font-family: "Consolas", monospace;
+}
+.order-info b { color: var(--ink); font-weight: 600; }
+.order-actions { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+.order-btn {
+  padding: 3px 8px; font-size: 13px;
+  border: 1px solid var(--line); background: #fff;
+  cursor: pointer; font-family: inherit;
+  color: var(--ink-dim); border-radius: 4px;
+  transition: all 0.1s;
+}
+.order-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.order-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+.empty {
+  padding: 40px 20px; text-align: center;
+  color: var(--ink-faint); font-style: italic; font-size: 15px;
+}
+
+.footer-note {
+  margin-top: 20px; font-size: 13px; color: var(--ink-dim);
+  padding: 10px 5px; border-top: 1px dashed var(--line);
+}
+
+.toast {
+  position: fixed; bottom: 30px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: #fff;
+  padding: 12px 20px; font-size: 15px;
+  opacity: 0; pointer-events: none;
+  transition: all 0.25s ease; z-index: 100;
+  border-radius: 6px;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* モーダル */
+.modal-bg {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 200;
+  align-items: center; justify-content: center;
+}
+.modal-bg.show { display: flex; }
+.modal {
+  background: #fff; padding: 25px 30px;
+  min-width: 400px; border: none;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+.modal h3 { margin: 0 0 15px; font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.modal .field { margin-bottom: 12px; }
+.modal .field label { display: block; font-size: 14px; color: var(--ink-dim); margin-bottom: 4px; }
+.modal .field input, .modal .field textarea {
+  width: 100%; padding: 8px 10px;
+  border: 1px solid var(--line); font-family: inherit; font-size: 15px;
+  border-radius: 4px;
+}
+.modal .field input:focus, .modal .field textarea:focus { outline: none; border-color: var(--accent); }
+.modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+.btn {
+  display: inline-block; padding: 6px 14px;
+  font-size: 14px; font-family: inherit;
+  border: 1px solid var(--line); background: #fff;
+  cursor: pointer; text-decoration: none; color: var(--ink);
+  border-radius: 4px; transition: all 0.1s;
+}
+.btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* 大型ステータスバッジ (サマリー左) */
+.status-big {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 15px 25px;
+  border-radius: 12px;
+  border: none;
+  background: #fff;
+  color: var(--ink);
+  min-width: 140px;
+  text-align: center;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.status-big .label {
+  font-size: 18px; font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.1; margin-bottom: 6px;
+  color: var(--ink);
+  display: inline-flex; align-items: center; gap: 8px;
+  justify-content: center;
+}
+.status-big .lamp-big {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #999;
+  flex-shrink: 0;
+}
+.status-big .num {
+  font-size: 42px; font-weight: 800;
+  line-height: 1; font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.status-big .unit {
+  font-size: 14px;
+  opacity: 0.7; margin-top: 4px;
+  font-weight: 600; letter-spacing: 0.05em;
+  color: var(--ink-dim);
+}
+.status-big.ok { background: var(--ok-soft); color: var(--ok); box-shadow: none; }
+.status-big.ok .lamp-big { background: var(--ok); }
+.status-big.warn { background: var(--warn-soft); color: var(--warn); box-shadow: none; }
+.status-big.warn .lamp-big { background: var(--warn); }
+.status-big.danger { background: var(--alert-soft); color: var(--alert); box-shadow: none; }
+.status-big.danger .lamp-big {
+  background: var(--alert);
+  box-shadow: 0 0 0 0 rgba(231,76,60,0.5);
+  animation: lamp-pulse 1.6s ease-in-out infinite;
+}
+
+/* ダミーウエハ */
+tr.dummy-row { opacity: 0.6; }
+tr.dummy-row td { color: #777; }
+tr.dummy-row .lot-name { font-style: italic; }
+.dummy-tag {
+  display: inline-block;
+  font-size: 11px; font-weight: 700;
+  background: #999; color: #fff;
+  padding: 2px 6px; margin-left: 6px;
+  border-radius: 4px; letter-spacing: 0.05em;
+  vertical-align: 1px;
+}
+
+/* ダミーブロックは控えめサイズ */
+.pc-stat.dummy-mini {
+  text-align: center; padding: 0 10px;
+  opacity: 0.8;
+}
+.pc-stat.dummy-mini .label { font-size: 12px; color: var(--ink-faint); }
+.pc-stat.dummy-mini .val-combo .val {
+  font-size: 24px; font-weight: 700; color: #777;
+}
+.pc-stat.dummy-mini .val-combo .val.zero { color: var(--ink-faint); }
+.pc-stat.dummy-mini .val-combo .val-plus { font-size: 14px; }
+.pc-stat.dummy-mini .sub { font-size: 11px; color: var(--ink-faint); }
+
+/* 出所バッジ */
+.origin-badge {
+  display: inline-block; padding: 3px 10px;
+  font-size: 12px; font-weight: 700;
+  border-radius: 12px; margin-left: 10px;
+  letter-spacing: 0.06em; vertical-align: 3px;
+}
+.origin-badge.honsha { background: #d6e4f5; color: #2d5a8a; }
+.origin-badge.itoshima { background: #d8ecda; color: #2d6a3e; }
+
+/* ファイルリンクボタン */
+.file-link-group {
+  display: inline-flex; gap: 5px; margin-left: 10px;
+  vertical-align: 2px;
+}
+.file-link-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; font-size: 13px; font-weight: 600;
+  border-radius: 6px; border: 1px solid var(--line);
+  background: #fff; color: var(--ink);
+  text-decoration: none; cursor: pointer;
+  white-space: nowrap; transition: all 0.1s;
+}
+.file-link-btn:hover { background: #f0f4f8; border-color: #93b3d4; }
+.file-link-btn.web { color: #2d5a8a; }
+.file-link-btn.web:hover { background: #e8f0fa; border-color: #5a85b8; }
+.lot-row .file-link-btn { padding: 2px 8px; font-size: 12px; }
+
+/* 変更ファイル表示 */
+.changes-box .summary.has-changes { color: var(--warn); }
+.changes-box.expanded .summary .toggle-arrow { transform: rotate(90deg); }
+.changes-list {
+  background: #fff; border: none;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  padding: 10px 0;
+}
+.changes-list .change-item { border-bottom: 1px solid #f0f2f5; }
+
+/* 基板カード */
+.sub-card {
+  background: var(--panel);
+  margin-bottom: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.03);
+}
+.sub-header {
+  padding: 15px 20px;
+  border-top: none; /* 上線を消す */
+  background: #fbfdfc; /* わずかにグリーンがかった淡いグレー */
+  border-radius: 8px;
+}
+.sub-title .name { font-size: 19px; }
+.sub-title .file { font-size: 13px; }
+.sub-status {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 10px;
+  background: #fff;
+  min-width: 120px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.sub-status .label { font-size: 16px; gap: 8px; }
+.sub-status .num { font-size: 32px; }
+.sub-status .unit { font-size: 13px; }
+.sub-status.ok { background: var(--ok-soft); color: var(--ok); box-shadow: none; }
+.sub-status.ok .lamp-big { background: var(--ok); }
+.sub-status.warn { background: var(--warn-soft); color: var(--warn); box-shadow: none; }
+.sub-status.warn .lamp-big { background: var(--warn); }
+.sub-status.danger { background: var(--alert-soft); color: var(--alert); box-shadow: none; }
+.sub-status.danger .lamp-big { background: var(--alert); }
+
+.sub-meta { font-size: 15px; color: #16a34a !important; }
+.sub-meta .row .lbl { font-size: 15px; color: #16a34a !important; }
+.sub-meta .row .val { color: #16a34a !important; font-size: 15px; }
+.sub-meta .row .val .num { color: #16a34a !important; }
+
+/* ロット別在庫 */
+.sub-lots {
+  padding: 12px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid var(--line);
+}
+.sub-lots .lbl { font-size: 13px; }
+.sub-lots .lot-pill {
+  padding: 4px 12px;
+  background: #fff;
+  border-radius: 14px;
+  font-size: 14px;
+}
+.lot-age {
+  font-size: 13px;
+  padding: 2px 8px;
+  background: #f0f2f0;
+  border-radius: 10px;
+}
+
+/* 経過時間 大型表示 */
+.sub-age-big {
+  padding: 8px 20px;
+  border-radius: 10px;
+  background: #f0f2f0;
+}
+.sub-age-big .age-elapsed { font-size: 32px; }
+.sub-age-big .age-elapsed .age-suffix { font-size: 15px; }
+.sub-age-big .age-detail { font-size: 13px; }
+.sub-age-big.age-warn { background: var(--warn-soft); color: var(--warn); }
+.sub-age-big.age-alert { background: var(--alert-soft); color: var(--alert); }
+
+/* 履歴表 */
+table.history-table thead th {
+  background: #f8f9fa;
+  padding: 8px 15px;
+  font-size: 13px;
+}
+table.history-table tbody td {
+  padding: 8px 15px;
+  border-bottom: 1px solid #f0f2f5;
+}
+table.history-table .h-date, table.history-table .h-lot { font-size: 14px; }
+table.history-table .h-company { font-size: 15px; }
+table.history-table .h-company .note { font-size: 13px; }
+table.history-table .h-stock { font-size: 16px; }
+
+/* 基板グループ (アコーディオン) */
+.sgroup-block .sgroup-header-wrap {
+  padding: 12px 18px;
+  border-left: 8px solid #4a9b6e;
+  background: #e8f5ed;
+  border-radius: 0 8px 8px 0;
+}
+.sgroup-block .sgroup-header-wrap:hover { background: #dff1e6; }
+.sgroup-block .sgname { font-size: 26px; color: #1a5c3e; }
+.sgroup-block .sgcount { font-size: 13px; color: var(--ink-dim); font-weight: 600; flex-shrink: 0; }
+.sgroup-block .sgpreview .pname-pill {
+  padding: 4px 12px 4px 10px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+.sgroup-block .sgstock {
+  font-size: 16px;
+  padding: 4px 15px;
+  border-radius: 14px;
+  min-width: 80px;
+}
+.sgroup-block .sgstock .lbl { font-size: 12px; }
+
+/* 再取得ボタンなど */
+#fetch-status-bar {
+  background: var(--accent-soft);
+  border-radius: 8px;
+  font-size: 15px;
+  padding: 10px 15px;
+}
+#btn-refetch, #btn-export-json {
+  padding: 5px 15px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+#btn-refetch:hover, #btn-export-json:hover {
+  background: #f0f4f8;
+}
+#btn-refetch:not(:disabled), #btn-export-json:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* v5.28: シリーズ帯は薄い青＋枠線＋角丸 (左は色付きアクセント太線を維持) */
+.group-header.band-a, .group-header.band-b {
+  background: #e3edf7;
+  border: 1px solid #b9c6d6;
+  border-left-width: 8px;
+  border-left-style: solid;   /* 色は各シリーズの inline style で指定 */
+  border-radius: 8px;
+}
+.group-header.band-a:hover, .group-header.band-b:hover { background: #d6e4f3; }
+/* v5.28: シリーズのラベル(FC シリーズ等)を1.3倍に (詳細品名の一覧はそのまま) */
+.group-header .gname { font-size: 26px; }
+
+/* v5.29: 同一ファイル由来の派生品種を1枚のカードにまとめ、薄い横線で区切る */
+.file-group {
+  background: var(--panel);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.03);
+  overflow: hidden;
+}
+.file-group > .product-card {
+  box-shadow: none; margin: 0; border-radius: 0;
+}
+.file-group > .product-card + .product-card {
+  border-top: 1px solid var(--line);  /* 派生品種の区切り(薄い横線) */
+}
+/* v5.28: グループ名右の「N製品」を少し大きめに */
+.group-header .gcount, .sgroup-block .sgcount { font-size: 16px; }
+
+/* v5.28: 基板シリーズ帯もウエハ側と同様の構成 (2段・品名は【】・数量/合計なし・100ケ未満は警告バッジ) */
+.sgroup-block .sgroup-header-wrap {
+  display: flex; flex-direction: column; align-items: stretch; gap: 9px;
+  padding: 12px 18px;
+}
+.sgroup-header-wrap .sg-top { display: flex; align-items: center; gap: 14px; }
+.sgroup-header-wrap .sgtoggle { flex-shrink: 0; }
+.sgroup-header-wrap .sgname { flex-shrink: 0; }
+.sgroup-header-wrap .sgpreview {
+  flex: 1; min-width: 0; margin: 0 4px;
+  font-size: 13px; color: var(--ink-dim); line-height: 1.5; white-space: normal;
+}
+.sgroup-header-wrap .sgpreview .gp-bracket { color: var(--ink-faint); font-weight: 700; }
+.sgroup-header-wrap .sgpreview .gp-name { color: var(--ink-dim); }
+/* v5.28: 基板の警告カードは上下2分割 (上=数量 / 下=経過時間)。問題のある側だけ赤、OK側はグレー */
+.sgroup-header-wrap .sg-alert {
+  display: flex; flex-direction: column;
+  min-width: 150px;
+  border: 1px solid #9aa2ab;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sgroup-header-wrap .sg-alert .db-half {
+  display: flex; align-items: baseline; justify-content: center;
+  gap: 6px; padding: 10px 16px; text-align: center;
+}
+.sgroup-header-wrap .sg-alert .db-half.db-qty { border-bottom: 1px solid rgba(0,0,0,0.18); }
+.sgroup-header-wrap .sg-alert .db-half.ok { background: #dcdfe3; color: #2c3e50; }  /* 問題なし=グレー */
+.sgroup-header-wrap .sg-alert .db-half.ng { background: #e53935; color: #ffffff; }  /* 問題あり=赤 */
+.sgroup-header-wrap .sg-alert .db-name { font-size: 13px; font-weight: 700; }
+.sgroup-header-wrap .sg-alert .db-num {
+  font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+}
+.sgroup-header-wrap .sg-alert .db-unit { font-size: 11px; font-weight: 700; }
+.sgroup-header-wrap .sg-alert .db-age-val { font-size: 12px; font-weight: 700; }
+
+/* v5.28: 検索バーをタブの横に配置 (アクティブタブ側のみ表示) */
+.tabs { align-items: stretch; flex-wrap: wrap; }
+/* v5.28: タブを大型化し、アラームしきい値を2段目に表示 */
+.tabs .tab {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 14px 26px;
+}
+.tabs .tab .tab-main { font-size: 20px; font-weight: 800; }
+.tabs .tab .tab-main .count { font-size: 14px; font-weight: 400; opacity: 0.7; margin-left: 8px; }
+/* v5.28: しきい値の凡例カード (TOPカードと同じ配色) */
+.tl-card {
+  display: inline-block;
+  font-size: 12px; font-weight: 700;
+  padding: 4px 10px; border-radius: 5px;
+  border: 1px solid; white-space: nowrap;
+}
+.tl-card b { font-variant-numeric: tabular-nums; font-weight: 900; }
+.tl-card.danger { background: #e53935; border-color: #b71c1c; color: #ffffff; }
+.tl-card.warn   { background: #ffdf9e; border-color: #e39400; color: #6b4300; }
+
+/* v5.28: しきい値の凡例フロート (position:fixed でスクロール追従、右側に固定) */
+.legend-float {
+  position: fixed;
+  right: 16px; top: 50%; transform: translateY(-50%);
+  z-index: 40; width: 200px;
+  background: #fff;
+  border: 1px solid #9aa5b3;
+  border-radius: 10px;
+  box-shadow: 0 8px 26px rgba(0,0,0,0.30);
+  overflow: hidden;
+}
+.legend-float .lf-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px;
+  background: #2c3e50; color: #fff;
+  font-size: 13px; font-weight: 800;
+  cursor: pointer; user-select: none;
+}
+.legend-float .lf-toggle { font-size: 12px; transition: transform 0.2s; }
+.legend-float.collapsed .lf-toggle { transform: rotate(180deg); }
+.legend-float .lf-body { padding: 12px; }
+.legend-float.collapsed .lf-body { display: none; }
+.legend-float .lp-section { margin-bottom: 12px; }
+.legend-float .lp-section:last-child { margin-bottom: 0; }
+.legend-float .lp-head { font-size: 12px; font-weight: 800; color: var(--ink); margin-bottom: 7px; }
+.legend-float .tl-card { display: inline-block; margin: 2px 5px 2px 0; }
+/* v5.28: すべて閉じるボタン — 検索窓の左に配置、高さ控えめ、3Dボタン風 */
+.tabs .btn-collapse-all {
+  margin-left: auto;          /* 右寄せ = 検索窓の左隣に来る */
+  align-self: center;         /* タブより低い高さに */
+  padding: 6px 16px;
+  font-size: 13px; font-weight: 700;
+  color: #34495e;
+  background: linear-gradient(#ffffff, #dbe1e8);
+  border: 1px solid #a4aeba;
+  border-radius: 6px;
+  box-shadow: 0 2px 0 #97a2af, 0 3px 4px rgba(0,0,0,0.25);
+  cursor: pointer; white-space: nowrap;
+  transition: transform 0.05s, box-shadow 0.05s, background 0.1s;
+}
+.tabs .btn-collapse-all:hover { background: linear-gradient(#ffffff, #ccd4dd); }
+.tabs .btn-collapse-all:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 #97a2af, 0 1px 2px rgba(0,0,0,0.2);
+}
+.tab-tools { display: none; align-items: center; gap: 12px; }
+.tab-tools.active { display: flex; }
+.tab-tools .search { position: relative; margin: 0; }
+.tab-tools .search input { width: 320px; max-width: 46vw; }
+.tab-tools label {
+  font-size: 14px; color: var(--ink-dim);
+  display: flex; align-items: center; gap: 8px;
+  white-space: nowrap; cursor: pointer;
+}
+
+/* v5.28: 品名カード見出し — 品名を大きく、本社/Excelボタン/ファイル名は品名の下(元サイズの1.2倍) */
+.pc-title { display: flex; flex-direction: column; align-items: flex-start; gap: 0; flex-wrap: nowrap; }
+.pc-name-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.pc-name-row .file-link-group { margin-left: 0; vertical-align: baseline; }
+.pc-name-row .file-link-btn { font-size: 16px; padding: 4px 12px; gap: 5px; border-radius: 6px; }
+.pc-title .name { font-size: 62px; line-height: 1.1; font-weight: 800; }
+.pc-meta {
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap; margin-top: 8px;
+}
+.pc-meta .origin-badge {
+  font-size: 14px; padding: 3px 12px; border-radius: 12px;
+  margin-left: 0; vertical-align: baseline;
+}
+.pc-meta .file-link-group { margin-left: 0; vertical-align: baseline; }
+.pc-meta .file-link-btn { font-size: 16px; padding: 4px 12px; gap: 5px; border-radius: 6px; }
+.pc-meta .file {
+  font-size: 16px; color: var(--ink-dim);
+  font-family: "Consolas", monospace;
+}
+/* THEME END */
+/* ▲▲▲ v5.28 実験テーマ ここまで ▲▲▲ */
 
 </style>
 <!-- v5.0: SharePoint連携用ライブラリ (ローカル配置のJSを参照) -->
@@ -1697,12 +2563,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 <div class="app">
 
   <header class="top">
-    <h1>WALTS 在庫管理ツール <span class="sub">v5.26</span></h1>
-    <div class="changelog" id="changelog">
-      <div class="cl-latest" id="cl-latest"></div>
-      <div class="cl-toggle" id="cl-toggle" onclick="toggleChangelog()">過去の変更点を表示 ▼</div>
-      <div class="cl-past" id="cl-past"></div>
-    </div>
+    <h1>WALTS 在庫管理ツール <span class="sub">v5.29</span></h1>
     <div class="index-info-wrap" id="changes-box">
       <div class="changes-box" id="changes-display">
         <div class="lbl">📂 SharePoint との同期</div>
@@ -1723,36 +2584,69 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   </header>
 
   <div class="tabs">
-    <div class="tab active" data-tab="wafer">🌀 ウエハ在庫<span class="count" id="wafer-count">0品名</span></div>
-    <div class="tab" data-tab="substrate">🟫 基板在庫<span class="count" id="substrate-count">0品名</span></div>
-  </div>
-  
-  <div class="tab-content active" id="tab-wafer">
-  
-  <div class="controls">
-    <div class="search">
-      <input id="search" type="text" placeholder="品名・ロット・顧客・保管場所で検索">
+    <div class="tab active" data-tab="wafer">
+      <span class="tab-main">🌀 ウエハ在庫<span class="count" id="wafer-count">0品名</span></span>
     </div>
-    <label><input type="checkbox" id="show-empty"> 在庫0のロットも表示</label>
-  </div>
-
-  <div id="product-cards"></div>
-
-  </div><!-- /tab-wafer -->
-  
-  <div class="tab-content" id="tab-substrate">
-    <div class="controls" style="margin-top:14px">
+    <div class="tab" data-tab="substrate">
+      <span class="tab-main">🟫 基板在庫<span class="count" id="substrate-count">0品名</span></span>
+    </div>
+    <!-- v5.28: 開いたメニューを一括で閉じる (展開状態はlocalStorageに保存されるため) -->
+    <button type="button" class="btn-collapse-all" onclick="collapseAllMenus()" title="ウエハ・基板の開いているシリーズ/品名をすべて閉じます">▸ すべて閉じる</button>
+    <!-- v5.28: 検索バーはタブの横に配置 (アクティブタブ側のみ表示) -->
+    <div class="tab-tools active" id="tools-wafer">
+      <div class="search">
+        <input id="search" type="text" placeholder="品名・ロット・顧客・保管場所で検索">
+      </div>
+      <label><input type="checkbox" id="show-empty"> 在庫0のロットも表示</label>
+    </div>
+    <div class="tab-tools" id="tools-substrate">
       <div class="search">
         <input id="search-sub" type="text" placeholder="基板品名・顧客・Lot・備考で検索">
       </div>
       <label><input type="checkbox" id="show-dormant" checked> 1年以上動きのない基板も表示</label>
     </div>
+  </div>
+
+  <!-- v5.28: しきい値の凡例フロート (スクロールしても右側に固定) -->
+  <div class="legend-float" id="legend-float">
+    <div class="lf-head" onclick="toggleLegendFloat()" title="クリックで開閉">
+      <span>🔖 凡例（しきい値）</span>
+      <span class="lf-toggle" id="lf-toggle">▲</span>
+    </div>
+    <div class="lf-body">
+      <div class="lp-section">
+        <div class="lp-head">🌀 ウエハ在庫</div>
+        <span class="tl-card danger">危険 <b>10枚</b> 未満</span>
+        <span class="tl-card warn">警告 <b>25枚</b> 未満</span>
+      </div>
+      <div class="lp-section">
+        <div class="lp-head">🟫 基板在庫</div>
+        <span class="tl-card danger">数量 <b>100ケ</b> 未満</span>
+        <span class="tl-card danger">経過 <b>4年</b> 以上</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content active" id="tab-wafer">
+
+  <div id="product-cards"></div>
+
+  </div><!-- /tab-wafer -->
+
+  <div class="tab-content" id="tab-substrate">
     <div id="substrate-cards"></div>
   </div>
   
   <div class="footer-note">
     💡 「即在庫」=現有ロットの塗りつぶしなしslot / 「即在庫の予約」=現有ロットのベージュslot / 「入荷予定」=入荷待ちロットの全slot / 「入荷予定の予約」=入荷後すぐ出荷予定の予約済slot<br>
     🔧 scanner.py が各エクセルから自動抽出。発注状態はブラウザの localStorage に保存(実運用ではNAS上の orders.csv へ保存)。
+  </div>
+
+  <!-- v5.28: 変更履歴はページ最下部に配置 -->
+  <div class="changelog" id="changelog">
+    <div class="cl-latest" id="cl-latest"></div>
+    <div class="cl-toggle" id="cl-toggle" onclick="toggleChangelog()">過去の変更点を表示 ▼</div>
+    <div class="cl-past" id="cl-past"></div>
   </div>
 </div>
 
@@ -1838,6 +2732,9 @@ function setOrder(key, data) {
    ============================================================ */
 // === 変更履歴 (最新が先頭。先頭1件を常時表示、それ以前は折りたたみ) ===
 const CHANGELOG = [
+  { v: 'v5.29', date: '2026-07-29', text: 'FC150を加工工程で3品種に分割(SiNベース/PI塗布済/PI+ボール)。PI列・ボール列の注記で判定し、加工日が過ぎていれば完了(手元在庫)・未来なら加工中(入荷予定)。加工日の年が無ければ入荷後の最初の同月日を加工年に推定。PROCESS_SPLIT_CONFIGSに追加すれば他製品にも適用可' },
+  { v: 'v5.28', date: '2026-07-27', text: '【実験】新しい配色＋レイアウトテーマを試験導入(濃いめグレー背景・カード影・角丸・枠線・鮮やかなアクセント色)。シリーズ帯を太く枠線付きにし品名は【】表示、危険品は赤カード白抜き(品名+枚数)を帯に表示。基板側も同構成にし在庫100ケ未満を警告として帯に赤カード表示。品名カード見出しを大型化(品名の下に本社/Excel/ファイル名)。検索バーはタブ横へ、変更履歴は最下部へ移動。CSS末尾の THEME START〜THEME END を削除すればv5.27の見た目に戻せる。数え方・集計は変更なし' },
+  { v: 'v5.27', date: '2026-07-27', text: 'ウエハのシリーズ見出しに所属品名を【A / B / C】形式で常時表示(危険=赤/警告=橙)。そのシリーズに危険品(使える分10枚未満)がある場合のみ、見出し内に薄赤カード(品名+枚数のみ)を表示。展開せず不足品がシリーズ単位で分かる。帯右の在庫合計表示は削除' },
   { v: 'v5.26', date: '2026-07-08', text: '基板Lot記載の追加パターン対応(Lot未記載出庫のFIFO控除、入庫番号混入・省略形・各種内訳記法対応)、最古在庫の経過時間をヘッダー右側に大型表示、全体フォントサイズ2Up' },
   { v: 'v5.25', date: '2026-07-08', text: '基板(KIT)の入庫日からの経過日数表示を追加(ロット別在庫に入庫日+経過期間、カードに最古在庫行、Lot列の複数ロット内訳/省略形/記入ズレ対応)' },
   { v: 'v5.24', date: '2026-06-15', text: '「開発品」シートは白slotも含め全て使用済扱い(在庫・予約にしない)' },
@@ -2526,24 +3423,54 @@ function renderSubstrate() {
     const autoExpand = q && visible.length > 0;
     const isExpanded = SGROUP_EXPANDED.has(g.id) || autoExpand;
     
-    // 合計在庫 + プレビュー
-    let totalStock = 0;
-    const previewParts = visible.map(s => {
-      const stock = s.current_stock;
-      totalStock += stock;
-      return `<span class="pname-pill"><span class="pn">${escape(s.product)}</span><span class="pq">${stock}</span></span>`;
+    // 所属品名プレビュー(【A / B / C】・数量なし) + 警告バッジ(在庫100ケ未満、または在庫があり4年以上経過)
+    const nameParts = [];
+    const warnBadges = [];  // v5.28: 帯に赤カード(品名+数量+経過期間)で警告表示
+    visible.forEach(s => {
+      nameParts.push(`<span class="gp-name">${escape(s.product)}</span>`);
+      // 最古在庫ロットの入庫からの経過期間
+      let elapsed = null;
+      if (s.current_stock > 0) {
+        const stockedLots = (s.lots || []).filter(l => l.stock > 0 && l.last_in_iso);
+        if (stockedLots.length) {
+          const oldest = stockedLots.reduce((a, b) => (a.last_in_iso <= b.last_in_iso ? a : b));
+          elapsed = subElapsed(oldest.last_in_iso);
+        }
+      }
+      const qtyNg = s.current_stock < 100;              // 数量NG: 100ケ未満
+      const ageNg = elapsed && elapsed.months >= 48;    // 経過NG: 4年(48ヶ月)以上
+      if (qtyNg || ageNg) {
+        // 上下2分割: 上=数量(問題なら赤/OKはグレー) / 下=経過時間(同左)。両方常に表示。
+        const ageLabel = elapsed ? `${escape(elapsed.label)}経過` : '—';
+        warnBadges.push(`
+          <span class="sg-alert">
+            <span class="db-half db-qty ${qtyNg ? 'ng' : 'ok'}">
+              <span class="db-name">${escape(s.product)}</span>
+              <span class="db-num">${s.current_stock}</span><span class="db-unit">ケ</span>
+            </span>
+            <span class="db-half db-age ${ageNg ? 'ng' : 'ok'}">
+              <span class="db-age-val">${ageLabel}</span>
+            </span>
+          </span>`);
+      }
     });
-    const previewHtml = previewParts.join('');
+    const previewHtml = `<span class="gp-bracket">【 </span>${nameParts.join('<span class="gp-bracket"> / </span>')}<span class="gp-bracket"> 】</span>`;
+    // v5.28: 警告なしのシリーズもカード分の高さを不可視占位で確保し帯の高さを揃える
+    const alertsHtml = warnBadges.length
+      ? `<div class="gh-alerts">${warnBadges.join('')}</div>`
+      : `<div class="gh-alerts gh-alerts-empty" aria-hidden="true"><span class="sg-alert"><span class="db-half db-qty ok"><span class="db-num">0</span><span class="db-unit">ケ</span></span><span class="db-half db-age ok"><span class="db-age-val">&nbsp;</span></span></span></div>`;
     const allNames = visible.map(s => s.product + ':' + s.current_stock).join(', ');
-    
+
     out += `
       <div class="sgroup-block ${isExpanded?'expanded':''}">
         <div class="sgroup-header-wrap" onclick="toggleSubGroup('${g.id}')" title="${escape(allNames)}">
-          <span class="sgtoggle">▶</span>
-          <span class="sgname">${escape(g.label)}</span>
-          <span class="sgcount">${visible.length}品名${q ? ' (検索ヒット)' : ''}</span>
-          <span class="sgpreview">${previewHtml}</span>
-          <span class="sgstock"><span class="lbl">合計</span>${totalStock}</span>
+          <div class="sg-top">
+            <span class="sgtoggle">▶</span>
+            <span class="sgname">${escape(g.label)}</span>
+            <span class="sgcount">${visible.length}製品${q ? ' (検索ヒット)' : ''}</span>
+            <span class="sgpreview">${previewHtml}</span>
+          </div>
+          ${alertsHtml}
         </div>
         <div class="sgroup-body">
           ${visible.map(renderSubCard).join('')}
@@ -2645,10 +3572,14 @@ function renderProductCard(p) {
         <div class="pc-title-wrap">
           <span class="expand-toggle">▶</span>
           <div class="pc-title">
-            <h2 class="name">${escape(displayName(p))}${p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '<span class="origin-badge itoshima">糸島</span>' : '<span class="origin-badge honsha">本社</span>'}${p.web_url ? `<span class="file-link-group">
-              <a class="file-link-btn web" href="#" onclick="openInExcelWeb(event, '${encodeURIComponent(p.web_url)}')" title="ブラウザのExcel Onlineでファイルを開く">📊 Excel on Browser</a>
-            </span>` : ''}</h2>
-            <div class="file">${escape(p.file)}</div>
+            <div class="pc-name-row">
+              <h2 class="name">${escape(displayName(p))}</h2>
+              ${p.web_url ? `<span class="file-link-group"><a class="file-link-btn web" href="#" onclick="openInExcelWeb(event, '${encodeURIComponent(p.web_url)}')" title="ブラウザのExcel Onlineでファイルを開く">📊 Excel on Browser</a></span>` : ''}
+            </div>
+            <div class="pc-meta">
+              ${p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '<span class="origin-badge itoshima">糸島</span>' : '<span class="origin-badge honsha">本社</span>'}
+              <span class="file">${escape(p.file)}</span>
+            </div>
           </div>
         </div>
         <div class="pc-stats">
@@ -2980,49 +3911,60 @@ function render() {
   const buckets = groupedInventory();
   const q = document.getElementById('search').value.trim();
   let outHtml = '';
+  let bandIdx = 0;  // v5.28: 帯を白/薄青で交互に塗るための連番(実際に描画したシリーズだけ数える)
   for (const g of GROUP_DEFS) {
     const products = buckets[g.id] || [];
     if (products.length === 0) continue;
     
     // 検索クエリ時は実際にヒットするかでカード描画。クエリなしならグループ全品名を描画
-    const cards = products.map(renderProductCard).filter(c => c && c.trim());
+    // v5.29: 同一ファイル由来の派生品種(FC150の3タイプ等)は1枚のカードにまとめ、薄い横線で区切る
+    const byFile = new Map();
+    for (const p of products) { const k = p.file || p.product; if (!byFile.has(k)) byFile.set(k, []); byFile.get(k).push(p); }
+    const cards = [];
+    for (const grp of byFile.values()) {
+      const inner = grp.map(renderProductCard).filter(c => c && c.trim());
+      if (inner.length === 0) continue;
+      cards.push(inner.length > 1 ? `<div class="file-group">${inner.join('')}</div>` : inner[0]);
+    }
     if (cards.length === 0) continue;
     
     // 検索中は自動展開、そうでなければlocalStorageの状態に従う
     const autoExpand = q && cards.length > 0;
     const isExpanded = GROUP_EXPANDED.has(g.id) || autoExpand;
     
-    // 集計: 合計在庫数 + 状態判定 + 各品名のピル生成
-    let totalAvail = 0;
-    let groupStatus = 'ok';
-    const previewParts = [];
+    // 所属品名プレビュー(【A / B / C】・色分けなし) + 危険品バッジ(品名+枚数)
+    const nameParts = [];
+    const dangerBadges = [];  // v5.27: シリーズ内の危険品を赤カードで表示
+    const warnBadges = [];    // v5.28: 警告品(使える分25枚未満)を薄黄カードで表示
     products.forEach(p => {
       const avail = totalAvailable(p);
-      totalAvail += avail;
       const st = statusOf(p);
-      if (st === 'danger' && groupStatus !== 'danger') groupStatus = 'danger';
-      else if (st === 'warn' && groupStatus === 'ok') groupStatus = 'warn';
-      const cls = st === 'danger' ? 'danger' : (st === 'warn' ? 'warn' : 'ok');
-      const originMini = p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '<span class="origin-mini">糸</span>' : '';
-      previewParts.push(`
-        <span class="pname-pill ${cls}">
-          <span class="pn">${escape(displayName(p))}</span>${originMini}
-          <span class="pq">${avail}</span>
-        </span>
-      `);
+      nameParts.push(`<span class="gp-name">${escape(displayName(p))}</span>`);
+      if (st === 'danger') {
+        dangerBadges.push(`<span class="gh-alert"><span class="db-name">${escape(displayName(p))}</span><span class="db-num">${avail}</span><span class="db-unit">枚</span></span>`);
+      } else if (st === 'warn') {
+        warnBadges.push(`<span class="gh-alert warn"><span class="db-name">${escape(displayName(p))}</span><span class="db-num">${avail}</span><span class="db-unit">枚</span></span>`);
+      }
     });
-    const previewHtml = previewParts.join('');
-    const allNames = products.map(p => p.product + (p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '(糸島)' : '') + ':' + totalAvailable(p)).join(', ');
-    const stockCls = groupStatus === 'danger' ? 'danger' : (groupStatus === 'warn' ? 'warn' : '');
-    
+    const badges = [...dangerBadges, ...warnBadges];  // 危険→警告の順に並べる
+    const previewHtml = `<span class="gp-bracket">【 </span>${nameParts.join('<span class="gp-bracket"> / </span>')}<span class="gp-bracket"> 】</span>`;
+    // v5.28: 危険/警告品が無いシリーズも、バッジ1段分の高さを不可視の占位で確保し帯の高さを揃える
+    const alertsHtml = badges.length
+      ? `<div class="gh-alerts">${badges.join('')}</div>`
+      : `<div class="gh-alerts gh-alerts-empty" aria-hidden="true"><span class="gh-alert"><span class="db-num">0</span></span></div>`;
+    const allNames = products.map(p => p.product + ':' + totalAvailable(p)).join(', ');
+    const bandCls = (bandIdx++ % 2 === 0) ? 'band-a' : 'band-b';  // v5.28: 白/薄青の交互
+
     outHtml += `
       <div class="group-block ${isExpanded?'expanded':''}">
-        <div class="group-header" style="border-left-color:${g.color}" onclick="toggleGroup('${g.id}')" title="${escape(allNames)}">
-          <span class="gtoggle">▶</span>
-          <span class="gname" style="color:${g.color}">${g.label}</span>
-          <span class="gcount">${cards.length}品名${q ? ' (検索ヒット)' : ''}</span>
-          <span class="gpreview">${previewHtml}</span>
-          <span class="gstock"><span class="lbl">在庫</span><span class="num ${stockCls}">${totalAvail}</span></span>
+        <div class="group-header ${bandCls}" style="border-left-color:${g.color}" onclick="toggleGroup('${g.id}')" title="${escape(allNames)}">
+          <div class="gh-top">
+            <span class="gtoggle">▶</span>
+            <span class="gname" style="color:${g.color}">${g.label}</span>
+            <span class="gcount">${cards.length}製品${q ? ' (検索ヒット)' : ''}</span>
+            <span class="gpreview">${previewHtml}</span>
+          </div>
+          ${alertsHtml}
         </div>
         <div class="group-body">${cards.join('')}</div>
       </div>
@@ -3043,10 +3985,36 @@ document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-tools').forEach(c => c.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    const tools = document.getElementById('tools-' + tab.dataset.tab);
+    if (tools) tools.classList.add('active');
   });
 });
+
+// v5.28: 開いているメニュー(ウエハ/基板のシリーズ・品名カード)をすべて閉じる
+window.collapseAllMenus = function() {
+  EXPANDED.clear(); saveExpanded();
+  GROUP_EXPANDED.clear(); saveGroupExpanded();
+  SUB_EXPANDED.clear(); localStorage.setItem(SUB_EXPAND_KEY, JSON.stringify([]));
+  SGROUP_EXPANDED.clear(); localStorage.setItem(SGROUP_EXPAND_KEY, JSON.stringify([]));
+  render();
+  renderSubstrate();
+};
+
+// v5.28: しきい値凡例フロートの開閉 (状態はlocalStorageに保存)
+const LEGEND_COLLAPSE_KEY = 'walts_legend_collapsed_v1';
+window.toggleLegendFloat = function() {
+  const el = document.getElementById('legend-float');
+  if (!el) return;
+  const collapsed = el.classList.toggle('collapsed');
+  localStorage.setItem(LEGEND_COLLAPSE_KEY, collapsed ? '1' : '0');
+};
+(function initLegendFloat() {
+  const el = document.getElementById('legend-float');
+  if (el && localStorage.getItem(LEGEND_COLLAPSE_KEY) === '1') el.classList.add('collapsed');
+})();
 
 document.getElementById('search-sub').addEventListener('input', renderSubstrate);
 document.getElementById('show-dormant').addEventListener('change', renderSubstrate);
@@ -3401,6 +4369,74 @@ function mbThickOf(cellText, sheetName) {
   m = sheetName.match(/[（(]\s*([0-9]+\.[0-9]+)\s*um/i);
   return m ? m[1] + 'um' : null;
 }
+
+/* ============================================================
+   v5.29: 加工工程による品種分割 (FC150: SiNベース / PI塗布済 / PI+ボール)
+   ・PI列/ボール列の注記から工程タイプを判定 (ボール有→③, PI有→②, 無→①)
+   ・「加工日」が過ぎていれば完了(手元在庫)、未来なら加工中=入荷予定
+   ・加工日の年が無ければ「入荷後の最初の同月日」を加工年に推定 (12月入荷→翌年加工に対応)
+   後で他製品にも広げる場合は PROCESS_SPLIT_CONFIGS に1行追加する。
+   ※ここを直したら core.js も再生成すること (build_core.py)
+   ============================================================ */
+const PROCESS_SPLIT_CONFIGS = [
+  { test: /^FC150(?![0-9A-Za-z])/i, piHeaders: ['PI'], ballHeaders: ['ボール'],
+    labels: { base: 'SiNベース', pi: 'PI塗布済', ball: 'PI+ボール' } },
+];
+function processSplitConfig(baseProduct) {
+  return PROCESS_SPLIT_CONFIGS.find(c => c.test.test(baseProduct)) || null;
+}
+// 実データのヘッダー行(=W#がある行)を探す。ヘッダーが2段(グループ見出し+列見出し)でも列見出し側を基準にできる。
+function findWaferHeaderRow(ws) {
+  for (let r = 1; r <= Math.min(ws.rowCount, 8); r++)
+    for (let c = 1; c <= Math.min(ws.columnCount, 25); c++)
+      if (cleanText(ws.getCell(r, c).value).trim() === 'W#') return r;
+  return null;
+}
+// 指定行の中で headers に一致する列を返す
+function colInRow(ws, row, headers) {
+  if (!row) return null;
+  for (let c = 1; c <= Math.min(ws.columnCount, 25); c++)
+    if (headers.includes(cleanText(ws.getCell(row, c).value).trim())) return c;
+  return null;
+}
+// セル1個のテキストに加工注記があるか (データ行の判定用。"-"/空は無し)
+function hasProcessNote(txt) {
+  const s = (txt || '').replace(/[－\-]/g, ' ').trim();
+  return s.length > 0 && /加工|完了|予定|中|済/.test(txt);
+}
+// 注記から加工日(年/月/日)を1つ取り出す。年が無ければ year=null。
+function extractProcessDate(txt) {
+  let m = txt.match(/(20\d{2})[\/\.年](\d{1,2})[\/\.月](\d{1,2})/);
+  if (m) return { year: +m[1], month: +m[2], day: +m[3] };
+  m = txt.match(/(?:^|[^\d])(\d{1,2})[\/\.](\d{1,2})(?![\d\/])/);
+  if (m) return { year: null, month: +m[1], day: +m[2] };
+  return null;
+}
+// ウエハ1枚の型を、そのウエハ行のPI/ボール欄から判定 (ボール有→ball, PI有→pi, 無→base)
+function waferProcessType(ws, r, piCol, ballCol) {
+  const ballTxt = ballCol ? cleanText(ws.getCell(r, ballCol).value) : '';
+  const piTxt = piCol ? cleanText(ws.getCell(r, piCol).value) : '';
+  if (hasProcessNote(ballTxt)) return { type: 'ball', note: ballTxt };
+  if (hasProcessNote(piTxt)) return { type: 'pi', note: piTxt };
+  return { type: 'base', note: '' };
+}
+// その注記の加工が未完(=入荷予定扱い)か? 加工日を過ぎていれば完了(false)。年が無ければ入荷年から推定。
+function noteStagePending(note, arrivalDt) {
+  if (!note) return false;
+  const di = extractProcessDate(note);
+  let y = di ? di.year : null, mo = di ? di.month : null, d = di ? di.day : null;
+  if (mo && d) {
+    if (y == null && arrivalDt) {
+      const ay = arrivalDt.getUTCFullYear(), am = arrivalDt.getUTCMonth() + 1, ad = arrivalDt.getUTCDate();
+      y = (mo < am || (mo === am && d < ad)) ? ay + 1 : ay;  // 入荷より前の月日→翌年加工
+    }
+    if (y != null) return new Date(Date.UTC(y, mo - 1, d)).getTime() > TODAY.getTime();  // 未来→加工中(入荷予定)
+  }
+  if (/完了/.test(note)) return false;   // 日付なし→語で判定
+  if (/予定|中/.test(note)) return true;
+  return false;
+}
+
 function isExcludedFile(name, folderKey) {
   const pattern = (folderKey && folderKey.startsWith('substrate'))
     ? SUBSTRATE_FILE_PATTERN
@@ -3581,10 +4617,19 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
     
     const cols = detectColumns(ws);
     if (!cols.slot) continue;
-    
-    const summary = getSummary(productNameForSheet(sn, ws));
-    summary.sheet_count++;
-    
+
+    // v5.29: 加工工程による品種分割 (FC150等) は per-wafer で型を判定する。
+    //   splitCfg!=null のシートは単一summaryを作らず、ウエハ毎に各タイプへ振り分ける。
+    const splitCfg = processSplitConfig(baseProduct);
+    let piCol = null, ballCol = null;
+    if (splitCfg) {
+      const hr = findWaferHeaderRow(ws);
+      piCol = colInRow(ws, hr, splitCfg.piHeaders);
+      ballCol = colInRow(ws, hr, splitCfg.ballHeaders);
+    }
+    const baseSummary = splitCfg ? null : getSummary(productNameForSheet(sn, ws));
+    if (baseSummary) baseSummary.sheet_count++;
+
     const sheetIsPending = isPendingSheet(sn);
     // v5.24: 「開発品」シートは白slotも含め全て使用済扱い (在庫・予約にしない)
     const sheetIsDev = /開発品/.test(sn);
@@ -3658,8 +4703,7 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
       
       // 入荷日空欄 + キーワードなし のロットは除外
       if (isSkipNoInfo) {
-        if (!summary.skipped_noinfo) summary.skipped_noinfo = [];
-        summary.skipped_noinfo.push({ sheet: sn, lot: lotName });
+        if (baseSummary) { if (!baseSummary.skipped_noinfo) baseSummary.skipped_noinfo = []; baseSummary.skipped_noinfo.push({ sheet: sn, lot: lotName }); }
         continue;
       }
       
@@ -3679,6 +4723,58 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
         }
       }
       
+      // v5.29: FC150等は per-wafer で型(SiN/PI/PI+ボール)と工程状態を判定し、各品種へ振り分ける
+      if (splitCfg) {
+        const buckets = {};  // key = typeKey|(cur/inc) → {a:在庫/未予約, b:予約, c:使用済, custs}
+        for (let r = start; r <= end; r++) {
+          if (ws.getRow(r).hidden) continue;
+          let status = classifier(ws.getCell(r, cols.slot));
+          if (!useReverseLogic && status === '在庫' && cols['備考'] && isConsumedNote(ws.getCell(r, cols['備考']).value)) status = '使用済';
+          if (sheetIsDev && !useReverseLogic) status = '使用済';
+          const wt = waferProcessType(ws, r, piCol, ballCol);
+          const stagePending = (wt.type === 'base') ? false : noteStagePending(wt.note, arrivalDt);
+          // 使用済(消費済)は入荷予定になり得ない。在庫/予約のみ加工中→入荷予定にする。
+          const isUsed = (status === '使用済');
+          const waferIncoming = !isUsed && (isIncoming || stagePending);
+          const key = wt.type + '|' + (waferIncoming ? 'inc' : 'cur');
+          let bk = buckets[key]; if (!bk) { bk = { a: 0, b: 0, c: 0, custs: [] }; buckets[key] = bk; }
+          if (useReverseLogic) { if (status === '未予約') bk.a++; else bk.b++; }
+          else { if (status === '在庫') bk.a++; else if (status === '予約') bk.b++; else bk.c++; }
+          const targetStatus = useReverseLogic ? '予約済' : '予約';
+          if (status === targetStatus && cols['顧客']) { const cu = cleanText(ws.getCell(r, cols['顧客']).value); if (cu && cu !== '-' && cu !== '') bk.custs.push(cu); }
+        }
+        for (const key in buckets) {
+          const typeKey = key.split('|')[0], inc = key.endsWith('|inc');
+          const bk = buckets[key];
+          const vsum = getSummary(`${baseProduct} ${splitCfg.labels[typeKey]}`);
+          vsum.sheet_count++;
+          const li = {
+            lot: lotName, sheet: sn, arrival_disp: arrivalDisp,
+            arrival_iso: arrivalDt ? arrivalDt.toISOString().substring(0,10) : null,
+            arrival_wildcard: hasWildcard, arrival_empty: isEmpty, arrival_future: isFuture,
+            customers: [...new Set(bk.custs)].sort(), locations: [...lotLocs].sort(),
+            is_dummy: isDummy, is_incoming: inc,
+          };
+          if (inc) {
+            li.unreserved = bk.a; li.reserved = bk.b; li.total = bk.a + bk.b;
+            vsum.incoming_unreserved += bk.a; vsum.incoming_reserved += bk.b; vsum.used += bk.c;
+            bk.custs.forEach(c => vsum.incoming_customers.add(c));
+            vsum.incoming_lots.push(li);
+          } else {
+            li.stock = bk.a; li.reserved = bk.b; li.used = bk.c;
+            if (isDummy) { vsum.dummy_stock += bk.a; vsum.dummy_reserved += bk.b; }
+            else { vsum.stock += bk.a; vsum.reserved += bk.b; }
+            vsum.used += bk.c;
+            bk.custs.forEach(c => vsum.reserved_customers.add(c));
+            lotLocs.forEach(l => vsum.locations.add(l));
+            if (arrivalDt && (!vsum._latestDt || arrivalDt > vsum._latestDt)) { vsum._latestDt = arrivalDt; vsum.latest_arrival = arrivalDt.toISOString().substring(0,10); }
+            vsum.lots.push(li);
+          }
+        }
+        continue;  // 通常集計はスキップ
+      }
+
+      const summary = baseSummary;
       let countA = 0, countB = 0, countC = 0;
       const customers = [];
       for (let r = start; r <= end; r++) {
@@ -3698,7 +4794,7 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
           if (cust && cust !== '-' && cust !== '') customers.push(cust);
         }
       }
-      
+
       const uniqCustomers = [...new Set(customers)].sort();
       const lotInfo = {
         lot: lotName, sheet: sn,
@@ -4161,7 +5257,7 @@ const CACHE_STORE = 'inventory_cache';
 const CACHE_VERSION = 1;
 // 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
 // (キャッシュ全クリアになる)
-const CACHE_SCHEMA_VERSION = 'v5.26-lot-fifo-c-2026-07-08';
+const CACHE_SCHEMA_VERSION = 'v5.29-fc150-process-split-2026-07-29';
 
 
 
