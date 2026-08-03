@@ -60,7 +60,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>WALTS 在庫管理ツール v5.29</title>
+<title>WALTS 在庫管理ツール v5.30</title>
 <style>
   :root {
     --bg: #eceef1;
@@ -1788,6 +1788,25 @@ tr.dummy-row .lot-name { font-style: italic; }
 .sub-status.danger { background: var(--alert-soft); color: var(--alert); box-shadow: none; }
 .sub-status.danger .lamp-big { background: var(--alert); }
 
+/* v5.30: 基板の入荷予定ボックス (在庫数値の右に固定サイズで常時表示。ウエハの入荷予定と同系色) */
+.sub-incoming {
+  display: flex; flex-direction: column; justify-content: center; gap: 3px;
+  padding: 8px 14px; min-width: 172px; min-height: 86px; box-sizing: border-box;
+  border: 1px dashed #c3aede; border-radius: 10px; background: #f7f2fb;
+}
+.sub-incoming .si-row { display: flex; align-items: baseline; gap: 6px; }
+.sub-incoming .si-lbl { flex: 1; font-size: 12px; font-weight: 700; color: var(--incoming); white-space: nowrap; }
+.sub-incoming .si-num { font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.sub-incoming .si-num.free { color: var(--incoming); }
+.sub-incoming .si-num.res { color: var(--ink-dim); }
+.sub-incoming .si-u { font-size: 11px; color: var(--ink-dim); }
+.sub-incoming .si-note { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+/* 入荷予定なしの製品も同サイズの枠 (レイアウトずれ防止) */
+.sub-incoming.empty { align-items: center; border-color: var(--line); background: #f4f5f7; }
+.sub-incoming.empty .si-none { font-size: 13px; font-weight: 700; color: var(--ink-faint); text-align: center; line-height: 1.35; }
+/* v5.30: 使える分カード内「現有在庫の予約」表示 */
+.sub-status .si-resv { display: block; font-size: 11px; font-weight: 700; color: var(--warn); margin-top: 3px; white-space: nowrap; }
+
 .sub-meta { font-size: 15px; color: #16a34a !important; }
 .sub-meta .row .lbl { font-size: 15px; color: #16a34a !important; }
 .sub-meta .row .val { color: #16a34a !important; font-size: 15px; }
@@ -2204,6 +2223,16 @@ table.history-table .h-stock { font-size: 16px; }
     return cellToNumber(v);
   }
 
+  // v5.30: セルのフォント色を 'red'/'blue'/'' で返す (未確定行マーカー用。赤=予約, 青=入荷待ち)
+  function cellFontColor(cell) {
+    const f = cell && cell.font;
+    if (!f || !f.color || !f.color.argb) return '';
+    const rgb = String(f.color.argb).slice(-6).toUpperCase();
+    if (rgb === 'FF0000') return 'red';
+    if (rgb === '0000FF') return 'blue';
+    return '';
+  }
+
   function extractRecords(ws, colMap, sheetName) {
     const records = [];
     if (ws.rowCount < 5) return records;
@@ -2266,6 +2295,7 @@ table.history-table .h-stock { font-size: 16px; }
         stock:      cellToNumber(stkV),
         tori_date:  normalizeText(toriV),
         person:     normalizeText(persV),
+        color_kind: (colMap.company ? cellFontColor(ws.getCell(r, colMap.company)) : '') || cellFontColor(ws.getCell(r, colMap.lot)),  // v5.30: 赤=予約/青=入荷待ち
       });
       r += 2;
     }
@@ -2513,15 +2543,49 @@ table.history-table .h-stock { font-size: 16px; }
       return a.row - b.row;
     });
 
+    // v5.30: 未確定行(入荷待ち/予約)を分離する。
+    //   判定: 日付欄が「入荷待ち/入荷予定/予約」= 未確定、または 日付空欄 かつ Lotに ** (ワイルドカード)。
+    //   入庫あり→入荷予定、出庫あり→予約(入荷後出荷)。現有在庫は確定行のみで算出。
+    function isPendingRec(rec) {
+      const d = (rec.date || '').trim();
+      if (/入荷待ち|入荷予定|予約/.test(d)) return true;  // キーワード (今後の入力ルール。確実)
+      const lot = (rec.lot || '') + ' ' + (rec.lot2 || '');
+      if (/[*＊]{2}/.test(lot)) return true;              // ** ワイルドカード(未確定Lot=入荷待ち)
+      // 現行運用: 日付空欄 かつ 赤字(予約)/青字(入荷待ち)。確定取引は黒字なので誤検出しない。
+      if (d === '' && (rec.color_kind === 'red' || rec.color_kind === 'blue')) return true;
+      return false;
+    }
+    allRecords.forEach(r => { r.is_pending = isPendingRec(r); });  // v5.30: history各行に未確定フラグ(消費分析での除外用)
+    const pendingRecs   = allRecords.filter(r => r.is_pending);
+    const confirmedRecs = allRecords.filter(r => !r.is_pending);
+
+    // 現有在庫 = 確定行のみの最終残
     let currentStock = 0;
     let lastTx = null;
-    if (allRecords.length) {
-      lastTx = allRecords[allRecords.length - 1];
+    if (confirmedRecs.length) {
+      lastTx = confirmedRecs[confirmedRecs.length - 1];
       currentStock = lastTx.stock;
     }
 
-    const lots = aggregateLots(allRecords);
-    const { in_1y, out_1y, sample_1y } = compute1yTotals(allRecords, fileModifiedDate);
+    // 入荷予定・予約: 入荷予定=未確定の入庫合計 / 予約=未確定の出庫合計。
+    //   予約配分: 予約 ≤ 現有 → 現有から、現有超なら入荷予定から (案A: 使える分=現有フリー)。
+    let incoming = 0, reservedCurrent = 0, reservedIncoming = 0;
+    pendingRecs.forEach(r => { incoming += (r.in_qty || 0); });
+    let currentFree = currentStock, incomingFree = incoming;
+    pendingRecs.forEach(r => {
+      const outQ = (r.out_sale || 0) + (r.out_proc || 0) + (r.out_sample || 0);
+      if (outQ > 0) {
+        // 予約 ≤ 現有フリー → 現有から、超えたら入荷予定から
+        if (outQ <= currentFree) { currentFree -= outQ; reservedCurrent += outQ; }
+        else { incomingFree -= outQ; reservedIncoming += outQ; }
+      }
+    });
+    currentFree = Math.max(0, currentFree);
+    incomingFree = Math.max(0, incomingFree);
+    const reservedPending = reservedCurrent + reservedIncoming;
+
+    const lots = aggregateLots(confirmedRecs);  // ロット別在庫は確定分のみ
+    const { in_1y, out_1y, sample_1y } = compute1yTotals(confirmedRecs, fileModifiedDate);
     const primarySheet = sheetsProcessed.length ? sheetsProcessed[0].name : '';
 
     return {
@@ -2532,6 +2596,12 @@ table.history-table .h-stock { font-size: 16px; }
       sheets:        sheetsProcessed.map(s => s.name),
       sheets_skipped: sheetsSkipped,
       current_stock: currentStock,
+      current_free:  currentFree,      // v5.30: 使える分(現有フリー在庫)
+      incoming:      incoming,         // v5.30: 入荷予定(未確定入庫)合計
+      incoming_free: incomingFree,     // v5.30: 入荷予定フリー(入荷予定 − 入荷側予約)
+      reserved_pending:  reservedPending,  // v5.30: 予約合計(現有+入荷)
+      reserved_current:  reservedCurrent,  // v5.30: 現有在庫から引いた予約
+      reserved_incoming: reservedIncoming, // v5.30: 入荷予定から引いた予約
       in_1y:         in_1y,
       out_1y:        out_1y,
       sample_1y:     sample_1y,
@@ -2563,7 +2633,7 @@ table.history-table .h-stock { font-size: 16px; }
 <div class="app">
 
   <header class="top">
-    <h1>WALTS 在庫管理ツール <span class="sub">v5.29</span></h1>
+    <h1>WALTS 在庫管理ツール <span class="sub">v5.30</span></h1>
     <div class="index-info-wrap" id="changes-box">
       <div class="changes-box" id="changes-display">
         <div class="lbl">📂 SharePoint との同期</div>
@@ -2732,6 +2802,7 @@ function setOrder(key, data) {
    ============================================================ */
 // === 変更履歴 (最新が先頭。先頭1件を常時表示、それ以前は折りたたみ) ===
 const CHANGELOG = [
+  { v: 'v5.30', date: '2026-07-30', text: '基板に「入荷予定」概念を追加。未確定行(日付欄=入荷待ち/予約、または日付空欄+Lotに**)を分離し、現有在庫=確定行のみ・入荷予定=未確定入庫・予約=未確定出庫として算出。予約は現有で賄えれば現有から、超えたら入荷予定から引く。カードは「使える分(現有フリー)」を主表示し、入荷予定フリー/予約を別枠表示。アラーム判定も使える分ベースに変更' },
   { v: 'v5.29', date: '2026-07-29', text: 'FC150を加工工程で3品種に分割(SiNベース/PI塗布済/PI+ボール)。PI列・ボール列の注記で判定し、加工日が過ぎていれば完了(手元在庫)・未来なら加工中(入荷予定)。加工日の年が無ければ入荷後の最初の同月日を加工年に推定。PROCESS_SPLIT_CONFIGSに追加すれば他製品にも適用可' },
   { v: 'v5.28', date: '2026-07-27', text: '【実験】新しい配色＋レイアウトテーマを試験導入(濃いめグレー背景・カード影・角丸・枠線・鮮やかなアクセント色)。シリーズ帯を太く枠線付きにし品名は【】表示、危険品は赤カード白抜き(品名+枚数)を帯に表示。基板側も同構成にし在庫100ケ未満を警告として帯に赤カード表示。品名カード見出しを大型化(品名の下に本社/Excel/ファイル名)。検索バーはタブ横へ、変更履歴は最下部へ移動。CSS末尾の THEME START〜THEME END を削除すればv5.27の見た目に戻せる。数え方・集計は変更なし' },
   { v: 'v5.27', date: '2026-07-27', text: 'ウエハのシリーズ見出しに所属品名を【A / B / C】形式で常時表示(危険=赤/警告=橙)。そのシリーズに危険品(使える分10枚未満)がある場合のみ、見出し内に薄赤カード(品名+枚数のみ)を表示。展開せず不足品がシリーズ単位で分かる。帯右の在庫合計表示は削除' },
@@ -3191,9 +3262,11 @@ const SUB_GROUPS = [
 
 // 基板の状態判定
 function substrateStatus(s) {
-  if (s.current_stock < 0) return 'danger';
-  if (s.current_stock === 0) return 'danger';
-  if (s.current_stock < 30) return 'warn';
+  // v5.30: 判定は「使える分(現有フリー在庫)」で行う (入荷予定分は含めない=案A)
+  const v = (s.current_free != null) ? s.current_free : s.current_stock;
+  if (v < 0) return 'danger';
+  if (v === 0) return 'danger';
+  if (v < 30) return 'warn';
   return 'ok';
 }
 
@@ -3337,9 +3410,17 @@ function renderSubCard(s) {
             </div>
           </div>
           ${oldestBig}
-          <div class="sub-status">
-            <span class="num ${minusClass}">${s.current_stock}</span>
-            <span class="unit">現在在庫</span>
+          <div class="sub-status ${substrateStatus(s)}">
+            <span class="num ${minusClass}">${s.current_free != null ? s.current_free : s.current_stock}</span>
+            <span class="unit">使える分 (ケ)</span>
+            ${s.reserved_current > 0 ? `<span class="si-resv">＋予約 ${s.reserved_current} ケ（現有 ${s.current_stock}）</span>` : ''}
+          </div>
+          <div class="sub-incoming ${s.incoming > 0 ? '' : 'empty'}">
+            ${s.incoming > 0 ? `
+              <div class="si-row"><span class="si-lbl">入荷予定フリー</span><span class="si-num free">${s.incoming_free}</span><span class="si-u">ケ</span></div>
+              <div class="si-row"><span class="si-lbl">予約(入荷後出荷)</span><span class="si-num res">${s.reserved_incoming != null ? s.reserved_incoming : s.reserved_pending}</span><span class="si-u">ケ</span></div>
+              <div class="si-note">現有在庫 ${s.current_stock} ／ 入荷予定 ${s.incoming}</div>
+            ` : `<div class="si-none">入荷予定<br>無し</div>`}
           </div>
         </div>
       </div>
@@ -3437,7 +3518,8 @@ function renderSubstrate() {
           elapsed = subElapsed(oldest.last_in_iso);
         }
       }
-      const qtyNg = s.current_stock < 100;              // 数量NG: 100ケ未満
+      const free = (s.current_free != null) ? s.current_free : s.current_stock;  // v5.30: 使える分で判定
+      const qtyNg = free < 100;                         // 数量NG: 使える分100ケ未満
       const ageNg = elapsed && elapsed.months >= 48;    // 経過NG: 4年(48ヶ月)以上
       if (qtyNg || ageNg) {
         // 上下2分割: 上=数量(問題なら赤/OKはグレー) / 下=経過時間(同左)。両方常に表示。
@@ -3446,7 +3528,7 @@ function renderSubstrate() {
           <span class="sg-alert">
             <span class="db-half db-qty ${qtyNg ? 'ng' : 'ok'}">
               <span class="db-name">${escape(s.product)}</span>
-              <span class="db-num">${s.current_stock}</span><span class="db-unit">ケ</span>
+              <span class="db-num">${free}</span><span class="db-unit">ケ</span>
             </span>
             <span class="db-half db-age ${ageNg ? 'ng' : 'ok'}">
               <span class="db-age-val">${ageLabel}</span>
@@ -5257,7 +5339,7 @@ const CACHE_STORE = 'inventory_cache';
 const CACHE_VERSION = 1;
 // 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
 // (キャッシュ全クリアになる)
-const CACHE_SCHEMA_VERSION = 'v5.29-fc150-process-split-2026-07-29';
+const CACHE_SCHEMA_VERSION = 'v5.30-substrate-incoming-2026-07-30';
 
 
 
