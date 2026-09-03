@@ -60,7 +60,7 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>WALTS 在庫管理ツール v5.30</title>
+<title>WALTS 在庫管理ツール v5.55</title>
 <style>
   :root {
     --bg: #eceef1;
@@ -723,30 +723,60 @@ v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム�
   }
   /* v5.28: 危険/警告品なしのシリーズはバッジ1段分の高さだけ確保して不可視化(帯の高さ統一) */
   .group-header .gh-alerts.gh-alerts-empty, .sgroup-header-wrap .gh-alerts.gh-alerts-empty { visibility: hidden; }
+  /* v5.37/v5.38: バッジは2段(上段=品名+枚数 / 下段=＋予定)。危険/警告で高さを揃える。 */
   .group-header .gh-alert, .sgroup-header-wrap .gh-alert {
-    display: inline-flex; align-items: baseline; gap: 7px;
-    background: #e53935;               /* v5.28: しっかりした赤背景 */
-    border: 1px solid #b71c1c;
+    display: inline-flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    background: #f6bcbc;               /* v5.38: 赤を少し強めに */
+    border: 3px solid #d43b3b;         /* v5.38/v5.39: 赤い太線 */
     border-radius: 8px;
-    padding: 9px 14px;                 /* v5.28: 高さ約1.3倍 */
+    padding: 5px 14px;
+    min-height: 58px; box-sizing: border-box;  /* v5.38: 危険/警告の高さを統一 */
+  }
+  .group-header .gh-alert .gh-line1, .sgroup-header-wrap .gh-alert .gh-line1 {
+    display: inline-flex; align-items: baseline; gap: 7px;
+  }
+  /* v5.39: 下段 = 枚数 + ＋予定 */
+  .group-header .gh-alert .gh-line2, .sgroup-header-wrap .gh-alert .gh-line2 {
+    display: inline-flex; align-items: baseline; justify-content: center; gap: 6px;
   }
   .group-header .gh-alert .db-name, .sgroup-header-wrap .gh-alert .db-name {
-    font-size: 14px; font-weight: 700; color: #ffffff;   /* 白抜き */
+    font-size: 14px; font-weight: 700; color: #a83232;
   }
   .group-header .gh-alert .db-num, .sgroup-header-wrap .gh-alert .db-num {
-    font-size: 22px; font-weight: 900; color: #ffffff;   /* 白抜き */
+    font-size: 22px; font-weight: 900; color: #a83232;
     line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
   }
   .group-header .gh-alert .db-unit, .sgroup-header-wrap .gh-alert .db-unit {
-    font-size: 12px; font-weight: 700; color: #ffffff;   /* 白抜き */
+    font-size: 12px; font-weight: 700; color: #a83232;
   }
-  /* v5.28: 警告品はオレンジ寄りの黄カード(濃い茶系の文字) */
+  /* v5.37/v5.38: 警告品はパステルな黄(濃い茶系の文字)＋オレンジ太線 */
   .group-header .gh-alert.warn {
-    background: #ffdf9e; border-color: #e39400;
+    background: #ffeec8; border-color: #e8912e;
   }
   .group-header .gh-alert.warn .db-name,
   .group-header .gh-alert.warn .db-num,
-  .group-header .gh-alert.warn .db-unit { color: #6b4300; }
+  .group-header .gh-alert.warn .db-unit { color: #8a5e13; }
+  /* v5.36/v5.37: バッジ下段の入荷予定チップ */
+  .group-header .gh-alert .db-incoming, .sgroup-header-wrap .gh-alert .db-incoming {
+    font-size: 15px; font-weight: 800; line-height: 1;   /* v5.41/v5.50: ＋予定の数値を大きく */
+    color: #a83232; background: rgba(168,50,50,0.12);
+    border-radius: 999px; padding: 3px 10px;
+    white-space: nowrap;
+  }
+  .group-header .gh-alert.warn .db-incoming {
+    color: #8a5e13; background: rgba(138,94,19,0.14);
+  }
+  /* v5.48/v5.49: バッジ内「予定」の予約済内訳 (予定の内数と分かるよう「(うち予約N)」表記) */
+  .group-header .gh-alert .db-incoming .db-inc-resv,
+  .sgroup-header-wrap .gh-alert .db-incoming .db-inc-resv {
+    font-size: 13px; font-weight: 700; margin-left: 4px; opacity: 0.9;   /* v5.50: 少し大きく */
+  }
+  .group-header .gh-alert .db-incoming .db-inc-resv::before { content: "("; }
+  .group-header .gh-alert .db-incoming .db-inc-resv::after  { content: ")"; }
+  /* v5.38: 入荷予定なしバッジの高さ合わせ用プレースホルダー(不可視) */
+  .group-header .gh-alert .db-incoming.db-incoming-ph,
+  .sgroup-header-wrap .gh-alert .db-incoming.db-incoming-ph { visibility: hidden; }
 
   /* シリーズ一覧の見出し */
   .series-section-title {
@@ -1395,8 +1425,9 @@ h1 .sub { font-size: 14px; font-weight: 400; color: var(--ink-dim); margin-left:
   font-family: "Consolas", monospace; margin-top: 3px;
 }
 .pc-stats {
-  display: flex; align-items: center; gap: 30px;
+  display: flex; align-items: center; gap: 44px;   /* v5.36: ステータスと数値列の間隔を拡大 */
   flex: 1; justify-content: flex-end; flex-wrap: nowrap;
+  padding-right: 8px;
 }
 .pc-stat {
   text-align: center;
@@ -1440,6 +1471,33 @@ h1 .sub { font-size: 14px; font-weight: 400; color: var(--ink-dim); margin-left:
   color: var(--ink);
 }
 .pc-stat .val-extra.zero { color: var(--ink-faint); font-weight: 400; }
+
+/* v5.34: 在庫サマリーを5列(手元/入荷予定/出荷待ち/入荷後予約/ダミー)に分離表示 */
+.pc-cols {
+  display: flex; align-items: flex-start;
+  gap: 36px; flex-wrap: nowrap;   /* v5.36: 詰まって見えるので間隔を拡大 */
+}
+.pc-col { text-align: center; min-width: 64px; }
+.col-label {
+  font-size: 12px; font-weight: 700; color: #a1566a;
+  margin-bottom: 5px; white-space: nowrap; letter-spacing: 0.02em;
+}
+.col-val {
+  font-size: 34px; font-weight: 800; line-height: 1;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.col-unit { font-size: 11px; color: var(--ink-dim); margin-top: 3px; }
+.col-sub {
+  font-size: 11px; color: #b07a86; margin-top: 4px; white-space: nowrap;
+}
+/* 数値の意味色 */
+.pc-col.col-hand     .col-val { color: var(--accent); }    /* 手元=青 */
+.pc-col.col-incoming .col-val { color: var(--incoming); }  /* 入荷予定=紫 */
+.pc-col.col-ship     .col-val { color: var(--warn); }      /* 出荷待ち=橙 */
+.pc-col.col-afres    .col-val { color: var(--warn); }      /* 入荷後予約=橙 */
+.pc-col.col-dummy    .col-val { color: var(--ink); }       /* ダミー=黒 */
+/* v5.37: 枚数による色変化(ゼロ淡色化/手元ゼロ赤)は廃止。常に意味色で統一。 */
 
 /* アコーディオン制御 */
 .expand-toggle {
@@ -1679,6 +1737,28 @@ table.lot-table tbody tr.zero:hover { background: var(--hover); }
   font-weight: 600; letter-spacing: 0.05em;
   color: var(--ink-dim);
 }
+/* v5.39: 入荷予定はステータス枠の右横に固定幅で表示 (高さ・幅を有無で変えない) */
+.status-block { display: inline-flex; align-items: center; gap: 12px; }
+.status-incoming-side {
+  flex-shrink: 0; width: 80px; text-align: center;
+  color: var(--incoming); line-height: 1.25;
+}
+.status-incoming-side.ph { visibility: hidden; }
+.status-incoming-side .sis-label {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+}
+.status-incoming-side .sis-num {
+  font-size: 22px; font-weight: 800; line-height: 1.05;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+}
+.status-incoming-side .sis-num span { font-size: 11px; font-weight: 700; margin-left: 1px; }
+/* v5.47/v5.48: 予定のうち予約済み分 (小さすぎたので拡大・チップ化) */
+.status-incoming-side .sis-sub {
+  display: inline-block; margin-top: 3px;
+  font-size: 12px; font-weight: 800; white-space: nowrap;
+  color: var(--incoming); background: var(--incoming-soft);
+  border-radius: 999px; padding: 1px 7px;
+}
 .status-big.ok { background: var(--ok-soft); color: var(--ok); box-shadow: none; }
 .status-big.ok .lamp-big { background: var(--ok); }
 .status-big.warn { background: var(--warn-soft); color: var(--warn); box-shadow: none; }
@@ -1844,6 +1924,29 @@ tr.dummy-row .lot-name { font-style: italic; }
 .sub-age-big.age-warn { background: var(--warn-soft); color: var(--warn); }
 .sub-age-big.age-alert { background: var(--alert-soft); color: var(--alert); }
 
+/* v5.53: 基板詳細をウエハ式(ステータス枠＋入荷予定＋4列)に統一。1行に収めるためコンパクト化 */
+.sub-stats-v2 { gap: 14px; flex-wrap: nowrap; }
+.sub-stats-v2 .sub-meta { font-size: 12px !important; max-width: 185px; }
+.sub-stats-v2 .sub-meta .row .lbl { font-size: 12px !important; }
+.sub-stats-v2 .sub-meta .row .val { font-size: 12px !important; }
+.sub-stats-v2 .sub-meta .row .val .num { font-size: 12px !important; }
+.sub-stats-v2 .sub-age-big { padding: 6px 10px; flex-shrink: 0; }
+.sub-stats-v2 .sub-age-big .age-elapsed { font-size: 19px; }
+.sub-stats-v2 .sub-age-big .age-elapsed .age-suffix { font-size: 11px; }
+.sub-stats-v2 .sub-age-big .age-detail { font-size: 10px; }
+.sub-stats-v2 .status-big { min-width: 92px; padding: 10px 12px; }
+.sub-stats-v2 .status-big .label { font-size: 15px; }
+.sub-stats-v2 .status-big .num { font-size: 30px; }
+.sub-stats-v2 .status-big .unit { font-size: 12px; }
+.sub-stats-v2 .status-block { gap: 8px; }
+.sub-stats-v2 .status-incoming-side { width: 60px; }
+.sub-stats-v2 .status-incoming-side .sis-num { font-size: 18px; }
+.sub-stats-v2 .pc-cols { gap: 15px; }
+.sub-stats-v2 .pc-col { min-width: 48px; }
+.sub-stats-v2 .col-val { font-size: 25px; }
+.sub-stats-v2 .col-label { font-size: 11px; }
+.sub-stats-v2 .col-sub { font-size: 10px; }
+
 /* 履歴表 */
 table.history-table thead th {
   background: #f8f9fa;
@@ -1953,7 +2056,7 @@ table.history-table .h-stock { font-size: 16px; }
 .sgroup-header-wrap .sg-alert {
   display: flex; flex-direction: column;
   min-width: 150px;
-  border: 1px solid #9aa2ab;
+  border: 3px solid #d43b3b;   /* v5.45: ウエハ帯と同じ太い枠線(赤) */
   border-radius: 8px;
   overflow: hidden;
 }
@@ -1961,15 +2064,29 @@ table.history-table .h-stock { font-size: 16px; }
   display: flex; align-items: baseline; justify-content: center;
   gap: 6px; padding: 10px 16px; text-align: center;
 }
-.sgroup-header-wrap .sg-alert .db-half.db-qty { border-bottom: 1px solid rgba(0,0,0,0.18); }
-.sgroup-header-wrap .sg-alert .db-half.ok { background: #dcdfe3; color: #2c3e50; }  /* 問題なし=グレー */
-.sgroup-header-wrap .sg-alert .db-half.ng { background: #e53935; color: #ffffff; }  /* 問題あり=赤 */
+.sgroup-header-wrap .sg-alert .db-half.db-qty { border-bottom: 3px solid #d43b3b; }  /* v5.45: 横線も枠と同じ太さ */
+.sgroup-header-wrap .sg-alert .db-half.ok { background: var(--ok-soft); color: #2d6a3e; }  /* v5.46: 問題なし=基板の薄い緑(グレーは警告っぽいため) */
+.sgroup-header-wrap .sg-alert .db-half.ng { background: #f6bcbc; color: #a83232; }  /* v5.42: 問題あり=パステル赤(帯に合わせ) */
 .sgroup-header-wrap .sg-alert .db-name { font-size: 13px; font-weight: 700; }
 .sgroup-header-wrap .sg-alert .db-num {
   font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
 }
 .sgroup-header-wrap .sg-alert .db-unit { font-size: 11px; font-weight: 700; }
 .sgroup-header-wrap .sg-alert .db-age-val { font-size: 12px; font-weight: 700; }
+/* v5.53: 入荷予定は3段目ではなく、1段目(数量セル)を改行して2行目に表示 */
+.sgroup-header-wrap .sg-alert .db-half.db-qty.has-inc {
+  flex-direction: column; align-items: center; gap: 3px;
+}
+.sgroup-header-wrap .sg-alert .sg-qty-main {
+  display: inline-flex; align-items: baseline; justify-content: center; gap: 6px;
+}
+.sgroup-header-wrap .sg-alert .sg-inc-line {
+  font-size: 12px; font-weight: 700; color: #6a3fa0;   /* 入荷予定=紫系(セル色と区別) */
+}
+.sgroup-header-wrap .sg-alert .sg-inc-line .sg-inc-num { font-size: 15px; font-weight: 800; }
+.sgroup-header-wrap .sg-alert .sg-inc-line .sg-inc-resv { font-size: 11px; font-weight: 700; margin-left: 3px; opacity: 0.9; }
+.sgroup-header-wrap .sg-alert .sg-inc-line .sg-inc-resv::before { content: "("; }
+.sgroup-header-wrap .sg-alert .sg-inc-line .sg-inc-resv::after  { content: ")"; }
 
 /* v5.28: 検索バーをタブの横に配置 (アクティブタブ側のみ表示) */
 .tabs { align-items: stretch; flex-wrap: wrap; }
@@ -1985,11 +2102,12 @@ table.history-table .h-stock { font-size: 16px; }
   display: inline-block;
   font-size: 12px; font-weight: 700;
   padding: 4px 10px; border-radius: 5px;
-  border: 1px solid; white-space: nowrap;
+  border: 2px solid; white-space: nowrap;   /* v5.42: 帯バッジに合わせ太線 */
 }
 .tl-card b { font-variant-numeric: tabular-nums; font-weight: 900; }
-.tl-card.danger { background: #e53935; border-color: #b71c1c; color: #ffffff; }
-.tl-card.warn   { background: #ffdf9e; border-color: #e39400; color: #6b4300; }
+/* v5.42: 帯のアラームバッジと同じパステル配色に統一 */
+.tl-card.danger { background: #f6bcbc; border-color: #d43b3b; color: #a83232; }
+.tl-card.warn   { background: #ffeec8; border-color: #e8912e; color: #8a5e13; }
 
 /* v5.28: しきい値の凡例フロート (position:fixed でスクロール追従、右側に固定) */
 .legend-float {
@@ -2633,7 +2751,7 @@ table.history-table .h-stock { font-size: 16px; }
 <div class="app">
 
   <header class="top">
-    <h1>WALTS 在庫管理ツール <span class="sub">v5.30</span></h1>
+    <h1>WALTS 在庫管理ツール <span class="sub">v5.55</span></h1>
     <div class="index-info-wrap" id="changes-box">
       <div class="changes-box" id="changes-display">
         <div class="lbl">📂 SharePoint との同期</div>
@@ -2685,9 +2803,10 @@ table.history-table .h-stock { font-size: 16px; }
     </div>
     <div class="lf-body">
       <div class="lp-section">
-        <div class="lp-head">🌀 ウエハ在庫</div>
+        <div class="lp-head">🌀 ウエハ実在庫</div>
         <span class="tl-card danger">危険 <b>10枚</b> 未満</span>
         <span class="tl-card warn">警告 <b>25枚</b> 未満</span>
+        <div style="font-size:11px;color:var(--ink-dim);margin-top:5px;">入荷予定は在庫に含めず別表示</div>
       </div>
       <div class="lp-section">
         <div class="lp-head">🟫 基板在庫</div>
@@ -2802,6 +2921,30 @@ function setOrder(key, data) {
    ============================================================ */
 // === 変更履歴 (最新が先頭。先頭1件を常時表示、それ以前は折りたたみ) ===
 const CHANGELOG = [
+  { v: 'v5.55', date: '2026-08-27', text: '詳細カードの列名「入荷後予約」→「入予定予約」に変更(ウエハ・基板とも)。「現有予約」と対になり、入荷予定(未着)在庫の予約分と分かりやすく。補足は「入荷後に出荷」のまま。表示のみ' },
+  { v: 'v5.54', date: '2026-08-27', text: '基板TOP帯アラームカードの入荷予定表示を、3段目追加ではなく1段目(数量セル)を改行して2行目に「入荷予定 N ケ（うち予約N）」を記載する形に変更。カードが縦に伸びすぎないように。表示のみ' },
+  { v: 'v5.53', date: '2026-08-27', text: '基板の詳細カードをウエハと同じ表示方式に統一。ステータス枠(安全/警告/危険＋実在庫ケ)＋入荷予定を右横(合計・うち予約)＋数値4列(実在庫/入荷予定/現有予約/入荷後予約)。基板固有の最終取引/過去1年/経過は数値列の左にコンパクトに併記(ダミー概念はないため4列)。表示のみ' },
+  { v: 'v5.52', date: '2026-08-27', text: 'ウエハ詳細カードの列名「出荷待ち」→「現有予約」に変更(補足も「引当済み」→「予約済み」)。予約であって必ず出荷するとは限らないため、現有在庫の予約分と分かる表記に。入荷後予約と対で並ぶ。表示のみ' },
+  { v: 'v5.51', date: '2026-08-27', text: '基板のTOP帯アラームカードにも入荷予定を表示。在庫が少ない/経過が長い警告品で入荷予定がある場合、3段目に「入荷予定 N ケ（うち予約N）」を薄紫で追加(数量/経過と同じ太線区切り)。ウエハ帯と同じく一番上のページで補充予定が分かるように。表示のみ' },
+  { v: 'v5.50', date: '2026-08-27', text: '帯バッジの「＋予定N（うち予約N）」の数字を大きく(予定13→15px / 予約11→13px)して見やすく。表示のみ' },
+  { v: 'v5.49', date: '2026-08-27', text: '帯バッジの予約併記を「・予約N」→「(うち予約N)」に変更。予約は予定の内数(合計に含まれる)なので、別数量に見えないよう明示。例「＋予定71(うち予約3)」。表示のみ' },
+  { v: 'v5.48', date: '2026-08-27', text: 'TOP帯の危険/警告バッジの「＋予定」も、フリー＋予約済の合計に変更し予約済分「(・予約N)」を併記。詳細カードの「うち予約」表示が小さかったので、文字を大きく(12px太字)しチップ表示にして視認性向上。表示のみ' },
+  { v: 'v5.47', date: '2026-08-27', text: 'ウエハ詳細カードのステータス右横「入荷予定」表示を、フリー分だけでなく予約済分も含めた合計に変更(＋予約済分を「うち予約 N」で補足)。従来はフリー在庫になりうる分のみで「予定がもっとあるはず」と誤解を生んだため。数値内訳(入荷予定=フリー/入荷後予約=予約済)の5列表示は従来どおり。表示のみ' },
+  { v: 'v5.46', date: '2026-08-27', text: '基板帯アラームカードの「問題なし」側の色をグレー→基板の薄い緑(--ok-soft)に変更。グレーだと警告のように見えたため、安全=緑で直感的に。文字も落ち着いた緑に。表示のみ' },
+  { v: 'v5.45', date: '2026-08-27', text: '基板シリーズ帯のアラームカード(数量/経過の2分割カード)の枠線をウエハ帯と同じ太さ(3px 赤)に、上下2分割の横線も同じ3pxに変更。前版で誤って基板"詳細"カードに付けた枠線は差し戻し(詳細は変更なし)。表示のみ' },
+  { v: 'v5.43', date: '2026-08-27', text: 'MB130Aの表示名を修正。膜厚(x.xum)はAl-Si-Cu金属層の厚さだが、従来「MB130A PI 1.5um」表示だと下地PI/SiNの厚さと誤解されたため「MB130A PI / Al-Si-Cu 1.5um」形式に変更(SiN側も同様)。表示名のみの変更で在庫の集計・グループ分け・並び替えは不変。ナビカードもΦ等を含む表示名に統一' },
+  { v: 'v5.42', date: '2026-08-27', text: '凡例(しきい値)カードと基板シリーズ帯のアラーム色を、ウエハ帯と同じパステル配色に統一。凡例は危険=パステル赤(太線)/警告=パステル黄(オレンジ太線)、基板帯の「問題あり」半分も原色赤→パステル赤に。基板の詳細カードは変更なし。表示のみ' },
+  { v: 'v5.41', date: '2026-08-27', text: 'アラームバッジの「＋予定N」の文字を少し大きく(11→13px)して視認性を向上。表示のみ' },
+  { v: 'v5.40', date: '2026-08-27', text: 'アラームバッジを上段=品名/下段=枚数＋予定 の2段レイアウトに変更(品名を独立表示し枚数を下段へ)。高さは従来どおり危険/警告で統一。表示のみ' },
+  { v: 'v5.39', date: '2026-08-27', text: 'アラームバッジの枠線をさらに太く(3px)。詳細カードの入荷予定表示をステータス枠の下段→「右横」の固定幅枠に変更し、入荷予定の有無でカードの高さも幅も変わらないように統一(無い時は同じ枠を不可視で確保)。表示のみ' },
+  { v: 'v5.38', date: '2026-08-27', text: 'TOPアラームバッジの微調整。危険/警告バッジの高さを統一(min-height+上下中央寄せ、＋予定の有無で高さがばらつかない)。危険は背景の赤を少し強め、赤い太線(2px #d43b3b)で囲む。警告は現状のパステル黄のままオレンジ太線(2px #e8912e)で囲む。表示のみ' },
+  { v: 'v5.37', date: '2026-08-27', text: 'TOPアラームバッジの見た目調整。「＋予定N」を枚数の下段に移動(高さは増えるが視認性向上)。危険=赤/警告=黄の背景をパステル調に和らげ、文字を濃色に。詳細カードの数値5列は枚数による色変化(ゼロ淡色化/実在庫ゼロ赤)を廃止し、常に固定の意味色(実在庫=青/入荷予定=紫/出荷待ち・入荷後予約=橙/ダミー=黒)で統一。表示のみ' },
+  { v: 'v5.36', date: '2026-08-27', text: 'TOPシリーズ帯の危険/警告バッジにも入荷予定を表示(「品名 0枚 ＋予定14」)。実在庫が少なくても入荷予定があることが一覧で分かるように。あわせて詳細カードの数値5列が詰まって見えたため列間隔を拡大(列間36px/ステータス〜数値列44px)。表示のみ' },
+  { v: 'v5.35', date: '2026-08-27', text: 'ウエハの警告/危険判定を「実在庫」ベースに変更。従来は実在庫＋入荷予定の合計で判定していたため、実在庫0でも入荷予定があれば安全に見え誤解を生んでいた。今後は手元にすぐ使える実在庫のみでアラーム判定(危険10枚未満/警告25枚未満)し、入荷予定がある場合はステータス枠に「＋入荷予定 N枚」を補足表示。TOPアラーム・ナビカード・凡例も実在庫基準に統一。数え方(在庫の集計値)は不変で判定基準のみ変更' },
+  { v: 'v5.34', date: '2026-08-27', text: 'ウエハカードの在庫サマリーを見やすく再設計。従来の「即在庫+予約済」「入荷予定+予約済」の加算表記(A+B)をやめ、実在庫/入荷予定/出荷待ち/入荷後予約/ダミーの5列に分離し、それぞれ意味色(実在庫=青・入荷予定=紫・出荷待ち/入荷後予約=橙・ダミー=黒)と補足ラベル付きで表示。ゼロは淡色化(実在庫ゼロのみ在庫切れ=赤で強調)。数え方は不変(表示のみ)' },
+  { v: 'v5.33', date: '2026-08-27', text: '入荷待ちウエハの誤計上を修正。入荷日セルに「予定/未定/?」等の未確定マーカーがある場合、その日付が過去でも実到着(現有在庫)とはみなさず入荷予定のまま数える。例: 入荷待ちシートのLotに「2026/1/14予定?」とあり予定日が過ぎていたウエハが即在庫25枚に誤計上されていたのを、入荷予定へ正しく分類。プレーンな過去日付(マーカー無し)は従来どおり実到着=現有在庫' },
+  { v: 'v5.32', date: '2026-08-19', text: '「ぱっと表示」対応。前回の解析結果(在庫/基板)をlocalStorageにスナップショット保存し、次回起動時にまず即描画→裏でSharePointを再取得して差し替える。2回目以降の起動で「認証中…取得中…」の空白待ちが消え、開いた瞬間に前回データが出る(初回OPENのみ通常取得)。スキーマ更新時や容量超過時はスナップショットを自動無効化。数え方は不変' },
+  { v: 'v5.31', date: '2026-08-06', text: 'ウエハの空スロット除外に対応。W#(slot)列の右側に横長×縦長の大結合セル(注文済み/未入荷メモが空スロットに被さる。高さ≥3行・幅≥5列)がある行は、実物ウエハなしの空スロットとして数えない。色(白)は不安定なので使わず結合セルで判定。例MB50: 空スロット135枚をダミー計上していたのを除外' },
   { v: 'v5.30', date: '2026-07-30', text: '基板に「入荷予定」概念を追加。未確定行(日付欄=入荷待ち/予約、または日付空欄+Lotに**)を分離し、現有在庫=確定行のみ・入荷予定=未確定入庫・予約=未確定出庫として算出。予約は現有で賄えれば現有から、超えたら入荷予定から引く。カードは「使える分(現有フリー)」を主表示し、入荷予定フリー/予約を別枠表示。アラーム判定も使える分ベースに変更' },
   { v: 'v5.29', date: '2026-07-29', text: 'FC150を加工工程で3品種に分割(SiNベース/PI塗布済/PI+ボール)。PI列・ボール列の注記で判定し、加工日が過ぎていれば完了(手元在庫)・未来なら加工中(入荷予定)。加工日の年が無ければ入荷後の最初の同月日を加工年に推定。PROCESS_SPLIT_CONFIGSに追加すれば他製品にも適用可' },
   { v: 'v5.28', date: '2026-07-27', text: '【実験】新しい配色＋レイアウトテーマを試験導入(濃いめグレー背景・カード影・角丸・枠線・鮮やかなアクセント色)。シリーズ帯を太く枠線付きにし品名は【】表示、危険品は赤カード白抜き(品名+枚数)を帯に表示。基板側も同構成にし在庫100ケ未満を警告として帯に赤カード表示。品名カード見出しを大型化(品名の下に本社/Excel/ファイル名)。検索バーはタブ横へ、変更履歴は最下部へ移動。CSS末尾の THEME START〜THEME END を削除すればv5.27の見た目に戻せる。数え方・集計は変更なし' },
@@ -2878,33 +3021,51 @@ function minutesAgo(date) {
 }
 
 function statusOf(product) {
-  // 「自由に使える分」(即在庫の未予約 + 入荷予定の未予約) で判定
+  // v5.35: 警告/危険は「実在庫(手元にすぐ使える未予約分)」で判定する。
+  //   入荷予定は未着なので在庫としては数えない(実在庫0で安全に見えると誤解を生むため)。
   const total = totalAvailable(product);
   if (total < 10) return 'danger';
   if (total < 25) return 'warn';
   return 'ok';
 }
 function totalAvailable(product) {
-  // 自由に使える分 = 即在庫(未予約) + 入荷予定(未予約)
-  // 予約済は他顧客に確保済みなので除外
-  return product.stock + product.incoming_unreserved;
+  // v5.35: 実在庫 = 即在庫の未予約分のみ。入荷予定(未着)は含めない。
+  //   予約済は他顧客に確保済みなので元から除外。
+  return product.stock;
 }
 
 
 function renderStatusBig(p) {
   const st = statusOf(p);
-  const total = totalAvailable(p);
+  const total = totalAvailable(p);  // v5.35: 実在庫
   const labels = {
     danger: '危険',
     warn:   '警告',
     ok:     '安全',
     none:   '―'
   };
+  // v5.39/v5.47: 入荷予定はステータス枠の「右横」に固定幅で表示。
+  //   入荷予定の有無でカードの高さ・幅が変わらないよう、無い時も同じ枠を不可視で確保。
+  //   v5.47: 予定=フリー(incoming_unreserved)＋予約済(incoming_reserved) の合計を表示し、
+  //          うち予約済分を補足(フリーだけだと「もっと予定があるはず」と誤解するため)。
+  const incFree = p.incoming_unreserved || 0;
+  const incResv = p.incoming_reserved || 0;
+  const incTotal = incFree + incResv;
+  const hasInc = incTotal > 0;
+  const incomingSide = `
+    <div class="status-incoming-side${hasInc ? '' : ' ph'}" aria-hidden="${hasInc ? 'false' : 'true'}">
+      <div class="sis-label">入荷予定</div>
+      <div class="sis-num">+${hasInc ? incTotal : 0}<span>枚</span></div>
+      ${incResv > 0 ? `<div class="sis-sub">うち予約 ${incResv}</div>` : ''}
+    </div>`;
   return `
-    <div class="status-big ${st}">
-      <div class="label"><span class="lamp-big"></span>${labels[st]}</div>
-      <div class="num">${total}</div>
-      <div class="unit">使える分 (枚)</div>
+    <div class="status-block">
+      <div class="status-big ${st}">
+        <div class="label"><span class="lamp-big"></span>${labels[st]}</div>
+        <div class="num">${total}</div>
+        <div class="unit">実在庫 (枚)</div>
+      </div>
+      ${incomingSide}
     </div>
   `;
 }
@@ -2919,12 +3080,12 @@ function renderStatusPill(p) {
     none:   '⚪ ―'
   };
   const subText = {
-    danger: '使える分が10枚未満',
-    warn:   '使える分が25枚未満',
-    ok:     '使える分が25枚以上',
+    danger: '実在庫が10枚未満',
+    warn:   '実在庫が25枚未満',
+    ok:     '実在庫が25枚以上',
     none:   ''
   };
-  return `<span class="status-pill ${st}" title="${subText[st]}">${labels[st]} 使える分 <span class="num">${total}</span>枚</span>`;
+  return `<span class="status-pill ${st}" title="${subText[st]}">${labels[st]} 実在庫 <span class="num">${total}</span>枚</span>`;
 }
 
 
@@ -3390,7 +3551,17 @@ function renderSubCard(s) {
   const minusWarn = s.current_stock < 0
     ? '<div class="minus-warning">⚠️ 現在在庫がマイナス値です。エクセル元データの確認が必要です。</div>'
     : '';
-  
+
+  // v5.53: ウエハ詳細と同じ「ステータス枠＋入荷予定右横＋数値列(4列)」方式に統一
+  const sSt = substrateStatus(s);
+  const sStLabel = { danger: '危険', warn: '警告', ok: '安全', none: '―' }[sSt] || '―';
+  const sFree = (s.current_free != null) ? s.current_free : s.current_stock;   // 実在庫(使える分)
+  const sIncFree = s.incoming_free || 0;                                        // 入荷予定フリー
+  const sResvCur = s.reserved_current || 0;                                     // 現有予約
+  const sResvInc = (s.reserved_incoming != null) ? s.reserved_incoming : (s.reserved_pending || 0); // 入荷後予約
+  const sIncTotal = s.incoming || 0;                                            // 入荷予定合計(フリー+予約)
+  const sHasInc = sIncTotal > 0;
+
   return `
     <div class="sub-card ${isExpanded?'expanded':''}">
       <div class="sub-header" onclick="toggleSubCard('${escape(s.product)}')">
@@ -3401,7 +3572,7 @@ function renderSubCard(s) {
           </span>` : ''}</h3>
           <div class="file">${escape(s.file)}</div>
         </div>
-        <div class="sub-stats">
+        <div class="sub-stats sub-stats-v2">
           <div class="sub-meta">
             <div class="row"><span class="lbl">最終取引</span><span class="val">${escape(lastTxText)}</span></div>
             <div class="row">
@@ -3410,17 +3581,43 @@ function renderSubCard(s) {
             </div>
           </div>
           ${oldestBig}
-          <div class="sub-status ${substrateStatus(s)}">
-            <span class="num ${minusClass}">${s.current_free != null ? s.current_free : s.current_stock}</span>
-            <span class="unit">使える分 (ケ)</span>
-            ${s.reserved_current > 0 ? `<span class="si-resv">＋予約 ${s.reserved_current} ケ（現有 ${s.current_stock}）</span>` : ''}
+          <div class="status-block">
+            <div class="status-big ${sSt}">
+              <div class="label"><span class="lamp-big"></span>${sStLabel}</div>
+              <div class="num ${minusClass}">${sFree}</div>
+              <div class="unit">実在庫 (ケ)</div>
+            </div>
+            <div class="status-incoming-side${sHasInc ? '' : ' ph'}" aria-hidden="${sHasInc ? 'false' : 'true'}">
+              <div class="sis-label">入荷予定</div>
+              <div class="sis-num">+${sHasInc ? sIncTotal : 0}<span>ケ</span></div>
+              ${sResvInc > 0 ? `<div class="sis-sub">うち予約 ${sResvInc}</div>` : ''}
+            </div>
           </div>
-          <div class="sub-incoming ${s.incoming > 0 ? '' : 'empty'}">
-            ${s.incoming > 0 ? `
-              <div class="si-row"><span class="si-lbl">入荷予定フリー</span><span class="si-num free">${s.incoming_free}</span><span class="si-u">ケ</span></div>
-              <div class="si-row"><span class="si-lbl">予約(入荷後出荷)</span><span class="si-num res">${s.reserved_incoming != null ? s.reserved_incoming : s.reserved_pending}</span><span class="si-u">ケ</span></div>
-              <div class="si-note">現有在庫 ${s.current_stock} ／ 入荷予定 ${s.incoming}</div>
-            ` : `<div class="si-none">入荷予定<br>無し</div>`}
+          <div class="pc-cols">
+            <div class="pc-col col-hand ${sFree===0?'zero':''}">
+              <div class="col-label">実在庫</div>
+              <div class="col-val">${sFree}</div>
+              <div class="col-unit">ケ</div>
+              <div class="col-sub">すぐ使える</div>
+            </div>
+            <div class="pc-col col-incoming ${sIncFree===0?'zero':''}">
+              <div class="col-label">入荷予定</div>
+              <div class="col-val">${sIncFree}</div>
+              <div class="col-unit">ケ</div>
+              <div class="col-sub">入荷予定分</div>
+            </div>
+            <div class="pc-col col-ship ${sResvCur===0?'zero':''}">
+              <div class="col-label">現有予約</div>
+              <div class="col-val">${sResvCur}</div>
+              <div class="col-unit">ケ</div>
+              <div class="col-sub">予約済み</div>
+            </div>
+            <div class="pc-col col-afres ${sResvInc===0?'zero':''}">
+              <div class="col-label">入予定予約</div>
+              <div class="col-val">${sResvInc}</div>
+              <div class="col-unit">ケ</div>
+              <div class="col-sub">入荷後に出荷</div>
+            </div>
           </div>
         </div>
       </div>
@@ -3524,11 +3721,20 @@ function renderSubstrate() {
       if (qtyNg || ageNg) {
         // 上下2分割: 上=数量(問題なら赤/OKはグレー) / 下=経過時間(同左)。両方常に表示。
         const ageLabel = elapsed ? `${escape(elapsed.label)}経過` : '—';
+        // v5.53: 入荷予定は3段目ではなく、1段目(数量)を改行して2行目に記載。
+        const subInc = s.incoming || 0;
+        const subIncResv = (s.reserved_incoming != null) ? s.reserved_incoming : (s.reserved_pending || 0);
+        const incLine = subInc > 0
+          ? `<span class="sg-inc-line">入荷予定 <span class="sg-inc-num">${subInc}</span> ケ${subIncResv > 0 ? `<span class="sg-inc-resv">うち予約${subIncResv}</span>` : ''}</span>`
+          : '';
         warnBadges.push(`
           <span class="sg-alert">
-            <span class="db-half db-qty ${qtyNg ? 'ng' : 'ok'}">
-              <span class="db-name">${escape(s.product)}</span>
-              <span class="db-num">${free}</span><span class="db-unit">ケ</span>
+            <span class="db-half db-qty ${qtyNg ? 'ng' : 'ok'}${subInc > 0 ? ' has-inc' : ''}">
+              <span class="sg-qty-main">
+                <span class="db-name">${escape(s.product)}</span>
+                <span class="db-num">${free}</span><span class="db-unit">ケ</span>
+              </span>
+              ${incLine}
             </span>
             <span class="db-half db-age ${ageNg ? 'ng' : 'ok'}">
               <span class="db-age-val">${ageLabel}</span>
@@ -3586,7 +3792,7 @@ function renderNavCards() {
     if (p.stock === 0) qtyCls = 'zero';
     return `
       <div class="nav-card ${st}" onclick="scrollToProduct('${escape(p.product)}')">
-        <div class="pname">${escape(p.product)}</div>
+        <div class="pname">${escape(displayName(p))}</div>
         <div class="pqty ${qtyCls}">${p.stock}</div>
       </div>
     `;
@@ -3643,7 +3849,7 @@ function renderProductCard(p) {
   if (p.stock === 0) stockCls = 'zero';
   
   const t = THRESHOLDS[p.product];
-  const thresholdInfo = '警告: 使える分25枚未満 / 危険: 10枚未満';
+  const thresholdInfo = '警告: 実在庫25枚未満 / 危険: 10枚未満';
   
   // 検索クエリがある場合、ヒット品名は自動展開
   const isExpanded = EXPANDED.has(p.product) || (q && (lots.length > 0 || incoming.length > 0 || matchSearch(p.product, q)));
@@ -3666,32 +3872,37 @@ function renderProductCard(p) {
         </div>
         <div class="pc-stats">
           ${renderStatusBig(p)}
-          <div class="pc-stat in-stock">
-            <div class="label">即在庫 + 予約済 (出荷待ち)</div>
-            <div class="val-combo">
-              <span class="val ${stockCls}">${p.stock}</span>
-              <span class="val-plus">+</span>
-              <span class="val warn ${p.stock_reserved===0?'zero':''}">${p.stock_reserved}</span>
+          <div class="pc-cols" title="${escape(thresholdInfo)}">
+            <div class="pc-col col-hand ${p.stock===0?'zero':''}">
+              <div class="col-label">実在庫</div>
+              <div class="col-val">${p.stock}</div>
+              <div class="col-unit">枚</div>
+              <div class="col-sub">すぐ使える</div>
             </div>
-            <div class="sub">${thresholdInfo}</div>
-          </div>
-          <div class="pc-stat ${(p.incoming_unreserved + p.incoming_reserved)===0?'zero':''}">
-            <div class="label">入荷予定 + 予約済 (入荷後出荷)</div>
-            <div class="val-combo">
-              <span class="val" style="color:var(--incoming)">${p.incoming_unreserved}</span>
-              <span class="val-plus">+</span>
-              <span class="val incoming ${p.incoming_reserved===0?'zero':''}">${p.incoming_reserved}</span>
+            <div class="pc-col col-incoming ${p.incoming_unreserved===0?'zero':''}">
+              <div class="col-label">入荷予定</div>
+              <div class="col-val">${p.incoming_unreserved}</div>
+              <div class="col-unit">枚</div>
+              <div class="col-sub">入荷予定分</div>
             </div>
-            <div class="sub">予約は入荷後すぐ出荷</div>
-          </div>
-          <div class="pc-stat dummy-mini ${((p.dummy_stock||0)+(p.dummy_reserved||0))===0?'zero':''}">
-            <div class="label">ダミー(5年経過)</div>
-            <div class="val-combo">
-              <span class="val ${(p.dummy_stock||0)===0?'zero':''}">${p.dummy_stock||0}</span>
-              <span class="val-plus">+</span>
-              <span class="val ${(p.dummy_reserved||0)===0?'zero':''}">${p.dummy_reserved||0}</span>
+            <div class="pc-col col-ship ${p.stock_reserved===0?'zero':''}">
+              <div class="col-label">現有予約</div>
+              <div class="col-val">${p.stock_reserved}</div>
+              <div class="col-unit">枚</div>
+              <div class="col-sub">予約済み</div>
             </div>
-            <div class="sub">参考</div>
+            <div class="pc-col col-afres ${p.incoming_reserved===0?'zero':''}">
+              <div class="col-label">入予定予約</div>
+              <div class="col-val">${p.incoming_reserved}</div>
+              <div class="col-unit">枚</div>
+              <div class="col-sub">入荷後に出荷</div>
+            </div>
+            <div class="pc-col col-dummy ${((p.dummy_stock||0)+(p.dummy_reserved||0))===0?'zero':''}">
+              <div class="col-label">ダミー</div>
+              <div class="col-val">${(p.dummy_stock||0)+(p.dummy_reserved||0)}</div>
+              <div class="col-unit">枚</div>
+              <div class="col-sub">5年経過</div>
+            </div>
           </div>
         </div>
       </div>
@@ -4022,10 +4233,19 @@ function render() {
       const avail = totalAvailable(p);
       const st = statusOf(p);
       nameParts.push(`<span class="gp-name">${escape(displayName(p))}</span>`);
+      // v5.36: 入荷予定がある場合はバッジにも「＋予定N」を表示
+      // v5.39: バッジは上段=品名 / 下段=枚数＋予定 の2段構成
+      // v5.48: 予定=フリー＋予約済の合計。予約済があれば「(予約N)」を併記。
+      const incFreeB = p.incoming_unreserved || 0;
+      const incResvB = p.incoming_reserved || 0;
+      const incTotalB = incFreeB + incResvB;
+      const inc = incTotalB > 0
+        ? `<span class="db-incoming">＋予定${incTotalB}${incResvB > 0 ? `<span class="db-inc-resv">うち予約${incResvB}</span>` : ''}</span>`
+        : '';
       if (st === 'danger') {
-        dangerBadges.push(`<span class="gh-alert"><span class="db-name">${escape(displayName(p))}</span><span class="db-num">${avail}</span><span class="db-unit">枚</span></span>`);
+        dangerBadges.push(`<span class="gh-alert"><span class="gh-line1"><span class="db-name">${escape(displayName(p))}</span></span><span class="gh-line2"><span class="db-num">${avail}</span><span class="db-unit">枚</span>${inc}</span></span>`);
       } else if (st === 'warn') {
-        warnBadges.push(`<span class="gh-alert warn"><span class="db-name">${escape(displayName(p))}</span><span class="db-num">${avail}</span><span class="db-unit">枚</span></span>`);
+        warnBadges.push(`<span class="gh-alert warn"><span class="gh-line1"><span class="db-name">${escape(displayName(p))}</span></span><span class="gh-line2"><span class="db-num">${avail}</span><span class="db-unit">枚</span>${inc}</span></span>`);
       }
     });
     const badges = [...dangerBadges, ...warnBadges];  // 危険→警告の順に並べる
@@ -4311,15 +4531,20 @@ function cleanText(v) {
   } else s = String(v);
   return s.split(/\s+/).filter(x => x).join(' ');
 }
+// v5.33: 日付セル内の「未確定マーカー」= 予定日であって実到着ではない。
+//   例 "2026/1/14予定?" → 日付は取り出すが isPlanned=true にして、
+//   その日が過去でも「確定到着(現有在庫)」に倒さず入荷予定のまま扱う。
+function hasPlannedMarker(s) { return /予定|未定|見込|入荷待ち|[?？]/.test(String(s || '')); }
 function parseDate(v) {
-  if (v === null || v === undefined || v === '') return { disp: '', dt: null, hasWildcard: false, isFuture: false, isEmpty: true };
-  if (v instanceof Date) return { disp: v.toISOString().substring(0,10), dt: v, hasWildcard: false, isFuture: v.getTime() > TODAY.getTime(), isEmpty: false };
+  if (v === null || v === undefined || v === '') return { disp: '', dt: null, hasWildcard: false, isFuture: false, isEmpty: true, isPlanned: false };
+  if (v instanceof Date) return { disp: v.toISOString().substring(0,10), dt: v, hasWildcard: false, isFuture: v.getTime() > TODAY.getTime(), isEmpty: false, isPlanned: false };
   if (typeof v === 'number' && v > 30000 && v < 60000) {
     const dt = new Date(Date.UTC(1899, 11, 30 + Math.floor(v)));
-    return { disp: dt.toISOString().substring(0,10), dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false };
+    return { disp: dt.toISOString().substring(0,10), dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false, isPlanned: false };
   }
   const s = cleanText(v);
-  if (s.includes('*')) return { disp: s, dt: null, hasWildcard: true, isFuture: false, isEmpty: false };
+  const isPlanned = hasPlannedMarker(s);
+  if (s.includes('*')) return { disp: s, dt: null, hasWildcard: true, isFuture: false, isEmpty: false, isPlanned };
   // 正規化: 「年月日」「年月」混じりの和文表記を /区切りに統一
   //   例: "2011年3月15日" → "2011/3/15", "2011/3月" → "2011/3", "2011年3月" → "2011/3"
   const norm = s
@@ -4332,15 +4557,15 @@ function parseDate(v) {
   const m = norm.match(/^\s*(\d{4})[/\-\.](\d{1,2})[/\-\.](\d{1,2})/);
   if (m) {
     const dt = new Date(Date.UTC(+m[1], +m[2]-1, +m[3]));
-    return { disp: s, dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false };
+    return { disp: s, dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false, isPlanned };
   }
   // YYYY.M / YYYY/M / YYYY-M (月のみ、日省略) → 月の1日として扱う
   const m2 = norm.match(/^\s*(\d{4})[/\-\.](\d{1,2})\s*$/);
   if (m2) {
     const dt = new Date(Date.UTC(+m2[1], +m2[2]-1, 1));
-    return { disp: s, dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false };
+    return { disp: s, dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false, isPlanned };
   }
-  return { disp: s, dt: null, hasWildcard: false, isFuture: false, isEmpty: false };
+  return { disp: s, dt: null, hasWildcard: false, isFuture: false, isEmpty: false, isPlanned };
 }
 
 // 候補値の「日付らしさ」スコア: 高いほど確かな日付
@@ -4384,11 +4609,11 @@ function enrichArrivalDate(parsed, ws, arrivalCol, arrivalRow) {
   }
   if (mo !== null) {
     const dt = new Date(Date.UTC(year, mo - 1, dy));
-    return { disp: `${year}/${mo}/${dy}`, dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false };
+    return { disp: `${year}/${mo}/${dy}`, dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false, isPlanned: parsed.isPlanned };
   }
   // 月日見つからず → 案A: YYYY/1/1
   const dt = new Date(Date.UTC(year, 0, 1));
-  return { disp: `${year}/1/1 (年のみ)`, dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false };
+  return { disp: `${year}/1/1 (年のみ)`, dt, hasWildcard: false, isFuture: dt.getTime() > TODAY.getTime(), isEmpty: false, isPlanned: parsed.isPlanned };
 }
 const PENDING_SHEET_KEYWORDS = ['待ち', '購買', '依頼', '予定', '発注'];
 function isPendingSheet(name) { return PENDING_SHEET_KEYWORDS.some(kw => name.includes(kw)); }
@@ -4519,6 +4744,29 @@ function noteStagePending(note, arrivalDt) {
   return false;
 }
 
+/* ============================================================
+   v5.31: 空スロット判定
+   W#(slot)列の右側に「横長×縦長の大結合セル」(注文済み/未入荷メモ等が
+   空スロットに被さっている)がある行は、実物ウエハが無い空スロットとして除外する。
+   条件: 高さ≥3行 かつ 幅≥5列 かつ 結合がslot列より右まで及ぶ。
+   → 保管メモ(縦長1列)やPI加工メモ(縦長1列)は幅不足で対象外なので誤除外しない。
+   ※色(白)は不安定なので使わない。数え方変更につき core.js 再生成が必要。
+   ============================================================ */
+function colLettersToNum(a) { let n = 0; for (const ch of String(a)) n = n * 26 + (ch.charCodeAt(0) - 64); return n; }
+function emptyNoteRows(ws, slotCol) {
+  const set = new Set();
+  const merges = (ws.model && ws.model.merges) || [];
+  for (const m of merges) {
+    const mm = /^([A-Z]+)(\d+):([A-Z]+)(\d+)$/.exec(m);
+    if (!mm) continue;
+    const r1 = +mm[2], r2 = +mm[4], c1 = colLettersToNum(mm[1]), c2 = colLettersToNum(mm[3]);
+    if ((r2 - r1 + 1) >= 3 && (c2 - c1 + 1) >= 5 && c2 > slotCol) {
+      for (let r = r1; r <= r2; r++) set.add(r);
+    }
+  }
+  return set;
+}
+
 function isExcludedFile(name, folderKey) {
   const pattern = (folderKey && folderKey.startsWith('substrate'))
     ? SUBSTRATE_FILE_PATTERN
@@ -4567,6 +4815,12 @@ function displayName(p) {
   if (/ミラーウエハ|P-SiO|熱酸化膜|\bIP40\b/.test(p.product) && p.file) {
     const m = p.file.match(/^[0-9]*★?\s*φ\s*(\d+)\s*inch/i);
     if (m) return `Φ${m[1]} ${p.product}`;
+  }
+  // v5.43: MB130A の膜厚は Al-Si-Cu(金属層)の厚さ。下地(PI/SiN)の厚さと誤解されないよう明示。
+  //   例「MB130A PI 1.5um」→「MB130A PI / Al-Si-Cu 1.5um」
+  {
+    const mb = p.product.match(/^(MB130A)\s+(PI|SiN)\s+([0-9]+\.[0-9]+um)\b/i);
+    if (mb) return `${mb[1]} ${mb[2]} / Al-Si-Cu ${mb[3]}`;
   }
   return p.product;
 }
@@ -4715,6 +4969,7 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
     const sheetIsPending = isPendingSheet(sn);
     // v5.24: 「開発品」シートは白slotも含め全て使用済扱い (在庫・予約にしない)
     const sheetIsDev = /開発品/.test(sn);
+    const emptyRows = emptyNoteRows(ws, cols.slot);  // v5.31: 横長大結合(注文/未入荷メモ)が被る空スロット行
     const blocks = findSlotBlocks(ws, cols.slot);
     
     for (const block of blocks) {
@@ -4768,16 +5023,18 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
       }
       let parsed = parseDate(arrivalRaw);
       if (cols['入荷日']) parsed = enrichArrivalDate(parsed, ws, cols['入荷日'], arrivalRow);
-      const { disp: arrivalDisp, dt: arrivalDt, hasWildcard, isFuture, isEmpty } = parsed;
-      
+      const { disp: arrivalDisp, dt: arrivalDt, hasWildcard, isFuture, isEmpty, isPlanned } = parsed;
+
       // 入荷予定判定 (案E: 日付ファースト):
       //   1. 入荷日に * 含む → 入荷予定 (ワイルドカード)
       //   2. 入荷日が未来 → 入荷予定
-      //   3. シート名に「待ち/購買/依頼/予定/発注」を含む & 確定日付なし → 入荷予定
-      //   4. シート名キーワードあり + 過去の確定日付 → 現有在庫 (実物が到着している)
-      //   5. 入荷日が完全空欄 + シート名キーワードなし → 除外 (古い記入漏れと判断)
-      const hasPastDate = arrivalDt && !isFuture;
-      const isIncoming = hasWildcard || isFuture || (sheetIsPending && !hasPastDate);
+      //   3. 入荷日に「予定/未定/?」等の未確定マーカー → 入荷予定 (v5.33: 過去日でも実到着ではない)
+      //   4. シート名に「待ち/購買/依頼/予定/発注」を含む & 確定日付なし → 入荷予定
+      //   5. シート名キーワードあり + 過去の"確定"日付 → 現有在庫 (実物が到着している)
+      //   6. 入荷日が完全空欄 + シート名キーワードなし → 除外 (古い記入漏れと判断)
+      // v5.33: 未確定マーカー付きの過去日は「確定到着」に数えない (納期遅延の予定日)
+      const hasPastDate = arrivalDt && !isFuture && !isPlanned;
+      const isIncoming = hasWildcard || isFuture || isPlanned || (sheetIsPending && !hasPastDate);
       const isSkipNoInfo = isEmpty && !sheetIsPending && !hasWildcard && !isFuture;
       // 色判定の反転ロジックも「日付ファースト」: 過去日付があれば通常の色判定に戻す
       const useReverseLogic = sheetIsPending && !hasPastDate;
@@ -4799,6 +5056,7 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
       if (cols['保管']) {
         for (let r = start; r <= end; r++) {
           if (ws.getRow(r).hidden) continue;
+          if (emptyRows.has(r)) continue;  // v5.31: 空スロット(大結合メモ)は除外
           const v = ws.getCell(r, cols['保管']).value;
           const c = cleanText(v);
           if (c && c !== '-' && c !== '') lotLocs.add(c);
@@ -4810,6 +5068,7 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
         const buckets = {};  // key = typeKey|(cur/inc) → {a:在庫/未予約, b:予約, c:使用済, custs}
         for (let r = start; r <= end; r++) {
           if (ws.getRow(r).hidden) continue;
+          if (emptyRows.has(r)) continue;  // v5.31: 空スロット(大結合メモ)は除外
           let status = classifier(ws.getCell(r, cols.slot));
           if (!useReverseLogic && status === '在庫' && cols['備考'] && isConsumedNote(ws.getCell(r, cols['備考']).value)) status = '使用済';
           if (sheetIsDev && !useReverseLogic) status = '使用済';
@@ -4861,6 +5120,7 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
       const customers = [];
       for (let r = start; r <= end; r++) {
         if (ws.getRow(r).hidden) continue;
+        if (emptyRows.has(r)) continue;  // v5.31: 空スロット(大結合メモ)は除外
         let status = classifier(ws.getCell(r, cols.slot));
         // v5.23: 白(在庫)でも備考に消費系キーワードがあれば使用済へ (開発品の消費済み等)
         if (!useReverseLogic && status === '在庫' && cols['備考'] && isConsumedNote(ws.getCell(r, cols['備考']).value)) {
@@ -5339,7 +5599,7 @@ const CACHE_STORE = 'inventory_cache';
 const CACHE_VERSION = 1;
 // 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
 // (キャッシュ全クリアになる)
-const CACHE_SCHEMA_VERSION = 'v5.30-substrate-incoming-2026-07-30';
+const CACHE_SCHEMA_VERSION = 'v5.33-planned-marker-2026-08-27';
 
 
 
@@ -5424,6 +5684,41 @@ async function cacheStats() {
   const all = await cacheGetAll();
   const totalBytes = all.reduce((s, x) => s + (JSON.stringify(x).length || 0), 0);
   return { count: all.length, totalBytes };
+}
+
+/* ============================================================
+   v5.32: ぱっと表示用スナップショット
+   前回の解析結果(INVENTORY/SUBSTRATE)をlocalStorageに丸ごと保存し、
+   次回起動時にまず即描画 → 裏でSharePoint再取得して差し替える。
+   スキーマ(CACHE_SCHEMA_VERSION)不一致のスナップショットは無効化。
+   ============================================================ */
+const SNAPSHOT_KEY = 'walts_snapshot';
+function saveSnapshot() {
+  try {
+    const snap = {
+      schema: CACHE_SCHEMA_VERSION,
+      savedAt: new Date().toISOString(),
+      inventory: INVENTORY,   // 既にTTV未保証フィルタ済み
+      substrate: SUBSTRATE,
+    };
+    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap));
+  } catch (e) {
+    // 容量超過(QuotaExceeded)など。次回はスナップショット無しで通常起動。
+    console.warn('[Snapshot] 保存失敗:', e && e.name);
+    try { localStorage.removeItem(SNAPSHOT_KEY); } catch (_) {}
+  }
+}
+function loadSnapshot() {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    if (!raw) return null;
+    const snap = JSON.parse(raw);
+    if (!snap || snap.schema !== CACHE_SCHEMA_VERSION) return null;
+    if (!Array.isArray(snap.inventory) || !Array.isArray(snap.substrate)) return null;
+    return snap;
+  } catch (e) {
+    return null;
+  }
 }
 
 // グローバルから確認用
@@ -5652,6 +5947,7 @@ async function bootSharePointFlow(forceRefresh = false) {
     exportBtn.disabled = (wafer.length + substrate.length === 0);
 
     renderAll();
+    saveSnapshot();  // v5.32: 次回の「ぱっと表示」用に結果を保存
   } catch (err) {
     console.error('SharePoint fetch error:', err);
     statusText.textContent = '❌ データ取得に失敗しました';
@@ -5712,10 +6008,29 @@ document.getElementById('btn-export-json').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
-// === v5.0: 起動 ===
-// 初回はまず空で描画 (UIスケルトン表示) → 次にSharePoint取得
-renderAll();
-bootSharePointFlow();
+// === v5.0/v5.32: 起動 ===
+// 前回スナップショットがあれば即描画(ぱっと表示) → 裏でSharePoint再取得して差し替え。
+// 初回(スナップショット無し)は空スケルトンのまま取得を待つ。
+(function bootWithSnapshot() {
+  const snap = loadSnapshot();
+  if (snap) {
+    INVENTORY = snap.inventory;   // 保存時点でTTV未保証フィルタ済み
+    SUBSTRATE = snap.substrate;
+    renderAll();
+    const st = document.getElementById('fetch-status-text');
+    if (st) {
+      let when = '';
+      try {
+        when = new Date(snap.savedAt).toLocaleString('ja-JP',
+          { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+      } catch (_) {}
+      st.innerHTML = `📁 前回データ表示中${when ? ' (' + when + '時点)' : ''} — 最新取得中...`;
+    }
+  } else {
+    renderAll();  // 初回はUIスケルトン
+  }
+  bootSharePointFlow();
+})();
 
 </script>
 </body>
