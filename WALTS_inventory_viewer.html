@@ -1,66 +1,7 @@
 <!DOCTYPE html>
-<!--
-================================================================================
-WALTS 在庫検索ツール - 変更履歴
-================================================================================
-v0.1 : 初期モック (HTML単体、ダミーデータ30件)。検索/ソート/最終編集者表示。
-v0.2 : しきい値ハイライト追加 (thresholds.csv 別管理、警告/危険2段階)。
-v0.3 : バー目盛り改善、「危険まで残り」列追加。
-v0.4 : 在庫数を主役表示 (40px太字)、最終使用日・最終入庫日列の追加。
-v0.5 : 在庫数強調、インデックス更新日時の大型表示、発注状態管理 (localStorage)。
-v0.6 : 添付4ファイル(_FC150/_HPW/_SI0631/_熱酸化膜)からリアルデータ抽出。
-v0.7 : 品名別カード版、即在庫/予約済/入荷予定/入荷予定の予約を別カウント。
-v0.8 : 上部ナビカード削除、入荷予定セクションを現有在庫より上に配置。
-v0.9 : 品名ヘッダーに色付け、即在庫と予約を「30+5」加算表記で外数表示。
-v1.0 : 入荷予定シートのslot判定ロジックを修正
-       (塗りつぶしなし=未予約、色付き全部=予約済)。
-v1.1 : Theme=0(白塗りつぶし)を塗りつぶしなしと同じ在庫扱い。
-v1.2 : Excel非表示行を集計除外、特殊シート(不明品/Glass)除外、
-       灰色(Theme=0 tint≠0)は使用済扱いに修正。SI833-0016A問題解決。
-v1.3 : 品名ヘッダーの色を濃く調整、文字サイズアップ。
-v1.4 : 警告ロジック変更、ステータスバッジを品名右に表示。
-v1.5 : 警告判定を「自由に使える分」(即在庫の未予約 + 入荷予定の未予約)で計算。
-v1.6 : 即在庫の数字表示を入荷予定と同じ「未予約 + 予約」形式(同サイズ)に統一。
-v1.7 : 警告判定バグ修正(統一)、発注状況列を削除。
-v1.8 : ステータスバッジを大型化して即在庫サマリーの左に配置。
-v1.9 : サマリー部分が改行していたバグ修正
-       (ステータス+即在庫+入荷予定を確実に横並び)。
-v2.0 : 現有在庫ロット表も「在庫 + 予約」の加算表記に統一(入荷予定表と同じ形式)。
-v2.1 : 同一シート内ロットの区切り線を消し、別シート間の区切り線を濃く。
-v2.2 : 「要注意ロットのみ」チェックボックスを削除。
-v2.3 : ロット並び順をエクセルのシート表示順に変更(在庫数降順ソートを廃止)。
-v2.4 : ページ上部の変更履歴バナーを削除(履歴はこのコメントに保持)。
-v2.5 : 3年以上前の在庫を「ダミーウエハ」として別カウント(即在庫から除外、警告判定対象外)。
-v2.6 : ダミーブロックを一番右に移動、表示サイズを小さめに調整。
-v2.7 : 品名カードのロット情報をアコーディオン化(初期は全折りたたみ、検索時自動展開)。
-v2.8 : 全展開/全折りたたみボタンと表示中カウンターを削除(品名クリックだけで操作)。
-v2.9 : ウエハ全68品名(本社43+糸島25)統合、タブUI(ウエハ/基板)追加、出所バッジ表示。
-v3.0 : 接頭辞ベースで品名をグループ化(FC/CC/IP/HBM/MB/WM/HPW/熱酸化膜/ミラー/その他)。
-v3.1 : グループ自体もアコーディオン化(初期は全閉、検索時自動展開、状態localStorage保存)。
-v3.2 : グループヘッダーに品名プレビュー表示+合計在庫数表示。
-v3.3 : グループヘッダーの品名プレビューを丸角ボックス化(品名+在庫数を1単位で表示)。
-v3.4 : ヘッダー右上の「インデックス更新日時」を「前回からの変更ファイル一覧」に変更。
-v3.5 : 品名ピルのデザイン整理(白背景・枠線なし・数字一色・状態は丸ランプのみ)。
-v3.6 : 詳細パネル全体を白基調・数字一色に統一。グループ閉じ状態のピルからランプ削除。
-v3.7 : 品名カードヘッダーの色グラデーションを削除、淡いグレー単色に統一。
-v3.8 : 品名カードヘッダーの上部に色付き太線を復活(背景は淡いグレーのまま)。
-v3.9 : 品名カード上線を1色のパステルブルーに統一、ページ全体背景をグレーに変更。
-v4.0 : 「その他」を「汎用ウエハ系」と「その他」に分割
-       (Glass/ITO/AS8R/P-SiO P-SiN付ウエハ/SI0631×2を汎用ウエハ系に)。
-v4.1 : 基板タブ実装(21品名、入出庫履歴表示、ロット別在庫、過去1年集計)。
-v4.2 : 基板グループ分類をPad Pitchベースに変更(80/120/150/200μm Pitch + その他)。
-v4.3 : FBW (Full Bump Wafer) を独立グループに分離。
-v4.4 : 基板グループもアコーディオン化(品名プレビュー付き、ウエハと同様の操作感)。
-v5.0 : ハードコードINVENTORY廃止 → SharePointからリアルタイム取得方式へ移行。
-       MSAL認証 + ExcelJS によるブラウザ完結型データ取得。
-       本社・糸島フォルダを順次取得し統合表示。
-================================================================================
--->
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<title>WALTS 在庫管理ツール v5.55</title>
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>WALTS 在庫管理ツール v5.49</title>
 <style>
   :root {
     --bg: #eceef1;
@@ -1328,6 +1269,12 @@ h1 .sub { font-size: 14px; font-weight: 400; color: var(--ink-dim); margin-left:
 .changelog .cl-past .cl-row { padding: 2px 0; color: var(--ink-dim); }
 .changelog .cl-past .clv { display: inline-block; min-width: 46px; color: #2d6a8a; font-weight: 600; }
 .changelog .cl-past .cld { color: #999; margin-left: 6px; font-size: 13px; }
+/* v5.80: 束ねたRevの「＋詳細N件」トグルと展開内容 */
+.changelog .cl-more { color: #2d6a8a; cursor: pointer; font-size: 12px; font-weight: 600; margin-left: 6px; white-space: nowrap; }
+.changelog .cl-more:hover { text-decoration: underline; }
+.changelog .cl-detail { margin: 4px 0 6px 14px; padding-left: 10px; border-left: 2px solid #dbe4d0; }
+.changelog .cl-detail .cl-drow { padding: 2px 0; color: #777; font-size: 13px; }
+.changelog .cl-detail .clv2 { display: inline-block; min-width: 46px; color: #7a8a9a; font-weight: 600; }
 
 .index-info { text-align: right; line-height: 1.2; }
 .index-info .lbl { font-size: 12px; color: var(--ink-dim); letter-spacing: 0.08em; }
@@ -2110,6 +2057,46 @@ table.history-table .h-stock { font-size: 16px; }
 .tl-card.warn   { background: #ffeec8; border-color: #e8912e; color: #8a5e13; }
 
 /* v5.28: しきい値の凡例フロート (position:fixed でスクロール追従、右側に固定) */
+/* v5.70: 熱酸化膜グループ専用「マスク別 在庫検索」 */
+.thermal-search {
+  margin: 4px 0 10px; padding: 12px 16px;
+  background: #f3f6ee; border: 1px solid #d5dfc3; border-left: 4px solid #6a7a2a;
+  border-radius: 8px;
+}
+.thermal-search .ts-title { font-size: 16px; font-weight: 800; color: #556a1f; margin-bottom: 8px; }
+.thermal-search #thermal-mask-input {
+  width: 300px; max-width: 100%; padding: 8px 12px;
+  border: 1px solid var(--line); border-radius: 6px; font-size: 16px; background: #fff;
+}
+/* v5.76: 検索結果は小さめカードをグリッドで横並び→詰まったら下段へ折り返し */
+/* v5.77: フォントを2サイズアップ (見出し/入力欄含む) */
+.thermal-search #thermal-mask-result {
+  margin-top: 8px; display: grid; gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+  align-items: start;
+}
+.thermal-search .ts-hint, .thermal-search .ts-none { grid-column: 1 / -1; font-size: 15px; color: var(--ink-dim); }
+.thermal-search .ts-item {
+  background: #fff; border: 1px solid #cdd8bb; border-radius: 8px; padding: 7px 10px;
+}
+.thermal-search .ts-head { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.thermal-search .ts-mask { font-size: 15px; font-weight: 800; color: #556a1f; min-width: 68px; }
+.thermal-search .ts-pair { display: inline-flex; align-items: baseline; gap: 3px; }
+.thermal-search .ts-lbl { font-size: 12px; font-weight: 700; color: var(--ink-dim); }
+.thermal-search .ts-cnt { font-size: 19px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.thermal-search .ts-cnt.ts-resv { color: var(--warn); }
+.thermal-search .ts-u { font-size: 13px; color: var(--ink-dim); }
+.thermal-search .ts-files { margin-top: 5px; display: flex; flex-direction: column; gap: 4px; }
+.thermal-search .ts-file {
+  display: flex; align-items: center; gap: 5px; align-self: stretch;
+  font-size: 13px; color: var(--accent); text-decoration: none;
+  padding: 3px 7px; border-radius: 6px; background: #eef4e6;
+}
+.thermal-search .ts-file .tf-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thermal-search a.ts-file:hover { background: #e2eed3; text-decoration: underline; }
+.thermal-search .ts-file.nolink { color: var(--ink-dim); background: #f0f0f0; }
+.thermal-search .tf-cnt { margin-left: auto; flex: none; font-size: 12px; color: var(--ink-dim); font-weight: 700; }
+
 .legend-float {
   position: fixed;
   right: 16px; top: 50%; transform: translateY(-50%);
@@ -2751,19 +2738,19 @@ table.history-table .h-stock { font-size: 16px; }
 <div class="app">
 
   <header class="top">
-    <h1>WALTS 在庫管理ツール <span class="sub">v5.55</span></h1>
+    <h1>WALTS 在庫管理ツール <span class="sub">v5.49</span></h1>
     <div class="index-info-wrap" id="changes-box">
       <div class="changes-box" id="changes-display">
         <div class="lbl">📂 SharePoint との同期</div>
-        <div class="summary" id="changes-summary">起動中...</div>
+        <div class="summary" id="changes-summary">✓ 前回読込から変更なし</div>
       </div>
       <div class="changes-list" id="changes-list"></div>
     </div>
     <div id="fetch-status-bar" style="margin-top:8px; padding:8px 12px; background:#f0f4f8; border-radius:6px; font-size: 14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-      <span id="fetch-status-text" style="flex:1; min-width:200px;">SharePointへ接続中...</span>
-      <span id="fetch-counts" style="color:#555;"></span>
-      <button id="btn-refetch" disabled style="padding:4px 12px; font-size: 14px; cursor:pointer;">🔄 再取得</button>
-      <button id="btn-export-json" disabled style="padding:4px 12px; font-size: 14px; cursor:pointer; opacity:0.7;" title="デバッグ用: 現在の集計データをJSONで保存">📥 JSON出力</button>
+      <span id="fetch-status-text" style="flex:1; min-width:200px;">✅ 取得完了 (1.5秒) - 最終取得: 14:32:18</span>
+      <span id="fetch-counts" style="color:#555;">本社 43品名 / 糸島 16品名 / 基板 21品名</span>
+      <button id="btn-refetch" style="padding:4px 12px; font-size: 14px; cursor:pointer;">🔄 再取得</button>
+      <button id="btn-export-json" style="padding:4px 12px; font-size: 14px; cursor:pointer; opacity:0.7;" title="デバッグ用: 現在の集計データをJSONで保存">📥 JSON出力</button>
     </div>
     <div id="fetch-error-panel" style="display:none; margin-top:8px; padding:10px 12px; background:#fff5f5; border:1px solid #fcc; border-radius:6px; font-size: 14px;">
       <div style="font-weight:bold; color:#c33; margin-bottom:6px;">⚠️ データ取得に失敗しました</div>
@@ -2773,10 +2760,10 @@ table.history-table .h-stock { font-size: 16px; }
 
   <div class="tabs">
     <div class="tab active" data-tab="wafer">
-      <span class="tab-main">🌀 ウエハ在庫<span class="count" id="wafer-count">0品名</span></span>
+      <span class="tab-main">🌀 ウエハ在庫<span class="count" id="wafer-count">78品名</span></span>
     </div>
     <div class="tab" data-tab="substrate">
-      <span class="tab-main">🟫 基板在庫<span class="count" id="substrate-count">0品名</span></span>
+      <span class="tab-main">🟫 基板在庫<span class="count" id="substrate-count">21品名</span></span>
     </div>
     <!-- v5.28: 開いたメニューを一括で閉じる (展開状態はlocalStorageに保存されるため) -->
     <button type="button" class="btn-collapse-all" onclick="collapseAllMenus()" title="ウエハ・基板の開いているシリーズ/品名をすべて閉じます">▸ すべて閉じる</button>
@@ -2791,7 +2778,7 @@ table.history-table .h-stock { font-size: 16px; }
       <div class="search">
         <input id="search-sub" type="text" placeholder="基板品名・顧客・Lot・備考で検索">
       </div>
-      <label><input type="checkbox" id="show-dormant" checked> 1年以上動きのない基板も表示</label>
+      <label><input type="checkbox" id="show-dormant" checked=""> 1年以上動きのない基板も表示</label>
     </div>
   </div>
 
@@ -2833,9 +2820,9 @@ table.history-table .h-stock { font-size: 16px; }
 
   <!-- v5.28: 変更履歴はページ最下部に配置 -->
   <div class="changelog" id="changelog">
-    <div class="cl-latest" id="cl-latest"></div>
-    <div class="cl-toggle" id="cl-toggle" onclick="toggleChangelog()">過去の変更点を表示 ▼</div>
-    <div class="cl-past" id="cl-past"></div>
+    <div class="cl-latest" id="cl-latest">🆕 <span class="clv">v5.61</span>NXTEC向け「熱酸化(300nm)+P-CVD SiN(400nm)」が改名されなかった不具合を修正(生品名のチルダ/Ωの文字種が推定と違い一致しなかったため、正規表現照合に変更)。表示名のみ<span class="cld">2026-09-08</span></div>
+    <div class="cl-toggle" id="cl-toggle" onclick="toggleChangelog()" style="display: inline-block;">過去の変更点を表示 ▼</div>
+    <div class="cl-past" id="cl-past"><div class="cl-row"><span class="clv">v5.60</span>PWB-0101(Φ6)をシート名のTYPEで2分割(カウントも分割): TYPE-A→PWB-0101JY Type-A Al-Si 3.0 um / それ以外(TYPE-B・無ラベル4.6um)をまとめてPWB-0101JY Type-B Al-Si 4.6 um。数え方変更につきキャッシュ更新＋core.js再生成<span class="cld">2026-09-08</span></div><div class="cl-row"><span class="clv">v5.59</span>PWB8をシート上部の TYPE-A/TYPE-B マーカーで2分割(カウントも分割): PWB8-0101JY Type-A Al-Si-Cu 4.0um / Type-B Al-Si 4.0um。STAC→STAC-0101JY も追加。数え方変更につきキャッシュ更新＋core.js再生成<span class="cld">2026-09-08</span></div><div class="cl-row"><span class="clv">v5.58</span>表示名対応表に IP40MB → IP40MB-0101JY (Micro Bump) を追加(対応表への追記反映)。表示名のみ<span class="cld">2026-09-08</span></div><div class="cl-row"><span class="clv">v5.57</span>表示名を対応表に合わせて一括変更(例: CC80→CC80-0101JY、FC150→FC150JY 各工程、MB130A→MB130A-STG0101JY PI/1.5um、ITO(1101)→ITO1101-0100JY 等)。表示名のみで在庫カウント・グループ分けは不変。加えてWM40をシート名の(WM40-XXXXJY)で0101/0102/0103に3分割(カウントも分割)。PWB-0101/PWB8のType分割は別途対応。数え方変更につきキャッシュ更新＋core.js再生成<span class="cld">2026-09-08</span></div><div class="cl-row"><span class="clv">v5.56</span>ITOを「マスク」でウエハ単位に3分割(ITO(1101)/ITO(1102)/ITO(マスク未確定))。マスク列(縦セル結合可・列位置はヘッダー"マスク"で自動検出)の値で振り分け、空欄=未確定。FC150の工程分割と同じ枠組み(PROCESS_SPLIT_CONFIGSにkind:maskを追加)で実装。数え方変更につきキャッシュ更新＋core.js再生成<span class="cld">2026-09-07</span></div><div class="cl-row"><span class="clv">v5.55</span>詳細カードの列名「入荷後予約」→「入予定予約」に変更(ウエハ・基板とも)。「現有予約」と対になり、入荷予定(未着)在庫の予約分と分かりやすく。補足は「入荷後に出荷」のまま。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.54</span>基板TOP帯アラームカードの入荷予定表示を、3段目追加ではなく1段目(数量セル)を改行して2行目に「入荷予定 N ケ（うち予約N）」を記載する形に変更。カードが縦に伸びすぎないように。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.53</span>基板の詳細カードをウエハと同じ表示方式に統一。ステータス枠(安全/警告/危険＋実在庫ケ)＋入荷予定を右横(合計・うち予約)＋数値4列(実在庫/入荷予定/現有予約/入荷後予約)。基板固有の最終取引/過去1年/経過は数値列の左にコンパクトに併記(ダミー概念はないため4列)。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.52</span>ウエハ詳細カードの列名「出荷待ち」→「現有予約」に変更(補足も「引当済み」→「予約済み」)。予約であって必ず出荷するとは限らないため、現有在庫の予約分と分かる表記に。入荷後予約と対で並ぶ。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.51</span>基板のTOP帯アラームカードにも入荷予定を表示。在庫が少ない/経過が長い警告品で入荷予定がある場合、3段目に「入荷予定 N ケ（うち予約N）」を薄紫で追加(数量/経過と同じ太線区切り)。ウエハ帯と同じく一番上のページで補充予定が分かるように。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.50</span>帯バッジの「＋予定N（うち予約N）」の数字を大きく(予定13→15px / 予約11→13px)して見やすく。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.49</span>帯バッジの予約併記を「・予約N」→「(うち予約N)」に変更。予約は予定の内数(合計に含まれる)なので、別数量に見えないよう明示。例「＋予定71(うち予約3)」。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.48</span>TOP帯の危険/警告バッジの「＋予定」も、フリー＋予約済の合計に変更し予約済分「(・予約N)」を併記。詳細カードの「うち予約」表示が小さかったので、文字を大きく(12px太字)しチップ表示にして視認性向上。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.47</span>ウエハ詳細カードのステータス右横「入荷予定」表示を、フリー分だけでなく予約済分も含めた合計に変更(＋予約済分を「うち予約 N」で補足)。従来はフリー在庫になりうる分のみで「予定がもっとあるはず」と誤解を生んだため。数値内訳(入荷予定=フリー/入荷後予約=予約済)の5列表示は従来どおり。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.46</span>基板帯アラームカードの「問題なし」側の色をグレー→基板の薄い緑(--ok-soft)に変更。グレーだと警告のように見えたため、安全=緑で直感的に。文字も落ち着いた緑に。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.45</span>基板シリーズ帯のアラームカード(数量/経過の2分割カード)の枠線をウエハ帯と同じ太さ(3px 赤)に、上下2分割の横線も同じ3pxに変更。前版で誤って基板"詳細"カードに付けた枠線は差し戻し(詳細は変更なし)。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.43</span>MB130Aの表示名を修正。膜厚(x.xum)はAl-Si-Cu金属層の厚さだが、従来「MB130A PI 1.5um」表示だと下地PI/SiNの厚さと誤解されたため「MB130A PI / Al-Si-Cu 1.5um」形式に変更(SiN側も同様)。表示名のみの変更で在庫の集計・グループ分け・並び替えは不変。ナビカードもΦ等を含む表示名に統一<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.42</span>凡例(しきい値)カードと基板シリーズ帯のアラーム色を、ウエハ帯と同じパステル配色に統一。凡例は危険=パステル赤(太線)/警告=パステル黄(オレンジ太線)、基板帯の「問題あり」半分も原色赤→パステル赤に。基板の詳細カードは変更なし。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.41</span>アラームバッジの「＋予定N」の文字を少し大きく(11→13px)して視認性を向上。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.40</span>アラームバッジを上段=品名/下段=枚数＋予定 の2段レイアウトに変更(品名を独立表示し枚数を下段へ)。高さは従来どおり危険/警告で統一。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.39</span>アラームバッジの枠線をさらに太く(3px)。詳細カードの入荷予定表示をステータス枠の下段→「右横」の固定幅枠に変更し、入荷予定の有無でカードの高さも幅も変わらないように統一(無い時は同じ枠を不可視で確保)。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.38</span>TOPアラームバッジの微調整。危険/警告バッジの高さを統一(min-height+上下中央寄せ、＋予定の有無で高さがばらつかない)。危険は背景の赤を少し強め、赤い太線(2px #d43b3b)で囲む。警告は現状のパステル黄のままオレンジ太線(2px #e8912e)で囲む。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.37</span>TOPアラームバッジの見た目調整。「＋予定N」を枚数の下段に移動(高さは増えるが視認性向上)。危険=赤/警告=黄の背景をパステル調に和らげ、文字を濃色に。詳細カードの数値5列は枚数による色変化(ゼロ淡色化/実在庫ゼロ赤)を廃止し、常に固定の意味色(実在庫=青/入荷予定=紫/出荷待ち・入荷後予約=橙/ダミー=黒)で統一。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.36</span>TOPシリーズ帯の危険/警告バッジにも入荷予定を表示(「品名 0枚 ＋予定14」)。実在庫が少なくても入荷予定があることが一覧で分かるように。あわせて詳細カードの数値5列が詰まって見えたため列間隔を拡大(列間36px/ステータス〜数値列44px)。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.35</span>ウエハの警告/危険判定を「実在庫」ベースに変更。従来は実在庫＋入荷予定の合計で判定していたため、実在庫0でも入荷予定があれば安全に見え誤解を生んでいた。今後は手元にすぐ使える実在庫のみでアラーム判定(危険10枚未満/警告25枚未満)し、入荷予定がある場合はステータス枠に「＋入荷予定 N枚」を補足表示。TOPアラーム・ナビカード・凡例も実在庫基準に統一。数え方(在庫の集計値)は不変で判定基準のみ変更<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.34</span>ウエハカードの在庫サマリーを見やすく再設計。従来の「即在庫+予約済」「入荷予定+予約済」の加算表記(A+B)をやめ、実在庫/入荷予定/出荷待ち/入荷後予約/ダミーの5列に分離し、それぞれ意味色(実在庫=青・入荷予定=紫・出荷待ち/入荷後予約=橙・ダミー=黒)と補足ラベル付きで表示。ゼロは淡色化(実在庫ゼロのみ在庫切れ=赤で強調)。数え方は不変(表示のみ)<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.33</span>入荷待ちウエハの誤計上を修正。入荷日セルに「予定/未定/?」等の未確定マーカーがある場合、その日付が過去でも実到着(現有在庫)とはみなさず入荷予定のまま数える。例: 入荷待ちシートのLotに「2026/1/14予定?」とあり予定日が過ぎていたウエハが即在庫25枚に誤計上されていたのを、入荷予定へ正しく分類。プレーンな過去日付(マーカー無し)は従来どおり実到着=現有在庫<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.32</span>「ぱっと表示」対応。前回の解析結果(在庫/基板)をlocalStorageにスナップショット保存し、次回起動時にまず即描画→裏でSharePointを再取得して差し替える。2回目以降の起動で「認証中…取得中…」の空白待ちが消え、開いた瞬間に前回データが出る(初回OPENのみ通常取得)。スキーマ更新時や容量超過時はスナップショットを自動無効化。数え方は不変<span class="cld">2026-08-19</span></div><div class="cl-row"><span class="clv">v5.31</span>ウエハの空スロット除外に対応。W#(slot)列の右側に横長×縦長の大結合セル(注文済み/未入荷メモが空スロットに被さる。高さ≥3行・幅≥5列)がある行は、実物ウエハなしの空スロットとして数えない。色(白)は不安定なので使わず結合セルで判定。例MB50: 空スロット135枚をダミー計上していたのを除外<span class="cld">2026-08-06</span></div><div class="cl-row"><span class="clv">v5.30</span>基板に「入荷予定」概念を追加。未確定行(日付欄=入荷待ち/予約、または日付空欄+Lotに**)を分離し、現有在庫=確定行のみ・入荷予定=未確定入庫・予約=未確定出庫として算出。予約は現有で賄えれば現有から、超えたら入荷予定から引く。カードは「使える分(現有フリー)」を主表示し、入荷予定フリー/予約を別枠表示。アラーム判定も使える分ベースに変更<span class="cld">2026-07-30</span></div><div class="cl-row"><span class="clv">v5.29</span>FC150を加工工程で3品種に分割(SiNベース/PI塗布済/PI+ボール)。PI列・ボール列の注記で判定し、加工日が過ぎていれば完了(手元在庫)・未来なら加工中(入荷予定)。加工日の年が無ければ入荷後の最初の同月日を加工年に推定。PROCESS_SPLIT_CONFIGSに追加すれば他製品にも適用可<span class="cld">2026-07-29</span></div><div class="cl-row"><span class="clv">v5.28</span>【実験】新しい配色＋レイアウトテーマを試験導入(濃いめグレー背景・カード影・角丸・枠線・鮮やかなアクセント色)。シリーズ帯を太く枠線付きにし品名は【】表示、危険品は赤カード白抜き(品名+枚数)を帯に表示。基板側も同構成にし在庫100ケ未満を警告として帯に赤カード表示。品名カード見出しを大型化(品名の下に本社/Excel/ファイル名)。検索バーはタブ横へ、変更履歴は最下部へ移動。CSS末尾の THEME START〜THEME END を削除すればv5.27の見た目に戻せる。数え方・集計は変更なし<span class="cld">2026-07-27</span></div><div class="cl-row"><span class="clv">v5.27</span>ウエハのシリーズ見出しに所属品名を【A / B / C】形式で常時表示(危険=赤/警告=橙)。そのシリーズに危険品(使える分10枚未満)がある場合のみ、見出し内に薄赤カード(品名+枚数のみ)を表示。展開せず不足品がシリーズ単位で分かる。帯右の在庫合計表示は削除<span class="cld">2026-07-27</span></div><div class="cl-row"><span class="clv">v5.26</span>基板Lot記載の追加パターン対応(Lot未記載出庫のFIFO控除、入庫番号混入・省略形・各種内訳記法対応)、最古在庫の経過時間をヘッダー右側に大型表示、全体フォントサイズ2Up<span class="cld">2026-07-08</span></div><div class="cl-row"><span class="clv">v5.25</span>基板(KIT)の入庫日からの経過日数表示を追加(ロット別在庫に入庫日+経過期間、カードに最古在庫行、Lot列の複数ロット内訳/省略形/記入ズレ対応)<span class="cld">2026-07-08</span></div><div class="cl-row"><span class="clv">v5.24</span>「開発品」シートは白slotも含め全て使用済扱い(在庫・予約にしない)<span class="cld">2026-06-15</span></div><div class="cl-row"><span class="clv">v5.23</span>白slotでも備考に消費系記載(廃棄/開発使用/サンプル/不良/DC等)があれば使用済として在庫から除外<span class="cld">2026-06-08</span></div><div class="cl-row"><span class="clv">v5.22</span>末尾(数字)シート((2)等)の重複除外を廃止し実在在庫としてカウント<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.21</span>JSON出力時に品名解決がUIと一致しているか自己チェック(不一致なら警告)<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.20</span>JSONエクスポートの品名をUI表示と一致(Φ口径+全分割反映、生品名はproduct_raw)<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.19</span>画面上部に変更履歴を表示 (最新を常時表示、過去は折りたたみ)<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.18</span>MB130A を 下地(PI/SiN)×膜厚(x.xum) で品種分割<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.17</span>WLP 0.5P の在庫数を修正 (slot列に紛れる入庫番号/単価を除外)<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.16</span>WLP を独立グループ化し、ピッチ(0.3P/0.4P/0.5P)で品種分割<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.15</span>AS8R を「MBシリーズ（Wire Bonding）」へ移動<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.14</span>HPW を 表面仕様(SiN/PI) で品種分割<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.13</span>CC/IP を CC10/IP10・CC40/IP40・CC80/IP80 の独立グループに分割 (数字tier自動)<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.11</span>Model表記ゆれ(Ⅰ/Ⅱ・II・全角・数字)に対応<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.10</span>IP40 を Model I / Model II で品種分割<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.9</span>糸島 IP40 に Φ12 を表示<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.8</span>熱酸化膜ウエハ に Φ8 を表示<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.7</span>Glass の在庫/予約/使用済を slotセルの色で判定するよう修正、入荷予定の表示を修正<span class="cld">2026-06-01</span></div></div>
   </div>
 </div>
 
@@ -2859,6 +2846,91 @@ table.history-table .h-stock { font-size: 16px; }
 <script>
 // v5.0: INVENTORYはSharePointから取得 (起動時に集計、再取得ボタンで更新可能)
 let INVENTORY = [];
+// v5.68: 非表示にする品種 (もう使わない等)。生品名(p.product)で完全一致。
+const HIDDEN_PRODUCTS = new Set(['MB130A PI 2.0um']);
+// 表示対象のみに絞る (非表示品種 + TTV未保証を除外)。fetch/snapshot 両方で使用。
+function inventoryVisible(arr) {
+  return (arr || []).filter(p => !HIDDEN_PRODUCTS.has(p.product) && !/ミラーウエハ.*TTV未保証|TTV未保証/.test(p.product));
+}
+
+// v5.70: 熱酸化膜グループ専用「マスク別 在庫検索」
+//   熱酸化膜ウエハのマスク列(FBW200等の用途)ごとの現有在庫を検索する。
+let thermalMaskQuery = '';
+// v5.72: 検索対象は熱酸化膜の使える3ファイル(セーレンAMC / +SiNブイテック / Φ12 1000Å)。
+//   「使用不可」(熱酸化膜+SiN セーレン) は検索対象から除外。
+function isThermalProduct(p) { return (/熱酸化膜/.test(p.product) || /^P-SiO\s+P-SiN/.test(p.product)) && !/使用不可/.test(displayName(p)); }
+function thermalMaskResultHtml() {
+  const q = thermalMaskQuery.trim();
+  if (!q) return '<div class="ts-hint">マスク名を入力すると、その用途の在庫/予約枚数を表示します (例: FBW200)。ヒットしたシート名をクリックすると、その在庫のあるシートに直接ジャンプします。</div>';
+  const ql = q.toLowerCase();
+  // v5.78: ファイル単位ではなく「シート単位」で集計し、該当シートへ直接ジャンプできるようにする。
+  const agg = {};  // マスク名 → {stock, reserved, files:[{label, web_url, sheet, stock, reserved}]}
+  for (const p of INVENTORY) {
+    if (!isThermalProduct(p)) continue;
+    const ms = p.mask_stock || {}, mr = p.mask_reserved || {};
+    const mss = p.mask_stock_sheets || {}, mrs = p.mask_reserved_sheets || {};
+    const masks = new Set([...Object.keys(ms), ...Object.keys(mr)]);
+    for (const mask of masks) {
+      if (!mask.toLowerCase().includes(ql)) continue;
+      const st = ms[mask] || 0, rv = mr[mask] || 0;
+      const a = agg[mask] = agg[mask] || { stock: 0, reserved: 0, files: [] };
+      a.stock += st; a.reserved += rv;
+      const stSheets = mss[mask] || {}, rvSheets = mrs[mask] || {};
+      const sheetNames = new Set([...Object.keys(stSheets), ...Object.keys(rvSheets)]);
+      if (sheetNames.size) {
+        // シート別に1行ずつ (該当シートへジャンプ)
+        for (const sh of sheetNames) {
+          a.files.push({ label: displayName(p), web_url: p.web_url || null, sheet: sh,
+                         stock: stSheets[sh] || 0, reserved: rvSheets[sh] || 0 });
+        }
+      } else {
+        // 旧キャッシュ(シート情報なし)へのフォールバック: ファイル単位
+        a.files.push({ label: displayName(p), web_url: p.web_url || null, sheet: null, stock: st, reserved: rv });
+      }
+    }
+  }
+  const entries = Object.entries(agg).sort((a, b) => (b[1].stock + b[1].reserved) - (a[1].stock + a[1].reserved) || a[0].localeCompare(b[0], 'ja'));
+  if (entries.length === 0) return `<div class="ts-none">「${escape(q)}」の在庫・予約はありません（0 枚）</div>`;
+  return entries.map(([m, v]) => {
+    // 在庫のあるシートを上に、次に予約、その中は在庫数→予約数の多い順
+    const files = v.files.slice().sort((x, y) =>
+      (y.stock > 0) - (x.stock > 0) || (y.stock - x.stock) || (y.reserved - x.reserved));
+    const filesHtml = files.map(f => {
+      const cnt = `<span class="tf-cnt">在庫${f.stock}／予約${f.reserved}</span>`;
+      const label = f.sheet ? `${f.label}〈${f.sheet}〉` : f.label;
+      const title = f.sheet ? `シート「${f.sheet}」をExcelで開く（${f.label}）` : `${f.label} をExcelで開く`;
+      const args = f.sheet
+        ? `openInExcelWeb(event, '${encodeURIComponent(f.web_url)}', '${encodeURIComponent(f.sheet)}')`
+        : `openInExcelWeb(event, '${encodeURIComponent(f.web_url)}')`;
+      return f.web_url
+        ? `<a class="ts-file" href="#" onclick="${args}" title="${escape(title)}"><span class="tf-label">📊 ${escape(label)}</span>${cnt}</a>`
+        : `<span class="ts-file nolink"><span class="tf-label">${escape(label)}</span>${cnt}</span>`;
+    }).join('');
+    return `<div class="ts-item">
+      <div class="ts-head">
+        <span class="ts-mask">${escape(m)}</span>
+        <span class="ts-pair"><span class="ts-lbl">在庫</span><span class="ts-cnt">${v.stock}</span></span>
+        <span class="ts-pair"><span class="ts-lbl">予約</span><span class="ts-cnt ts-resv">${v.reserved}</span></span>
+        <span class="ts-u">枚</span>
+      </div>
+      <div class="ts-files">${filesHtml}</div>
+    </div>`;
+  }).join('');
+}
+function renderThermalMaskSearchBox() {
+  return `
+    <div class="thermal-search">
+      <div class="ts-title">🔍 熱酸化膜・酸化膜ウエハ マスク別 在庫検索</div>
+      <input id="thermal-mask-input" type="text" placeholder="マスク名で検索 (例: FBW200)"
+             value="${escape(thermalMaskQuery)}" oninput="onThermalMaskInput(this.value)">
+      <div id="thermal-mask-result">${thermalMaskResultHtml()}</div>
+    </div>`;
+}
+window.onThermalMaskInput = function(v) {
+  thermalMaskQuery = v;
+  const el = document.getElementById('thermal-mask-result');
+  if (el) el.innerHTML = thermalMaskResultHtml();  // 入力欄は作り直さずフォーカス維持
+};
 const THRESHOLDS = {"FC150": {"warn": 30, "danger": 15}, "HPW": {"warn": 20, "danger": 10}, "SI0631_250120": {"warn": 15, "danger": 5}, "熱酸化膜_SiN付ウエハ": {"warn": 50, "danger": 25}};
 
 
@@ -2920,7 +2992,41 @@ function setOrder(key, data) {
    ヘルパー
    ============================================================ */
 // === 変更履歴 (最新が先頭。先頭1件を常時表示、それ以前は折りたたみ) ===
+// ============================================================
+//  変更履歴 (CHANGELOG) と 公開版番号(Rev) について
+//  ・CHANGELOG は「内部ビルドの細かい記録」(v5.7〜)。開発の全手順を残す。
+//  ・画面/社内向けには v5.41 以前(社内既知)はそのまま個別表示し、v5.42 以降の
+//    細かい更新を 5件ずつ束ねて「公開Rev v5.42〜」に採番して表示する(buildPublicChangelog)。
+//    → 社内で 41 だった版が急に 78 に飛ばず、5件ごとに +1 だけ増える(現在の公開版=v5.49)。
+//  ・そのため title/h1 は「公開版(v5.49)」、CHANGELOG 先頭は「内部ビルド(v5.79)」で数字が異なる。
+//    次の変更でも内部は v5.80… と刻み、5件たまるごとに公開版が +1 される。
+// ============================================================
 const CHANGELOG = [
+  { v: 'v5.80', date: '2026-09-09', text: '束ねた公開Revをクリックで「＋詳細N件 ▾」展開し、元の細かい変更点を全文表示できるように(情報は省略せず畳んで保持)。表示のみ' },
+  { v: 'v5.79', date: '2026-09-09', text: '更新履歴を「5件ずつまとめた公開Rev」表示に変更。社内既知のv5.41以前は個別のまま、v5.42以降の細かい更新を5件ずつ束ねて公開版 v5.42〜v5.49 に採番(見出しも公開版v5.49に)。急なバージョン急増を避ける。表示のみ' },
+  { v: 'v5.78', date: '2026-09-08', text: 'マスク別在庫検索のヒットを「シート単位」に細分化し、クリックでその在庫のあるシートへ直接ジャンプ(activeCellでシート指定)。マスク別×シート別に在庫/予約を集計するためキャッシュ更新＋core.js再生成。在庫のあるシートを上に表示' },
+  { v: 'v5.77', date: '2026-09-08', text: 'マスク別在庫検索のフォントを2サイズアップ(見出し・検索入力欄・結果カードすべて)。カード最小幅を285pxに調整して折り返しを維持。表示のみ' },
+  { v: 'v5.76', date: '2026-09-08', text: 'マスク別在庫検索の結果を小さめカードのグリッド表示に変更し横並び→折り返しに。右側の空白を無くし一覧性を向上。ファイル名は長い場合は省略表示し、在庫/予約枚数を右端に固定。表示のみ' },
+  { v: 'v5.75', date: '2026-09-08', text: 'Φ12 P-SiO P-SiN付ウエハ(酸化膜ウエハ)を「熱酸化膜グループ」へ移動し、グループ名を「熱酸化膜＋酸化膜ウエハグループ」に変更。P-SiO P-SiNも同じマスク列(FBW40A/FBW200A/PTW等)を持つためマスク別在庫検索の対象に追加。マスク別内訳を追加集計するためキャッシュ更新＋core.js再生成' },
+  { v: 'v5.74', date: '2026-09-08', text: '熱酸化膜マスク検索の各ヒットに、該当ファイルのExcelリンク(在庫/予約枚数付き)を表示。クリックでそのExcelがブラウザで開く。マスクが複数ファイルに跨る場合は各ファイルを列挙。表示・検索のみ' },
+  { v: 'v5.73', date: '2026-09-08', text: '熱酸化膜マスク検索で予約状態もヒットするように。マスク別に在庫に加えて予約枚数も集計し、検索結果に「在庫N／予約M」を表示。例: FBW200→予約8枚。マスク別内訳を追加集計するためキャッシュ更新＋core.js再生成' },
+  { v: 'v5.72', date: '2026-09-08', text: '熱酸化膜マスク検索の対象を「使える3ファイル(セーレンAMC/+SiNブイテック/Φ12 1000Å)」に限定し、「使用不可」(セーレン+SiN)を検索対象から除外。表示・検索のみ' },
+  { v: 'v5.71', date: '2026-09-08', text: '熱酸化膜グループの並び順を指定順に: (1)Φ8 熱酸化膜(セーレンAMC) → (2)Φ8 熱酸化膜+SiN(ブイテック) → (3)Φ12 熱酸化膜(1000Å)(ブイテック) → (4)Φ8 熱酸化膜+SiN(セーレン)使用不可。並びのみ' },
+  { v: 'v5.70', date: '2026-09-08', text: '熱酸化膜グループの上に「マスク別 在庫検索」を新設。熱酸化膜ウエハのマスク列(FBW200等の用途)ごとに現有在庫を集計し、マスク名で検索すると在庫枚数を表示。現状は在庫スロットのマスクが未割当のため各マスク0枚(将来在庫が付けば表示)。数え方(既存の在庫集計)は不変、マスク別内訳を追加集計するためキャッシュ更新＋core.js再生成' },
+  { v: 'v5.69', date: '2026-09-08', text: '「SIPOS, ITO, 熱酸化膜グループ」から熱酸化膜を分離し「熱酸化膜グループ」を新設。SI0631/ITO/P-SiOは「SIPOS, ITO グループ」に残す。並び・表示のみ' },
+  { v: 'v5.68', date: '2026-09-08', text: '「MB130A PI 2.0um」(もう使わない品種)を非表示に。非表示リスト(HIDDEN_PRODUCTS)方式で、取得時・スナップショット表示の両方に適用。表示のみ' },
+  { v: 'v5.67', date: '2026-09-08', text: 'GlassはすべてΦ8のため、先頭に「Φ8」を付加(例: Φ8 Glass TEMPAX（0.7mm）)。表示名のみ' },
+  { v: 'v5.66', date: '2026-09-08', text: '全製品の表示名にウエハサイズを付加。見やすさ優先で末尾に「(Φ8)」等を表示(既に先頭にΦがあるミラー/熱酸化膜/P-SiO等はそのまま先頭表示)。Glassはサイズ表記なし。非Φ8は対応表記載のみ(FC150LC-0102JY/IP40=Φ12、PWB-0101=Φ6)、記載なしは全てΦ8。表示名のみ(数え方不変)' },
+  { v: 'v5.65', date: '2026-09-08', text: 'CC80系tierも対で整列: CC80 → IP80 → CC80 MarkⅣ → IP80 MarkⅣ → CC80TSV(対なしは末尾)。仕様ランクに Mark/TSV を追加(Model→無印/A→R→Mark→TSV→MB)。並びのみ(数え方不変)' },
+  { v: 'v5.64', date: '2026-09-08', text: 'CC40系tierの並びを仕様ランクで整列: CC40 Model I/II → IP40 Model I/II → IP40/IP40A → CC40MB → IP40MB。各ランク内はCC→IP。CC10系(0.1um→0.6um)も同ロジックで維持。並びのみ(数え方不変)' },
+  { v: 'v5.63', date: '2026-09-08', text: 'グループ整理: (1)FBW500をWLPグループに移動しグループ名を「WLPシリーズ＋FBW500」に (2)PWB-0101/PWB8用の「PWBシリーズ」を新設し移動 (3)CC10系の並びを膜厚対で CC10(0.1um)→IP10(0.1um)→CC10R(0.6um)→IP10R(0.6um) に変更。表示・並びのみ(数え方不変)' },
+  { v: 'v5.62', date: '2026-09-08', text: 'NXTEC向け品名の「Ω」がフォントで正しく表示されないため「ohm」表記に変更(例: …(1~10 ohm) for NXTEC)。表示名のみ' },
+  { v: 'v5.61', date: '2026-09-08', text: 'NXTEC向け「熱酸化(300nm)+P-CVD SiN(400nm)」が改名されなかった不具合を修正(生品名のチルダ/Ωの文字種が推定と違い一致しなかったため、正規表現照合に変更)。表示名のみ' },
+  { v: 'v5.60', date: '2026-09-08', text: 'PWB-0101(Φ6)をシート名のTYPEで2分割(カウントも分割): TYPE-A→PWB-0101JY Type-A Al-Si 3.0 um / それ以外(TYPE-B・無ラベル4.6um)をまとめてPWB-0101JY Type-B Al-Si 4.6 um。数え方変更につきキャッシュ更新＋core.js再生成' },
+  { v: 'v5.59', date: '2026-09-08', text: 'PWB8をシート上部の TYPE-A/TYPE-B マーカーで2分割(カウントも分割): PWB8-0101JY Type-A Al-Si-Cu 4.0um / Type-B Al-Si 4.0um。STAC→STAC-0101JY も追加。数え方変更につきキャッシュ更新＋core.js再生成' },
+  { v: 'v5.58', date: '2026-09-08', text: '表示名対応表に IP40MB → IP40MB-0101JY (Micro Bump) を追加(対応表への追記反映)。表示名のみ' },
+  { v: 'v5.57', date: '2026-09-08', text: '表示名を対応表に合わせて一括変更(例: CC80→CC80-0101JY、FC150→FC150JY 各工程、MB130A→MB130A-STG0101JY PI/1.5um、ITO(1101)→ITO1101-0100JY 等)。表示名のみで在庫カウント・グループ分けは不変。加えてWM40をシート名の(WM40-XXXXJY)で0101/0102/0103に3分割(カウントも分割)。PWB-0101/PWB8のType分割は別途対応。数え方変更につきキャッシュ更新＋core.js再生成' },
+  { v: 'v5.56', date: '2026-09-07', text: 'ITOを「マスク」でウエハ単位に3分割(ITO(1101)/ITO(1102)/ITO(マスク未確定))。マスク列(縦セル結合可・列位置はヘッダー"マスク"で自動検出)の値で振り分け、空欄=未確定。FC150の工程分割と同じ枠組み(PROCESS_SPLIT_CONFIGSにkind:maskを追加)で実装。数え方変更につきキャッシュ更新＋core.js再生成' },
   { v: 'v5.55', date: '2026-08-27', text: '詳細カードの列名「入荷後予約」→「入予定予約」に変更(ウエハ・基板とも)。「現有予約」と対になり、入荷予定(未着)在庫の予約分と分かりやすく。補足は「入荷後に出荷」のまま。表示のみ' },
   { v: 'v5.54', date: '2026-08-27', text: '基板TOP帯アラームカードの入荷予定表示を、3段目追加ではなく1段目(数量セル)を改行して2行目に「入荷予定 N ケ（うち予約N）」を記載する形に変更。カードが縦に伸びすぎないように。表示のみ' },
   { v: 'v5.53', date: '2026-08-27', text: '基板の詳細カードをウエハと同じ表示方式に統一。ステータス枠(安全/警告/危険＋実在庫ケ)＋入荷予定を右横(合計・うち予約)＋数値4列(実在庫/入荷予定/現有予約/入荷後予約)。基板固有の最終取引/過去1年/経過は数値列の左にコンパクトに併記(ダミー概念はないため4列)。表示のみ' },
@@ -2973,24 +3079,88 @@ function escape(s) {
   if (s === undefined || s === null) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+
+// ===== 公開版(Rev) の圧縮表示 =====
+// 社内既知の版。これ以前(v5.41以下)は個別のまま表示する。
+const PUBLIC_BASELINE = 41;
+// v5.42以降の内部ビルドを、この件数ずつ束ねて公開Rev 1つに割り当てる。
+const REV_GROUP_SIZE = 5;
+// 公開版(v5.PUBLIC)の見出し要約。キー=公開版のminor(42〜)。内部5件の内容をまとめたもの。
+const PUBLIC_REV_SUMMARIES = {
+  42: 'アラーム帯・凡例の配色をパステル調に統一し、詳細カードの入荷予定を「合計＋うち予約」で表示。基板帯の枠線・色を調整、MB130Aの表示名を修正',
+  43: 'TOP帯バッジの入荷予定/予約の併記を改善(合計・うち予約・文字拡大)。基板のTOP帯にも入荷予定を表示、列名「出荷待ち→現有予約」に変更',
+  44: '基板の詳細カードをウエハと同じ表示方式に統一。列名「入荷後予約→入予定予約」、ITO/WM40を仕様で分割、表示名を対応表に合わせて一括改名',
+  45: '品種分割を拡充(PWB8・PWB-0101をTypeで分割、IP40MB・STACを追加)。NXTEC向け品名の改名不具合を修正し「Ω→ohm」表記に変更',
+  46: 'グループ再編(WLPシリーズ＋FBW500、PWBシリーズを新設)。CC/IPの並びを対で整列し、全製品にウエハサイズを表示(GlassはΦ8)',
+  47: '「熱酸化膜グループ」を新設し、マスク名(FBW200等)で在庫・予約を検索できる窓を追加(対象ファイル整理・並び順指定)。不要品「MB130A PI 2.0um」を非表示',
+  48: 'マスク別在庫検索を強化(予約もヒット・該当Excelリンクを追加・結果を横並びカード＆フォント拡大)。P-SiO酸化膜ウエハを検索対象に追加',
+  49: 'マスク別在庫検索のヒットから「在庫のあるシート」へ直接ジャンプできるように。あわせて更新履歴を5件ずつ束ねた公開Rev表示に変更(各Revは「＋詳細」で元の変更点を全文表示可)',
+};
+function _revMinor(v) { return parseInt(String(v).replace(/^v?5\./, ''), 10); }
+// 内部CHANGELOG → 公開向け(新しい順)。v5.42以降を5件ずつ束ね、v5.41以下は個別のまま後ろに続ける。
+function buildPublicChangelog() {
+  const isNew = c => _revMinor(c.v) > PUBLIC_BASELINE;
+  const known = CHANGELOG.filter(c => !isNew(c));  // v5.41以下(社内既知・新しい順のまま)
+  const fresh = CHANGELOG.filter(isNew).sort((a, b) => _revMinor(a.v) - _revMinor(b.v));  // 昇順(古い順)
+  const groups = [];
+  for (let i = 0; i < fresh.length; i += REV_GROUP_SIZE) groups.push(fresh.slice(i, i + REV_GROUP_SIZE));
+  const pub = groups.map((g, idx) => {
+    const pv = PUBLIC_BASELINE + 1 + idx;  // 42, 43, ...
+    const dates = g.map(c => c.date).sort();
+    const dateDisp = dates[0] === dates[dates.length - 1] ? dates[0] : `${dates[0]}〜${dates[dates.length - 1]}`;
+    return {
+      v: `v5.${pv}`, date: dateDisp,
+      text: PUBLIC_REV_SUMMARIES[pv] || g.map(c => c.text).join(' / '),
+      builds: g.map(c => c.v).join(', '),  // 内部ビルド(参考・ツールチップ表示)
+      // v5.80: 束ねた元の詳細(クリックで展開表示)。情報は省略せず畳んで残す。
+      items: g.slice().reverse().map(c => ({ v: c.v, text: c.text, date: c.date })),  // 各Rev内は新しい順
+    };
+  }).reverse();  // 新しい順
+  return pub.concat(known);
+}
 // v5.19: 変更履歴の描画 (最新1件は常時表示、過去は折りたたみ)
+// v5.79: 公開Rev(5件ずつ束ね)で表示する
 function renderChangelog() {
   if (typeof CHANGELOG === 'undefined' || !Array.isArray(CHANGELOG) || CHANGELOG.length === 0) return;
-  const latest = CHANGELOG[0];
-  const past = CHANGELOG.slice(1);
+  const PUB = buildPublicChangelog();
+  const latest = PUB[0];
+  const past = PUB.slice(1);
   const elLatest = document.getElementById('cl-latest');
   const elPast = document.getElementById('cl-past');
   const elToggle = document.getElementById('cl-toggle');
+  const bt = c => c.builds ? ` title="内部ビルド: ${escape(c.builds)}"` : '';
+  // v5.80: 束ねたRevは「＋詳細N件 ▾」で元の詳細を展開表示(情報は省略しない)
+  const detailBlock = (c, id) => {
+    if (!c.items || !c.items.length) return { toggle: '', block: '' };
+    const rows = c.items.map(it =>
+      `<div class="cl-drow"><span class="clv2">${escape(it.v)}</span>${escape(it.text)}<span class="cld">${escape(it.date)}</span></div>`
+    ).join('');
+    return {
+      toggle: ` <span class="cl-more" onclick="toggleRevDetail('${id}', this)">＋詳細${c.items.length}件 ▾</span>`,
+      block: `<div class="cl-detail" id="${id}" hidden>${rows}</div>`,
+    };
+  };
   if (elLatest) {
-    elLatest.innerHTML = `🆕 <span class="clv">${escape(latest.v)}</span>${escape(latest.text)}<span class="cld">${escape(latest.date)}</span>`;
+    const d = detailBlock(latest, 'cl-det-latest');
+    elLatest.innerHTML = `🆕 <span class="clv"${bt(latest)}>${escape(latest.v)}</span>${escape(latest.text)}<span class="cld">${escape(latest.date)}</span>${d.toggle}${d.block}`;
   }
   if (elPast) {
-    elPast.innerHTML = past.map(c =>
-      `<div class="cl-row"><span class="clv">${escape(c.v)}</span>${escape(c.text)}<span class="cld">${escape(c.date)}</span></div>`
-    ).join('');
+    elPast.innerHTML = past.map((c, i) => {
+      const d = detailBlock(c, 'cl-det-' + i);
+      return `<div class="cl-row"${bt(c)}><span class="clv">${escape(c.v)}</span>${escape(c.text)}<span class="cld">${escape(c.date)}</span>${d.toggle}${d.block}</div>`;
+    }).join('');
   }
   if (elToggle) elToggle.style.display = past.length ? 'inline-block' : 'none';
 }
+// v5.80: 束ねたRevの詳細(元の変更点)を展開/折りたたみ
+window.toggleRevDetail = function(id, el) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  box.hidden = !box.hidden;
+  if (el) el.textContent = box.hidden
+    ? el.textContent.replace('▴', '▾').replace('詳細を隠す', `＋詳細${box.children.length}件`)
+    : `詳細を隠す ▴`;
+};
 function toggleChangelog() {
   const box = document.getElementById('changelog');
   const tog = document.getElementById('cl-toggle');
@@ -3097,21 +3267,25 @@ function renderStatusPill(p) {
 const BASE_GROUP_DEFS = [
   { id: 'FC',          label: 'FC シリーズ',         color: '#1a4d8f', test: p => /^FC\d/i.test(p) },
   // ← ここに CC/IP の tier別グループ群が入る (rebuildGroupDefs)
-  // SIPOS(SI0631/熱酸化膜ウエハ) + ITO + 熱酸化膜系(熱酸化膜各種/P-SiO) を1グループに統合
-  { id: 'SIPOS',       label: 'SIPOS, ITO, 熱酸化膜グループ', color: '#7a5a2a', test: p => {
+  // SIPOS(SI0631/熱酸化膜ウエハ) + ITO を1グループに統合
+  // v5.69: 熱酸化膜は別グループへ分離。SIPOS(SI0631)/ITO はこちらに残す。
+  // v5.75: P-SiO P-SiN付ウエハ(酸化膜ウエハ)は熱酸化膜グループへ移動。
+  { id: 'SIPOS',       label: 'SIPOS, ITO グループ', color: '#7a5a2a', test: p => {
       if (/^SI0631/i.test(p)) return true;
       if (/^ITO\b/i.test(p)) return true;
-      if (/熱酸化膜/.test(p)) return true;
-      if (/^P-SiO\s+P-SiN/.test(p)) return true;
       return false;
   }},
+  { id: 'thermal',     label: '熱酸化膜＋酸化膜ウエハグループ', color: '#6a7a2a', test: p => /熱酸化膜/.test(p) || /^P-SiO\s+P-SiN/.test(p) },
   { id: 'glass',       label: 'Glass シリーズ',      color: '#3a78a8', test: p => /^Glass\b/i.test(p) },
   { id: 'HBM',         label: 'HBM / IPHBM 系',      color: '#5a4a8a', test: p => /^(HBM|IPHBM)/i.test(p) },
   // MB シリーズ。AS8R (ワイヤボンディング系) も含める
   { id: 'MB',          label: 'MB シリーズ（Wire Bonding）', color: '#8a6d00', test: p => /^MB\d/i.test(p) || /^AS8R\b/i.test(p) },
   { id: 'WM',          label: 'WM / IPWM 系',        color: '#2d5a8a', test: p => /^(WM|IPWM)\d/i.test(p) },
   { id: 'HPW',         label: 'HPW シリーズ',        color: '#a02050', test: p => /^HPW/i.test(p) },
-  { id: 'WLP',         label: 'WLP シリーズ',        color: '#0f8a8a', test: p => /^WLP\b/i.test(p) },
+  // v5.63: FBW500 を WLP グループに含める
+  { id: 'WLP',         label: 'WLPシリーズ＋FBW500',  color: '#0f8a8a', test: p => /^WLP\b/i.test(p) || /^FBW/i.test(p) },
+  // v5.63: PWB シリーズ (PWB-0101 / PWB8)
+  { id: 'PWB',         label: 'PWB シリーズ',        color: '#8a4a2d', test: p => /^PWB/i.test(p) },
   { id: 'mirror',      label: 'ミラー / TTV 系',     color: '#6e1535', test: p => /ミラーウエハ|TTV/.test(p) },
   { id: 'other',       label: 'その他',              color: '#555555', test: p => true },
 ];
@@ -3203,6 +3377,9 @@ function groupedInventory() {
     } else if (gid === 'SIPOS') {
       // v5.4: ITO → SI0631 → 熱酸化膜ウエハ → 熱酸化膜+SiN → 残り(Φサイズ順→品名順)
       arr.sort((a, b) => siposSortKey(a).localeCompare(siposSortKey(b), 'ja'));
+    } else if (gid === 'thermal') {
+      // v5.71: 熱酸化膜の指定順: Φ8セーレンAMC → Φ8+SiNブイテック → Φ12(1000Å)ブイテック → +SiNセーレン(使用不可)
+      arr.sort((a, b) => thermalSortKey(a).localeCompare(thermalSortKey(b)) || a.product.localeCompare(b.product, 'ja'));
     } else if (gid === 'WLP') {
       // v5.16: WLPはピッチ昇順 (0.3P → 0.4P → 0.5P)
       const pk = p => { const m = p.product.match(/([0-9]+\.[0-9]+)P/i); return m ? parseFloat(m[1]) : 999; };
@@ -3243,8 +3420,20 @@ function ccipSortKey(product) {
   if (!m) return 'zzz_' + product;  // 想定外は末尾
   const prefix = m[1].toUpperCase();      // CC or IP
   const num = m[2].padStart(4, '0');      // 数字を4桁ゼロ埋め (10→0010, 40→0040, 80→0080)
-  const prefixOrder = prefix === 'CC' ? '0' : '1';  // CC先, IP後
-  return `${num}_${prefixOrder}_${product}`;
+  const prefixOrder = prefix === 'CC' ? '0' : '1';  // 同ランク内は CC先・IP後
+  const afterNum = product.slice(m[1].length + m[2].length);
+  // v5.64/v5.65: tier内の並びを「仕様(バリアント)ランク」で制御。各ランク内はCC→IP(対で隣接)。
+  //   Model(0) → 無印/A(1) → R=0.6um(2) → Mark(Ⅳ等)(3) → TSV(4) → MB=Micro Bump(5)
+  //   例 tier40: CC40 Model I/II → IP40 Model I/II → IP40/IP40A → CC40MB → IP40MB
+  //   例 tier10: CC10(0.1) → IP10(0.1) → CC10R(0.6) → IP10R(0.6)
+  //   例 tier80: CC80 → IP80 → CC80 MarkⅣ → IP80 MarkⅣ → CC80TSV
+  const rank = /Model/i.test(afterNum)    ? '0'
+             : /^\s*Mark/i.test(afterNum) ? '3'
+             : /TSV/i.test(afterNum)      ? '4'
+             : /^MB/i.test(afterNum)      ? '5'
+             : /^R/i.test(afterNum)       ? '2'
+             : '1';
+  return `${num}_${rank}_${prefixOrder}_${product}`;
 }
 // v5.12: CC/IP のサブグループ(数字tier)判定。例: CC40 Model I → '40', IP10 → '10'
 function ccipTier(product) {
@@ -3254,6 +3443,17 @@ function ccipTier(product) {
 
 // v5.4: SIPOS,ITO,熱酸化膜グループの並び順キー
 // 固定順: ITO → SI0631 → 熱酸化膜ウエハ → 熱酸化膜+SiN → 残り(Φサイズ昇順→品名順)
+// v5.71: 熱酸化膜グループの並び順キー (生品名で判定)
+//   0: Φ8 セーレンAMC(熱酸化膜ウエハ) / 1: Φ8 +SiN ブイテック / 2: Φ12 1000Å ブイテック / 3: +SiN セーレン(使用不可)
+function thermalSortKey(p) {
+  const n = p.product;
+  if (/^熱酸化膜ウエハ$/.test(n)) return '0';        // Φ8 熱酸化膜(セーレン AMC)
+  if (/セーレン/.test(n)) return '3';                // +SiN(セーレン) 使用不可
+  if (/1000/.test(n) || /Å/.test(n)) return '2';    // Φ12 熱酸化膜(1000Å) ブイテック
+  if (/[+＋]\s*SiN/.test(n)) return '1';             // Φ8 熱酸化膜+SiN ブイテック
+  if (/^P-SiO\s+P-SiN/.test(n)) return '2a';        // v5.75: Φ12 P-SiO P-SiN付(酸化膜ウエハ)
+  return '9';
+}
 function siposSortKey(p) {
   const name = p.product;
   if (/^ITO\b/i.test(name)) return '0_';
@@ -4257,6 +4457,9 @@ function render() {
     const allNames = products.map(p => p.product + ':' + totalAvailable(p)).join(', ');
     const bandCls = (bandIdx++ % 2 === 0) ? 'band-a' : 'band-b';  // v5.28: 白/薄青の交互
 
+    // v5.70: 熱酸化膜グループの上に「マスク別 在庫検索」窓を表示
+    if (g.id === 'thermal') outHtml += renderThermalMaskSearchBox();
+
     outHtml += `
       <div class="group-block ${isExpanded?'expanded':''}">
         <div class="group-header ${bandCls}" style="border-left-color:${g.color}" onclick="toggleGroup('${g.id}')" title="${escape(allNames)}">
@@ -4686,11 +4889,32 @@ function mbThickOf(cellText, sheetName) {
    ※ここを直したら core.js も再生成すること (build_core.py)
    ============================================================ */
 const PROCESS_SPLIT_CONFIGS = [
-  { test: /^FC150(?![0-9A-Za-z])/i, piHeaders: ['PI'], ballHeaders: ['ボール'],
+  { test: /^FC150(?![0-9A-Za-z])/i, kind: 'process', piHeaders: ['PI'], ballHeaders: ['ボール'],
     labels: { base: 'SiNベース', pi: 'PI塗布済', ball: 'PI+ボール' } },
+  // v5.56: ITO は「マスク」列の値でウエハ単位に分割 (1101 / 1102 / 空欄=未確定)。
+  //   マスク列は縦セル結合されるが、ExcelJSは結合スレーブでもマスター値を返すので getCell で読める。
+  //   ラベルは動的: マスク値ありは「(値)」、空欄は undecidedLabel。
+  { test: /^ITO(?![0-9A-Za-z])/i, kind: 'mask', maskHeaders: ['マスク'],
+    undecidedKey: '__undecided__', undecidedLabel: '(マスク未確定)' },
 ];
 function processSplitConfig(baseProduct) {
   return PROCESS_SPLIT_CONFIGS.find(c => c.test.test(baseProduct)) || null;
+}
+// ヘッダー行に依存せず、上部(1〜8行)から指定ヘッダーの列番号を探す (slot/W# どちらの表でも可)
+function findColByHeader(ws, headers) {
+  for (let r = 1; r <= Math.min(ws.rowCount, 8); r++)
+    for (let c = 1; c <= Math.min(ws.columnCount, 25); c++)
+      if (headers.includes(cleanText(ws.getCell(r, c).value).trim())) return c;
+  return null;
+}
+// v5.59: PWB8 のシート上部にある「TYPE-A / TYPE-B」マーカーから型を判定 (per-sheet分割用)
+function pwbTypeOf(ws) {
+  for (let r = 1; r <= Math.min(ws.rowCount, 5); r++)
+    for (let c = 1; c <= Math.min(ws.columnCount, 20); c++) {
+      const m = cleanText(ws.getCell(r, c).value).match(/TYPE[-\s]*([AB])\b/i);
+      if (m) return m[1].toUpperCase();
+    }
+  return null;
 }
 // 実データのヘッダー行(=W#がある行)を探す。ヘッダーが2段(グループ見出し+列見出し)でも列見出し側を基準にできる。
 function findWaferHeaderRow(ws) {
@@ -4803,7 +5027,93 @@ function extractProductName(filename) {
 //   品名表示ルールを変えるときは ここだけ を直せば UI と JSON 両方に反映される。
 //   (品種"分割"のルールは analyzeWorkbook/productNameForSheet 等の解析側。こちらは表示名の加工のみ)
 //   export側がこの関数を通しているかは、JSON出力時に verifyExportNameSync() で自動検証する。
+// v5.57: 表示名対応表 (生品名 product → 新表示名)。分割済みバリアントも生品名(サブ名込み)で照合。
+//   ここは「表示名の変更」のみで在庫カウントには影響しない (グループ分け・並び替えは生品名 p.product を使うため)。
+const DISPLAY_RENAME = {
+  'MB50': 'MB50-0101JY',
+  'MB80': 'MB80-STG0101JY',
+  'MB130B': 'MB130B-STG0101JY PI/3.0 um',
+  'FC120': 'FC120JY',
+  'FC150SC': 'FC150SCJY',
+  'FC200': 'FC200JY',
+  'FC200SC': 'FC200SCJY',
+  'CC10R': 'CC10-0100JY/ Al-Cu 0.6 um',
+  'IP10R': 'IP10-0100JY/ Al-Cu 0.6 um',
+  'CC10': 'CC10-0100JY/ Al-Cu0.1 um',
+  'IP10': 'IP10-0100JY/ Al-Cu 0.1 um',
+  'CC40 ModelⅠ': 'CC40-0101JY Model I',
+  'CC40 ModelⅡ': 'CC40-0101JY Model II',
+  'IP40 Model I': 'IP40-0101JY Model I',
+  'IP40 Model II': 'IP40-0101JY Model II',
+  'IP40': 'IP40A-0101JY Model I',          // 糸島Φ12 IP40 (生品名 "IP40")
+  'CC40MB': 'CC40MB-0101JY (Micro Bump)',
+  'IP40MB': 'IP40MB-0101JY (Micro Bump)',
+  'CC80': 'CC80-0101JY',
+  'CC80TSV': 'C80TSV-0101JY',
+  'IP80': 'IP80-0101JY',
+  'CC80 MarkⅣ': 'CC80MarkⅣ-0101JY （A/B）',
+  'IP80 MarkⅣ': 'IP80 MarkⅣ-0101JY',
+  'ITO (1101)': 'ITO1101-0100JY',
+  'ITO (1102)': 'ITO1102-0100JY',
+  'ITO (マスク未確定)': 'ITO(マスク未確定)',
+  'SI0631': 'SIPOS-TEG SI0631',
+  '熱酸化膜ウエハ': 'Φ8 熱酸化膜（セーレン AMC）',
+  '熱酸化膜+SiN付ウエハ(セーレン)': 'Φ8 熱酸化膜＋SiN（セーレン）使用不可',
+  '熱酸化膜+SiN付ウエハ': 'Φ8 熱酸化膜＋SiN（ブイテック）',
+  '熱酸化膜(1000Å）付ウエハ': 'Φ12 熱酸化膜(1000Å) （ブイテック）',
+  'HBM-T': 'HBM-T-0100JY',
+  'IPHBM-T': 'IPHBM-0100JY',
+  'WM40-0101JY': 'WM40-0101JY (for CC80 Mark II)',
+  'IPWM40': 'IPWM40-0101JY (for WM40-0103JY)',
+  'TTV3um ミラーウエハ-TTV測定': 'Φ8 ミラーウエハ-TTV3 um',
+  '【カスタム】東芝TSS-MPDG2-DC TEG': 'Φ8 東芝 TSS-MPDG2-DC',
+  'LCD30A': 'LCD30A-0101JY',
+  'SiO2+AlCu': 'Φ8 SiO2+AlCu （ブイテック）',
+  'HPW Mark II': 'HPW Mark II-0101JY',
+  'HPW PI': 'HPW-0101JY PI',
+  'HPW SiN': 'HPW-0101JY SiN',
+  'STAC': 'STAC-0101JY',
+  'PWB8 Type-A': 'PWB8-0101JY Type-A Al-Si-Cu 4.0um',
+  'PWB8 Type-B': 'PWB8-0101JY Type-B Al-Si 4.0um',
+  'PWB-0101 Type-A': 'PWB-0101JY Type-A Al-Si 3.0 um',
+  'PWB-0101 Type-B': 'PWB-0101JY Type-B Al-Si 4.6 um',
+  '(1~10Ω) 熱酸化(300nm)+P-CVD SiN(400nm)': 'Φ8 熱酸化(300nm)+SiN(400nm) (1~10 ohm) for NXTEC',
+};
+// Excel由来の文字ゆらぎ吸収: Å(ANGSTROM SIGN U+212B)を通常のÅ(U+00C5)に統一
+function _renameNormKey(s){ return String(s||'').replace(/Å/g,'Å'); }
+const DISPLAY_RENAME_NORM={};
+for(const k in DISPLAY_RENAME) DISPLAY_RENAME_NORM[_renameNormKey(k)]=DISPLAY_RENAME[k];
+function applyDisplayRename(p) {
+  const key=_renameNormKey(p.product);
+  if (DISPLAY_RENAME_NORM[key] != null) return DISPLAY_RENAME_NORM[key];
+  let m = key.match(/^FC150 (SiNベース|PI塗布済|PI\+ボール)$/);
+  if (m) return `FC150JY ${m[1]}`;
+  m = key.match(/^MB130A (PI|SiN) ([0-9]+(?:\.[0-9]+)?um)$/i);
+  if (m) return `MB130A-STG0101JY ${m[1]}/${m[2]}`;
+  // NXTEC向け 熱酸化+P-CVD SiN: 生品名のチルダ(~/〜/～)・Ω(Ω/Ω)の文字種ゆらぎに依存しない正規表現で照合
+  if (/熱酸化.*P-CVD.*SiN.*400\s*nm/i.test(key)) return 'Φ8 熱酸化(300nm)+SiN(400nm) (1~10 ohm) for NXTEC';
+  return null;
+}
+// v5.66/v5.67: 全製品にウエハサイズを表示。既にΦ始まりの表示名(ミラー/熱酸化膜/renamed Φ系)は
+//   先頭にサイズがあるので付加しない。Glassは全てΦ8を先頭に付加。それ以外は末尾に「(Φ8)」等を付加。
+//   非Φ8は対応表の記載のみ(FC150LC-0102JY/IP40=Φ12, PWB-0101=Φ6)、記載なしは全てΦ8。
+const WAFER_SIZE = {
+  'FC150LC-0102JY': 'Φ12',
+  'IP40': 'Φ12',                 // 糸島Φ12 IP40 (生品名 "IP40", 表示は IP40A-0101JY Model I)
+  'PWB-0101': 'Φ6',
+  'PWB-0101 Type-A': 'Φ6',
+  'PWB-0101 Type-B': 'Φ6',
+};
 function displayName(p) {
+  const base = displayNameBase(p);
+  if (/^Φ/.test(base)) return base;                 // 既に先頭にサイズあり → そのまま
+  if (/^Glass\b/i.test(p.product)) return `Φ8 ${base}`;  // v5.67: Glassは全てΦ8を先頭に付加
+  return `${base} (${WAFER_SIZE[p.product] || 'Φ8'})`;
+}
+function displayNameBase(p) {
+  // v5.57: 対応表による改名を最優先 (新名はΦ等も含む完成形)
+  const rn = applyDisplayRename(p);
+  if (rn != null) return rn;
   // 既にΦ始まりなら二重付与しない
   if (/^Φ/.test(p.product)) return p.product;
   // 「熱酸化膜+SiN付ウエハ」は固定でΦ8 (ファイル名にφが無いため)
@@ -4815,12 +5125,6 @@ function displayName(p) {
   if (/ミラーウエハ|P-SiO|熱酸化膜|\bIP40\b/.test(p.product) && p.file) {
     const m = p.file.match(/^[0-9]*★?\s*φ\s*(\d+)\s*inch/i);
     if (m) return `Φ${m[1]} ${p.product}`;
-  }
-  // v5.43: MB130A の膜厚は Al-Si-Cu(金属層)の厚さ。下地(PI/SiN)の厚さと誤解されないよう明示。
-  //   例「MB130A PI 1.5um」→「MB130A PI / Al-Si-Cu 1.5um」
-  {
-    const mb = p.product.match(/^(MB130A)\s+(PI|SiN)\s+([0-9]+\.[0-9]+um)\b/i);
-    if (mb) return `${mb[1]} ${mb[2]} / Al-Si-Cu ${mb[3]}`;
   }
   return p.product;
 }
@@ -4902,6 +5206,10 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
         lots: [], incoming_lots: [],
         sheet_count: 0,
         skipped_ancient: [], skipped_noinfo: [],
+        mask_stock: {},      // v5.70: マスク別の現有在庫枚数 (熱酸化膜の用途マスク FBW200 等の検索用)
+        mask_reserved: {},   // v5.73: マスク別の現有予約枚数
+        mask_stock_sheets: {},    // v5.78: マスク別×シート別の在庫枚数 {mask:{sheet:n}} (該当シートへ直接ジャンプ用)
+        mask_reserved_sheets: {}, // v5.78: マスク別×シート別の予約枚数 {mask:{sheet:n}}
       };
     }
     return summaries[productName];
@@ -4915,6 +5223,20 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
     if (/^HPW/i.test(baseProduct)) {
       const surf = hpwSurfaceOf(sn);
       if (surf) return `${baseProduct} ${surf}`;
+    }
+    // v5.57: WM40 はシート名の「(WM40-XXXXJY)」で 0101/0102/0103 に分割 (IPWM40は対象外)
+    if (/^WM40(?![0-9A-Za-z])/i.test(baseProduct)) {
+      const m = sn.match(/WM40-(\d+)JY/i);
+      if (m) return `WM40-${m[1]}JY`;
+    }
+    // v5.59: PWB8 はシート上部の TYPE-A / TYPE-B マーカーで分割
+    if (/^PWB8(?![0-9A-Za-z])/i.test(baseProduct)) {
+      const t = pwbTypeOf(ws);
+      if (t) return `PWB8 Type-${t}`;
+    }
+    // v5.60: PWB-0101 はシート名の TYPE-A で分割。TYPE-A以外(TYPE-B・無ラベル4.6um)はType-Bにまとめる。
+    if (/^PWB-0101/i.test(baseProduct)) {
+      return /TYPE[-\s]*A/i.test(sn) ? 'PWB-0101 Type-A' : 'PWB-0101 Type-B';
     }
     // v5.18: MB130A は F列「下地」(PI/SiN) × G列「膜厚」(x.xum) で分割
     if (/^MB130A/i.test(baseProduct) && ws) {
@@ -4957,14 +5279,23 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
     // v5.29: 加工工程による品種分割 (FC150等) は per-wafer で型を判定する。
     //   splitCfg!=null のシートは単一summaryを作らず、ウエハ毎に各タイプへ振り分ける。
     const splitCfg = processSplitConfig(baseProduct);
-    let piCol = null, ballCol = null;
+    const splitKind = splitCfg ? (splitCfg.kind || 'process') : null;
+    let piCol = null, ballCol = null, maskCol = null;
     if (splitCfg) {
-      const hr = findWaferHeaderRow(ws);
-      piCol = colInRow(ws, hr, splitCfg.piHeaders);
-      ballCol = colInRow(ws, hr, splitCfg.ballHeaders);
+      if (splitKind === 'mask') {
+        maskCol = findColByHeader(ws, splitCfg.maskHeaders);  // slot/W# 表どちらでも
+      } else {
+        const hr = findWaferHeaderRow(ws);
+        piCol = colInRow(ws, hr, splitCfg.piHeaders);
+        ballCol = colInRow(ws, hr, splitCfg.ballHeaders);
+      }
     }
     const baseSummary = splitCfg ? null : getSummary(productNameForSheet(sn, ws));
     if (baseSummary) baseSummary.sheet_count++;
+
+    // v5.70: 熱酸化膜は「マスク」列(FBW200等の用途)を持つ。現有在庫をマスク別に集計して検索に使う。
+    // v5.75: P-SiO P-SiN付ウエハも同じ「マスク」列(FBW40A/FBW200A/PTW等)を持つため対象に追加。
+    const thermalMaskCol = (!splitCfg && (/熱酸化膜/.test(baseProduct) || /^P-SiO\s+P-SiN/.test(baseProduct))) ? findColByHeader(ws, ['マスク']) : null;
 
     const sheetIsPending = isPendingSheet(sn);
     // v5.24: 「開発品」シートは白slotも含め全て使用済扱い (在庫・予約にしない)
@@ -5063,21 +5394,32 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
         }
       }
       
-      // v5.29: FC150等は per-wafer で型(SiN/PI/PI+ボール)と工程状態を判定し、各品種へ振り分ける
+      // v5.29/v5.56: FC150は工程(SiN/PI/PI+ボール)、ITOはマスク(1101/1102/未確定)で per-wafer 振り分け
       if (splitCfg) {
-        const buckets = {};  // key = typeKey|(cur/inc) → {a:在庫/未予約, b:予約, c:使用済, custs}
+        const buckets = {};      // key = typeKey|(cur/inc) → {a:在庫/未予約, b:予約, c:使用済, custs}
+        const variantLabel = {}; // typeKey → 表示ラベル (マスクは動的に決まる)
         for (let r = start; r <= end; r++) {
           if (ws.getRow(r).hidden) continue;
           if (emptyRows.has(r)) continue;  // v5.31: 空スロット(大結合メモ)は除外
           let status = classifier(ws.getCell(r, cols.slot));
           if (!useReverseLogic && status === '在庫' && cols['備考'] && isConsumedNote(ws.getCell(r, cols['備考']).value)) status = '使用済';
           if (sheetIsDev && !useReverseLogic) status = '使用済';
-          const wt = waferProcessType(ws, r, piCol, ballCol);
-          const stagePending = (wt.type === 'base') ? false : noteStagePending(wt.note, arrivalDt);
+          // 品種キーと工程状態(加工中→入荷予定)を判定
+          let typeKey, stagePending = false;
+          if (splitKind === 'mask') {
+            const mv = maskCol ? cleanText(ws.getCell(r, maskCol).value).trim() : '';
+            if (mv) { typeKey = mv; variantLabel[typeKey] = `(${mv})`; }
+            else { typeKey = splitCfg.undecidedKey; variantLabel[typeKey] = splitCfg.undecidedLabel; }
+          } else {
+            const wt = waferProcessType(ws, r, piCol, ballCol);
+            typeKey = wt.type;
+            variantLabel[typeKey] = splitCfg.labels[typeKey];
+            stagePending = (wt.type === 'base') ? false : noteStagePending(wt.note, arrivalDt);
+          }
           // 使用済(消費済)は入荷予定になり得ない。在庫/予約のみ加工中→入荷予定にする。
           const isUsed = (status === '使用済');
           const waferIncoming = !isUsed && (isIncoming || stagePending);
-          const key = wt.type + '|' + (waferIncoming ? 'inc' : 'cur');
+          const key = typeKey + '|' + (waferIncoming ? 'inc' : 'cur');
           let bk = buckets[key]; if (!bk) { bk = { a: 0, b: 0, c: 0, custs: [] }; buckets[key] = bk; }
           if (useReverseLogic) { if (status === '未予約') bk.a++; else bk.b++; }
           else { if (status === '在庫') bk.a++; else if (status === '予約') bk.b++; else bk.c++; }
@@ -5087,7 +5429,7 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
         for (const key in buckets) {
           const typeKey = key.split('|')[0], inc = key.endsWith('|inc');
           const bk = buckets[key];
-          const vsum = getSummary(`${baseProduct} ${splitCfg.labels[typeKey]}`);
+          const vsum = getSummary(`${baseProduct} ${variantLabel[typeKey]}`);
           vsum.sheet_count++;
           const li = {
             lot: lotName, sheet: sn, arrival_disp: arrivalDisp,
@@ -5118,6 +5460,8 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
       const summary = baseSummary;
       let countA = 0, countB = 0, countC = 0;
       const customers = [];
+      const lotMaskStock = {};      // v5.70: このロットの在庫スロットをマスク別に集計
+      const lotMaskReserved = {};   // v5.73: 予約スロットをマスク別に集計
       for (let r = start; r <= end; r++) {
         if (ws.getRow(r).hidden) continue;
         if (emptyRows.has(r)) continue;  // v5.31: 空スロット(大結合メモ)は除外
@@ -5130,6 +5474,18 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
         if (sheetIsDev && !useReverseLogic) status = '使用済';
         if (useReverseLogic) { if (status === '未予約') countA++; else countB++; }
         else { if (status === '在庫') countA++; else if (status === '予約') countB++; else countC++; }
+        // v5.70/v5.73: 熱酸化膜: スロットのマスク(用途)を在庫/予約別に集計
+        if (thermalMaskCol) {
+          const isStk = (useReverseLogic && status === '未予約') || (!useReverseLogic && status === '在庫');
+          const isRsv = (useReverseLogic && status === '予約済') || (!useReverseLogic && status === '予約');
+          if (isStk || isRsv) {
+            const mv = cleanText(ws.getCell(r, thermalMaskCol).value).trim();
+            if (mv && mv !== '-') {
+              if (isStk) lotMaskStock[mv] = (lotMaskStock[mv] || 0) + 1;
+              else lotMaskReserved[mv] = (lotMaskReserved[mv] || 0) + 1;
+            }
+          }
+        }
         const targetStatus = useReverseLogic ? '予約済' : '予約';
         if (status === targetStatus && cols['顧客']) {
           const cust = cleanText(ws.getCell(r, cols['顧客']).value);
@@ -5155,7 +5511,21 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
       } else {
         lotInfo.stock = countA; lotInfo.reserved = countB; lotInfo.used = countC;
         if (isDummy) { summary.dummy_stock += countA; summary.dummy_reserved += countB; }
-        else { summary.stock += countA; summary.reserved += countB; }
+        else {
+          summary.stock += countA; summary.reserved += countB;
+          // v5.70/v5.73: 現有(非ダミー)のマスク別枚数を在庫/予約別に集約
+          // v5.78: マスク別×シート別(sn)も記録し、検索ヒットから該当シートへ直接ジャンプできるようにする
+          for (const k in lotMaskStock) {
+            summary.mask_stock[k] = (summary.mask_stock[k] || 0) + lotMaskStock[k];
+            const bySheet = summary.mask_stock_sheets[k] || (summary.mask_stock_sheets[k] = {});
+            bySheet[sn] = (bySheet[sn] || 0) + lotMaskStock[k];
+          }
+          for (const k in lotMaskReserved) {
+            summary.mask_reserved[k] = (summary.mask_reserved[k] || 0) + lotMaskReserved[k];
+            const bySheet = summary.mask_reserved_sheets[k] || (summary.mask_reserved_sheets[k] = {});
+            bySheet[sn] = (bySheet[sn] || 0) + lotMaskReserved[k];
+          }
+        }
         summary.used += countC;
         customers.forEach(c => summary.reserved_customers.add(c));
         lotLocs.forEach(l => summary.locations.add(l));
@@ -5217,6 +5587,8 @@ async function analyzeGlassWorkbook(arrayBuffer, filename, fileMeta, locationOri
         lots: [], incoming_lots: [],
         sheet_count: 0,
         skipped_ancient: [], skipped_noinfo: [],
+        mask_stock: {},      // v5.70: マスク別の現有在庫枚数 (熱酸化膜の用途マスク FBW200 等の検索用)
+        mask_reserved: {},   // v5.73: マスク別の現有予約枚数
       };
     }
     return summaries[product];
@@ -5395,6 +5767,8 @@ async function analyzeWlpWorkbook(arrayBuffer, filename, fileMeta, locationOrigi
         lots: [], incoming_lots: [],
         sheet_count: 0,
         skipped_ancient: [], skipped_noinfo: [],
+        mask_stock: {},      // v5.70: マスク別の現有在庫枚数 (熱酸化膜の用途マスク FBW200 等の検索用)
+        mask_reserved: {},   // v5.73: マスク別の現有予約枚数
       };
     }
     return summaries[product];
@@ -5599,7 +5973,7 @@ const CACHE_STORE = 'inventory_cache';
 const CACHE_VERSION = 1;
 // 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
 // (キャッシュ全クリアになる)
-const CACHE_SCHEMA_VERSION = 'v5.33-planned-marker-2026-08-27';
+const CACHE_SCHEMA_VERSION = 'v5.78-mask-sheet-jump-2026-09-08';
 
 
 
@@ -5932,8 +6306,8 @@ async function bootSharePointFlow(forceRefresh = false) {
     );
     const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
 
-    // v5.1: 「ミラーウエハ-TTV未保証」は表示しない
-    INVENTORY = wafer.filter(p => !/ミラーウエハ.*TTV未保証|TTV未保証/.test(p.product));
+    // v5.1/v5.68: 非表示品種(TTV未保証・もう使わない品種)を除外
+    INVENTORY = inventoryVisible(wafer);
     SUBSTRATE = substrate;
     const honshaCount = stats.wafer_honsha.ok;
     const itoshimaCount = stats.wafer_itoshima.ok;
@@ -6014,7 +6388,7 @@ document.getElementById('btn-export-json').addEventListener('click', () => {
 (function bootWithSnapshot() {
   const snap = loadSnapshot();
   if (snap) {
-    INVENTORY = snap.inventory;   // 保存時点でTTV未保証フィルタ済み
+    INVENTORY = inventoryVisible(snap.inventory);   // v5.68: 旧スナップショットにも非表示フィルタを適用
     SUBSTRATE = snap.substrate;
     renderAll();
     const st = document.getElementById('fetch-status-text');
@@ -6033,5 +6407,6 @@ document.getElementById('btn-export-json').addEventListener('click', () => {
 })();
 
 </script>
-</body>
-</html>
+
+
+</body></html>
