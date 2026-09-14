@@ -1311,6 +1311,59 @@ h1 .sub { font-size: 14px; font-weight: 400; color: var(--ink-dim); margin-left:
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
+/* ===== v5.81: 在庫「推移」タブ ===== */
+#tab-trend { padding: 4px 2px 40px; }
+.trend-empty { max-width: 640px; margin: 40px auto; text-align: center; color: var(--ink-dim); }
+.trend-empty .te-icon { font-size: 46px; }
+.trend-empty .te-title { font-size: 18px; font-weight: 800; color: var(--ink); margin: 6px 0 10px; }
+.trend-empty p { font-size: 14px; line-height: 1.7; margin: 8px 0; }
+.trend-empty code { background: #eef1f5; padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+.trend-empty .te-hint { font-size: 12px; color: var(--ink-dim); }
+.trend-empty.dragover { outline: 3px dashed var(--accent); outline-offset: 8px; border-radius: 10px; }
+.trend-load, .trend-reload {
+  font-size: 14px; font-weight: 700; color: #fff; background: var(--accent);
+  border: none; border-radius: 8px; padding: 9px 18px; cursor: pointer; margin: 8px 0;
+}
+.trend-load:hover, .trend-reload:hover { filter: brightness(1.08); }
+.trend-reload { font-size: 12px; padding: 5px 12px; }
+.trend-controls {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 10px 12px; margin-bottom: 12px; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 8px; font-size: 14px;
+}
+.trend-controls select { font-size: 14px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.trend-controls label { display: inline-flex; align-items: center; gap: 4px; }
+.trend-metrics { display: inline-flex; gap: 12px; padding-left: 4px; border-left: 1px solid var(--line); }
+.trend-metrics .m-stock { color: #2d6cc0; font-weight: 700; }
+.trend-metrics .m-resv  { color: #e08a00; font-weight: 700; }
+.trend-metrics .m-inc   { color: #7a53c9; font-weight: 700; }
+.trend-range { color: var(--ink-dim); font-size: 13px; margin-left: auto; }
+#trend-chart { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 6px 4px; overflow-x: auto; }
+#trend-chart svg { display: block; width: 100%; height: auto; }
+.tc-grid { stroke: #e6e9ee; stroke-width: 1; }
+.tc-axis { stroke: #b9c0c9; stroke-width: 1; }
+.tc-ylab, .tc-xlab { fill: var(--ink-dim); font-size: 12px; }
+.tc-line { fill: none; stroke-width: 2.5; }
+.tc-dot { stroke: #fff; stroke-width: 1.5; }
+.tc-legend { font-size: 13px; font-weight: 700; }
+.trend-delta-head { font-size: 15px; font-weight: 800; color: var(--ink); margin: 18px 2px 8px; }
+.trend-delta-head #trend-delta-sub { font-size: 12px; font-weight: 400; color: var(--ink-dim); margin-left: 8px; }
+#trend-delta table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#trend-delta th, #trend-delta td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+#trend-delta th { background: #f2f5f8; color: var(--ink-dim); font-weight: 700; position: sticky; top: 0; }
+#trend-delta td.num { text-align: right; font-variant-numeric: tabular-nums; }
+#trend-delta .dp { color: #1f8a4c; font-weight: 700; }   /* 増加 */
+#trend-delta .dm { color: #c9402f; font-weight: 700; }   /* 減少 */
+#trend-delta .ev { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
+#trend-delta .ev.use  { background: #fdeceb; color: #c9402f; }
+#trend-delta .ev.inc  { background: #eee9f8; color: #7a53c9; }
+#trend-delta .ev.arr  { background: #e9f2fb; color: #2d6cc0; }
+#trend-delta .ev.resv { background: #fdf3e3; color: #b5710a; }
+#trend-delta .ev.new  { background: #e8f6ee; color: #1f8a4c; }
+#trend-delta .ev.gone { background: #eef0f2; color: #6b7280; }
+#trend-delta .tdmore { text-align: center; color: var(--accent); cursor: pointer; padding: 8px; font-size: 13px; }
+#trend-delta .tdmore:hover { text-decoration: underline; }
+
 /* コントロールバー */
 .controls {
   display: grid; grid-template-columns: 1fr auto auto;
@@ -2765,6 +2818,9 @@ table.history-table .h-stock { font-size: 16px; }
     <div class="tab" data-tab="substrate">
       <span class="tab-main">🟫 基板在庫<span class="count" id="substrate-count">21品名</span></span>
     </div>
+    <div class="tab" data-tab="trend">
+      <span class="tab-main">📈 在庫推移<span class="count" id="trend-count">履歴未読込</span></span>
+    </div>
     <!-- v5.28: 開いたメニューを一括で閉じる (展開状態はlocalStorageに保存されるため) -->
     <button type="button" class="btn-collapse-all" onclick="collapseAllMenus()" title="ウエハ・基板の開いているシリーズ/品名をすべて閉じます">▸ すべて閉じる</button>
     <!-- v5.28: 検索バーはタブの横に配置 (アクティブタブ側のみ表示) -->
@@ -2811,6 +2867,40 @@ table.history-table .h-stock { font-size: 16px; }
 
   <div class="tab-content" id="tab-substrate">
     <div id="substrate-cards"></div>
+  </div>
+
+  <!-- v5.81: 在庫「推移」タブ -->
+  <div class="tab-content" id="tab-trend">
+    <input type="file" id="trend-file" accept=".jsonl,.json,.txt" hidden>
+    <div id="trend-empty" class="trend-empty">
+      <div class="te-icon">📈</div>
+      <div class="te-title">在庫の推移・変動を表示します</div>
+      <p>スナップショット履歴ファイル（<code>在庫履歴_YYYY-MM.jsonl</code>）を読み込むと、在庫量の<b>推移グラフ</b>と<b>増減明細</b>を表示します。</p>
+      <button type="button" class="trend-load" onclick="document.getElementById('trend-file').click()">📁 履歴ファイルを読み込む</button>
+      <p class="te-hint">※ 履歴は日次スナップショットで自動記録されます（社内PC）。手元のファイルをここにドラッグ＆ドロップでも読み込めます。</p>
+    </div>
+    <div id="trend-main" hidden>
+      <div class="trend-controls">
+        <label>対象:
+          <select id="trend-scope">
+            <option value="all">全社合計</option>
+            <option value="group">グループ別</option>
+            <option value="product">製品別</option>
+          </select>
+        </label>
+        <select id="trend-pick" hidden></select>
+        <span class="trend-metrics">
+          <label class="m-stock"><input type="checkbox" id="trend-m-stock" checked> 実在庫</label>
+          <label class="m-resv"><input type="checkbox" id="trend-m-resv"> 予約</label>
+          <label class="m-inc"><input type="checkbox" id="trend-m-inc"> 入荷予定</label>
+        </span>
+        <span class="trend-range" id="trend-range"></span>
+        <button type="button" class="trend-reload" onclick="document.getElementById('trend-file').click()">📁 別の履歴</button>
+      </div>
+      <div id="trend-chart"></div>
+      <div class="trend-delta-head">📋 増減明細 <span id="trend-delta-sub"></span></div>
+      <div id="trend-delta"></div>
+    </div>
   </div>
   
   <div class="footer-note">
@@ -3002,6 +3092,8 @@ function setOrder(key, data) {
 //    次の変更でも内部は v5.80… と刻み、5件たまるごとに公開版が +1 される。
 // ============================================================
 const CHANGELOG = [
+  { v: 'v5.82', date: '2026-09-14', text: 'SIPOS(SI0631)等で、まだ製造中(完成待ちシート)のウエハが在庫計上される不具合を修正。入荷日欄に「上旬/中旬/下旬・頃」等の未確定記載がある分は入荷予定として扱う。加えて1つのslotブロックに複数の入荷日(確定日/予定/上旬)が混在する場合は入荷日ごとに分割し、確定到着分=現有在庫・予定分=入荷予定に正しく振り分け(工程分割のFC150/ITOは対象外で従来通り)。数え方変更につきキャッシュ更新＋core.js再生成' },
+  { v: 'v5.81', date: '2026-09-14', text: '(準備中・既定では非表示)「在庫推移」タブを内部追加。日次スナップショット履歴から在庫量の推移グラフと増減明細を表示する機能。データ連携の整備後に公開予定。表示のみ(数え方・既存タブに影響なし)' },
   { v: 'v5.80', date: '2026-09-09', text: '束ねた公開Revをクリックで「＋詳細N件 ▾」展開し、元の細かい変更点を全文表示できるように(情報は省略せず畳んで保持)。表示のみ' },
   { v: 'v5.79', date: '2026-09-09', text: '更新履歴を「5件ずつまとめた公開Rev」表示に変更。社内既知のv5.41以前は個別のまま、v5.42以降の細かい更新を5件ずつ束ねて公開版 v5.42〜v5.49 に採番(見出しも公開版v5.49に)。急なバージョン急増を避ける。表示のみ' },
   { v: 'v5.78', date: '2026-09-08', text: 'マスク別在庫検索のヒットを「シート単位」に細分化し、クリックでその在庫のあるシートへ直接ジャンプ(activeCellでシート指定)。マスク別×シート別に在庫/予約を集計するためキャッシュ更新＋core.js再生成。在庫のあるシートを上に表示' },
@@ -3094,7 +3186,7 @@ const PUBLIC_REV_SUMMARIES = {
   46: 'グループ再編(WLPシリーズ＋FBW500、PWBシリーズを新設)。CC/IPの並びを対で整列し、全製品にウエハサイズを表示(GlassはΦ8)',
   47: '「熱酸化膜グループ」を新設し、マスク名(FBW200等)で在庫・予約を検索できる窓を追加(対象ファイル整理・並び順指定)。不要品「MB130A PI 2.0um」を非表示',
   48: 'マスク別在庫検索を強化(予約もヒット・該当Excelリンクを追加・結果を横並びカード＆フォント拡大)。P-SiO酸化膜ウエハを検索対象に追加',
-  49: 'マスク別在庫検索のヒットから「在庫のあるシート」へ直接ジャンプできるように。あわせて更新履歴を5件ずつ束ねた公開Rev表示に変更(各Revは「＋詳細」で元の変更点を全文表示可)',
+  49: '製造中(完成待ち)のウエハが在庫計上される不具合を修正(入荷日「上旬」等は入荷予定扱い・1ブロックに複数入荷日があれば分割)。マスク別在庫検索のヒットから在庫のあるシートへ直接ジャンプ。更新履歴を5件ずつ束ねた公開Rev表示に(各Revは「＋詳細」で全文表示可)',
 };
 function _revMinor(v) { return parseInt(String(v).replace(/^v?5\./, ''), 10); }
 // 内部CHANGELOG → 公開向け(新しい順)。v5.42以降を5件ずつ束ね、v5.41以下は個別のまま後ろに続ける。
@@ -4495,8 +4587,277 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
     const tools = document.getElementById('tools-' + tab.dataset.tab);
     if (tools) tools.classList.add('active');
+    // v5.81: しきい値の凡例フロートは推移タブでは無関係なので隠す
+    const lf = document.getElementById('legend-float');
+    if (lf) lf.style.display = (tab.dataset.tab === 'trend') ? 'none' : '';
   });
 });
+
+/* ============================================================
+   在庫「推移」タブ (v5.81) — 履歴JSONL(スナップショット)を読み込み、
+   在庫推移グラフ＋増減明細を表示。数え方には一切関与しない表示専用。
+   ============================================================ */
+// 在庫推移タブの表示フラグ。本番Git配布=false(非表示・未完成のため)、ローカル検証時=true にする。
+// falseでもタブのコードは残るので、trueに戻すだけで再表示できる。
+const SHOW_TREND_TAB = false;
+const trendState = { runs: [], events: [], prodDisp: {}, baselineTs: new Set(), loaded: false, deltaLimit: 200 };
+const TREND_COL = { stock: '#2d6cc0', resv: '#e08a00', inc: '#7a53c9' };
+
+function trendFmtDate(ts, withTime) {
+  // ts = "2026-08-25T09:40:00"
+  const m = String(ts).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!m) return String(ts);
+  return withTime ? `${+m[2]}/${+m[3]} ${m[4]}:${m[5]}` : `${+m[2]}/${+m[3]}`;
+}
+function trendGroupLabel(praw) {
+  try { const g = (typeof groupOf === 'function') ? groupOf(praw) : null; return (g && g.label) ? g.label : 'その他'; }
+  catch (e) { return 'その他'; }
+}
+
+function trendParse(text) {
+  const runs = [], events = [], prodDisp = {}, baselineTs = new Set();
+  const lotState = {};       // key -> {s,r,u,inc,dum}
+  let curBaseline = false;
+  text.split(/\r?\n/).forEach(line => {
+    line = line.trim(); if (!line) return;
+    let o; try { o = JSON.parse(line); } catch (e) { return; }
+    if (o.t === 'run') {
+      curBaseline = !!o.baseline;
+      if (curBaseline) baselineTs.add(o.ts);
+      const prodMap = {};
+      (o.prod || []).forEach(p => {
+        prodMap[p.p] = { s: p.s || 0, r: p.r || 0, inc: p.inc || 0, incR: p.incR || 0, dum: p.dum || 0, disp: p.disp, loc: p.loc };
+        if (p.disp) prodDisp[p.p] = p.disp;
+      });
+      runs.push({ ts: o.ts, totals: o.totals || {}, prodMap, baseline: curBaseline });
+    } else if (o.t === 'lot') {
+      const key = [o.p, o.loc, o.sheet, o.lot].join('');
+      const existed = Object.prototype.hasOwnProperty.call(lotState, key);
+      const prev = lotState[key] || { s: 0, r: 0, u: 0, inc: 0, dum: 0 };
+      if (o.gone) {
+        events.push({ ts: o.ts, p: o.p, loc: o.loc, sheet: o.sheet, lot: o.lot,
+          ds: -prev.s, dr: -prev.r, du: 0, s: 0, r: 0, u: prev.u, gone: 1, baseline: curBaseline });
+        delete lotState[key];
+      } else {
+        const ns = { s: o.s || 0, r: o.r || 0, u: o.u || 0, inc: o.inc || 0, dum: o.dum || 0 };
+        events.push({ ts: o.ts, p: o.p, loc: o.loc, sheet: o.sheet, lot: o.lot, arr: o.arr,
+          s: ns.s, r: ns.r, u: ns.u, inc: ns.inc, dum: ns.dum,
+          ds: ns.s - prev.s, dr: ns.r - prev.r, du: ns.u - prev.u,
+          prevInc: prev.inc, isNew: !existed, baseline: curBaseline });
+        lotState[key] = ns;
+      }
+    }
+  });
+  return { runs, events, prodDisp, baselineTs };
+}
+
+function trendUniqueGroups() {
+  const seen = new Set(), out = [];
+  trendState.runs.forEach(r => Object.keys(r.prodMap).forEach(praw => {
+    const g = trendGroupLabel(praw);
+    if (!seen.has(g)) { seen.add(g); out.push(g); }
+  }));
+  return out;
+}
+function trendUniqueProducts() {
+  const seen = new Set(), out = [];
+  trendState.runs.forEach(r => Object.keys(r.prodMap).forEach(praw => {
+    if (!seen.has(praw)) { seen.add(praw); out.push({ praw, disp: trendState.prodDisp[praw] || praw }); }
+  }));
+  out.sort((a, b) => (a.disp || '').localeCompare(b.disp || '', 'ja'));
+  return out;
+}
+
+function trendPopulatePick() {
+  const scope = document.getElementById('trend-scope').value;
+  const pick = document.getElementById('trend-pick');
+  if (scope === 'all') { pick.hidden = true; pick.innerHTML = ''; return; }
+  pick.hidden = false;
+  let opts = '';
+  if (scope === 'group') opts = trendUniqueGroups().map(g => `<option value="${escape(g)}">${escape(g)}</option>`).join('');
+  else opts = trendUniqueProducts().map(p => `<option value="${escape(p.praw)}">${escape(p.disp)}</option>`).join('');
+  pick.innerHTML = opts;
+}
+
+// 選択スコープ×メトリクスから系列を作る
+function trendBuildSeries() {
+  const scope = document.getElementById('trend-scope').value;
+  const sel = document.getElementById('trend-pick').value;
+  const metrics = [];
+  if (document.getElementById('trend-m-stock').checked) metrics.push({ key: 'stock', label: '実在庫', color: TREND_COL.stock });
+  if (document.getElementById('trend-m-resv').checked)  metrics.push({ key: 'resv',  label: '予約',   color: TREND_COL.resv });
+  if (document.getElementById('trend-m-inc').checked)   metrics.push({ key: 'inc',   label: '入荷予定', color: TREND_COL.inc });
+  if (!metrics.length) metrics.push({ key: 'stock', label: '実在庫', color: TREND_COL.stock });
+
+  const valAt = (run, key) => {
+    if (scope === 'all') {
+      const t = run.totals || {};
+      return key === 'stock' ? (t.stock || 0) : key === 'resv' ? (t.reserved || 0) : (t.incoming || 0);
+    }
+    let sum = 0;
+    for (const praw in run.prodMap) {
+      if (scope === 'group' && trendGroupLabel(praw) !== sel) continue;
+      if (scope === 'product' && praw !== sel) continue;
+      const e = run.prodMap[praw];
+      sum += key === 'stock' ? e.s : key === 'resv' ? e.r : e.inc;
+    }
+    return sum;
+  };
+  const series = metrics.map(m => ({
+    label: m.label, color: m.color,
+    pts: trendState.runs.map((run, i) => ({ i, y: valAt(run, m.key) })),
+  }));
+  return { series, runs: trendState.runs };
+}
+
+function trendChart(built) {
+  const runs = built.runs, n = runs.length;
+  const box = document.getElementById('trend-chart');
+  if (!n) { box.innerHTML = '<div style="padding:20px;color:#888">データがありません</div>'; return; }
+  const W = 920, H = 340, L = 52, R = 18, T = 26, B = 50;
+  const pw = W - L - R, ph = H - T - B;
+  let maxY = 0;
+  built.series.forEach(s => s.pts.forEach(p => { if (p.y > maxY) maxY = p.y; }));
+  if (maxY <= 0) maxY = 1;
+  maxY = Math.ceil(maxY * 1.1 / 5) * 5 || 5;
+  const xAt = i => n === 1 ? L + pw / 2 : L + (i / (n - 1)) * pw;
+  const yAt = v => T + ph - (v / maxY) * ph;
+
+  // 同一日が複数ある時は時刻付き
+  const dateCount = {};
+  runs.forEach(r => { const d = trendFmtDate(r.ts, false); dateCount[d] = (dateCount[d] || 0) + 1; });
+  const xLabel = r => { const d = trendFmtDate(r.ts, false); return dateCount[d] > 1 ? trendFmtDate(r.ts, true) : d; };
+  const showEvery = n > 16 ? Math.ceil(n / 16) : 1;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img">`;
+  // y グリッド＋目盛
+  for (let g = 0; g <= 5; g++) {
+    const v = maxY * g / 5, y = yAt(v);
+    svg += `<line class="tc-grid" x1="${L}" y1="${y.toFixed(1)}" x2="${W - R}" y2="${y.toFixed(1)}"/>`;
+    svg += `<text class="tc-ylab" x="${L - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end">${Math.round(v)}</text>`;
+  }
+  // x 軸＋ラベル
+  svg += `<line class="tc-axis" x1="${L}" y1="${T + ph}" x2="${W - R}" y2="${T + ph}"/>`;
+  runs.forEach((r, i) => {
+    if (i % showEvery !== 0 && i !== n - 1) return;
+    const x = xAt(i);
+    svg += `<text class="tc-xlab" x="${x.toFixed(1)}" y="${T + ph + 18}" text-anchor="middle">${escape(xLabel(r))}</text>`;
+  });
+  // 系列(折れ線＋点)
+  built.series.forEach(s => {
+    const pts = s.pts.map(p => `${xAt(p.i).toFixed(1)},${yAt(p.y).toFixed(1)}`).join(' ');
+    svg += `<polyline class="tc-line" stroke="${s.color}" points="${pts}"/>`;
+    s.pts.forEach(p => {
+      svg += `<circle class="tc-dot" cx="${xAt(p.i).toFixed(1)}" cy="${yAt(p.y).toFixed(1)}" r="3.5" fill="${s.color}"><title>${escape(xLabel(runs[p.i]))} ${s.label} ${p.y}</title></circle>`;
+    });
+  });
+  // 凡例
+  let lx = L;
+  built.series.forEach(s => {
+    svg += `<circle cx="${lx}" cy="14" r="5" fill="${s.color}"/>`;
+    svg += `<text class="tc-legend" x="${lx + 10}" y="18" fill="${s.color}">${escape(s.label)}</text>`;
+    lx += 30 + s.label.length * 14;
+  });
+  svg += `</svg>`;
+  box.innerHTML = svg;
+}
+
+function trendClassify(e) {
+  if (e.gone) return { cls: 'gone', label: '消滅' };
+  if (e.isNew) return { cls: 'new', label: '新規' };
+  if (e.prevInc === 1 && e.inc === 0) return { cls: 'arr', label: '入荷確定' };
+  if (e.inc === 1 && e.ds > 0) return { cls: 'inc', label: '入荷予定' };
+  if (e.ds < 0) return { cls: 'use', label: '消費/出庫' };
+  if (e.ds > 0) return { cls: 'arr', label: '入庫' };
+  if (e.dr !== 0) return { cls: 'resv', label: '予約変更' };
+  return { cls: 'resv', label: '変更' };
+}
+
+function trendDelta() {
+  const scope = document.getElementById('trend-scope').value;
+  const sel = document.getElementById('trend-pick').value;
+  const box = document.getElementById('trend-delta');
+  let evs = trendState.events.filter(e => !e.baseline);   // ベースライン(初期状態)は変動ではない
+  if (scope === 'group')   evs = evs.filter(e => trendGroupLabel(e.p) === sel);
+  if (scope === 'product') evs = evs.filter(e => e.p === sel);
+  // 実在庫か予約が動いたものだけ(使用済uだけの増減は在庫数不変なので除外)
+  evs = evs.filter(e => e.ds !== 0 || e.dr !== 0 || e.gone);
+  evs.sort((a, b) => (a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : (Math.abs(b.ds) + Math.abs(b.dr)) - (Math.abs(a.ds) + Math.abs(a.dr))));
+  document.getElementById('trend-delta-sub').textContent = `全 ${evs.length} 件`;
+  if (!evs.length) { box.innerHTML = '<div style="padding:14px;color:#888">この対象・期間に在庫の増減はありません。</div>'; return; }
+  const dCell = v => v === 0 ? '<td class="num">-</td>' : `<td class="num ${v > 0 ? 'dp' : 'dm'}">${v > 0 ? '+' : ''}${v}</td>`;
+  const shown = evs.slice(0, trendState.deltaLimit);
+  let html = '<table><thead><tr><th>日時</th><th>製品</th><th>ロット</th><th class="num">実在庫Δ</th><th class="num">予約Δ</th><th>種別</th><th>シート</th></tr></thead><tbody>';
+  shown.forEach(e => {
+    const c = trendClassify(e);
+    const disp = trendState.prodDisp[e.p] || e.p;
+    html += `<tr><td>${escape(trendFmtDate(e.ts, true))}</td><td>${escape(disp)}</td><td>${escape(e.lot || '')}</td>`
+      + dCell(e.ds) + dCell(e.dr)
+      + `<td><span class="ev ${c.cls}">${c.label}</span></td><td style="color:#888">${escape(e.sheet || '')}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  if (evs.length > shown.length) html += `<div class="tdmore" onclick="trendState.deltaLimit+=500;trendDelta()">▼ さらに表示 (残り ${evs.length - shown.length} 件)</div>`;
+  box.innerHTML = html;
+}
+
+function trendRender() {
+  if (!trendState.loaded) return;
+  const runs = trendState.runs;
+  const rangeEl = document.getElementById('trend-range');
+  if (runs.length) {
+    rangeEl.textContent = `${trendFmtDate(runs[0].ts, false)} 〜 ${trendFmtDate(runs[runs.length - 1].ts, false)} ・ ${runs.length}時点`;
+  }
+  trendChart(trendBuildSeries());
+  trendDelta();
+}
+
+function trendLoadText(text, name) {
+  const parsed = trendParse(text);
+  if (!parsed.runs.length) { alert('履歴データ(run行)が見つかりませんでした。ファイル形式をご確認ください。'); return; }
+  trendState.runs = parsed.runs;
+  trendState.events = parsed.events;
+  trendState.prodDisp = parsed.prodDisp;
+  trendState.baselineTs = parsed.baselineTs;
+  trendState.loaded = true;
+  trendState.deltaLimit = 200;
+  document.getElementById('trend-empty').hidden = true;
+  document.getElementById('trend-main').hidden = false;
+  document.getElementById('trend-count').textContent = `${parsed.runs.length}時点`;
+  trendPopulatePick();
+  trendRender();
+}
+
+(function trendWire() {
+  const fileInput = document.getElementById('trend-file');
+  if (!fileInput) return;
+  fileInput.addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => trendLoadText(String(rd.result || ''), f.name);
+    rd.readAsText(f, 'utf-8');
+    fileInput.value = '';
+  });
+  ['trend-scope'].forEach(id => document.getElementById(id).addEventListener('change', () => { trendPopulatePick(); trendRender(); }));
+  ['trend-pick', 'trend-m-stock', 'trend-m-resv', 'trend-m-inc'].forEach(id =>
+    document.getElementById(id).addEventListener('change', trendRender));
+  // ドラッグ&ドロップ
+  const pane = document.getElementById('tab-trend');
+  const empty = document.getElementById('trend-empty');
+  pane.addEventListener('dragover', e => { e.preventDefault(); empty.classList.add('dragover'); });
+  pane.addEventListener('dragleave', e => { if (e.target === pane) empty.classList.remove('dragover'); });
+  pane.addEventListener('drop', e => {
+    e.preventDefault(); empty.classList.remove('dragover');
+    const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => trendLoadText(String(rd.result || ''), f.name);
+    rd.readAsText(f, 'utf-8');
+  });
+  // 在庫推移タブは既定で非表示(SHOW_TREND_TAB=false)。trueにすると再表示。
+  if (!SHOW_TREND_TAB) {
+    const tb = document.querySelector('.tab[data-tab="trend"]'); if (tb) tb.style.display = 'none';
+    const tp = document.getElementById('tab-trend'); if (tp) tp.style.display = 'none';
+  }
+})();
 
 // v5.28: 開いているメニュー(ウエハ/基板のシリーズ・品名カード)をすべて閉じる
 window.collapseAllMenus = function() {
@@ -4737,7 +5098,8 @@ function cleanText(v) {
 // v5.33: 日付セル内の「未確定マーカー」= 予定日であって実到着ではない。
 //   例 "2026/1/14予定?" → 日付は取り出すが isPlanned=true にして、
 //   その日が過去でも「確定到着(現有在庫)」に倒さず入荷予定のまま扱う。
-function hasPlannedMarker(s) { return /予定|未定|見込|入荷待ち|[?？]/.test(String(s || '')); }
+// v5.82: 「上旬/中旬/下旬(旬)」「頃/ごろ」も未確定マーカーに追加 (製造中で確定日なし → 入荷予定)
+function hasPlannedMarker(s) { return /予定|未定|見込|入荷待ち|旬|頃|ごろ|[?？]/.test(String(s || '')); }
 function parseDate(v) {
   if (v === null || v === undefined || v === '') return { disp: '', dt: null, hasWildcard: false, isFuture: false, isEmpty: true, isPlanned: false };
   if (v instanceof Date) return { disp: v.toISOString().substring(0,10), dt: v, hasWildcard: false, isFuture: v.getTime() > TODAY.getTime(), isEmpty: false, isPlanned: false };
@@ -5161,6 +5523,39 @@ function findSlotBlocks(ws, slotCol) {
   return blocks;
 }
 
+// v5.82: 1つのslotブロックに複数の入荷日(確定日/予定/上旬 等)が混在する場合、
+//   入荷日ごとにサブブロックへ分割する。これにより「完成待ち」シートで、
+//   確定到着分=現有在庫 / 上旬・予定分=入荷予定 を正しく振り分けられる。
+//   境界(入荷日セル)が1つ以下なら分割しない=通常ロットは従来通り(回帰なし)。
+function isArrivalCell(ws, r, arrivalCol) {
+  const v = ws.getCell(r, arrivalCol).value;
+  if (v === null || v === undefined || v === '') return false;
+  if (v instanceof Date) return true;
+  if (typeof v === 'number' && v > 30000 && v < 60000) return true;
+  const s = cleanText(v);
+  if (!s) return false;
+  if (hasPlannedMarker(s)) return true;                  // 予定/未定/見込/入荷待ち/旬/頃/?
+  if (s.includes('*') && /\d/.test(s)) return true;      // ワイルドカード 2026/*/*
+  if (/^\d{4}([\/\-.]\d{1,2}([\/\-.]\d{1,2})?)?\s*$/.test(s)) return true;  // YYYY(/MM(/DD))
+  if (/^\d{4}年/.test(s)) return true;                   // YYYY年…
+  return false;
+}
+function splitBlocksByArrival(ws, blocks, arrivalCol) {
+  if (!arrivalCol) return blocks;
+  const out = [];
+  for (const b of blocks) {
+    const bounds = [];
+    for (let r = b.start; r <= b.end; r++) if (isArrivalCell(ws, r, arrivalCol)) bounds.push(r);
+    if (bounds.length <= 1) { out.push(b); continue; }   // 入荷日が1つ以下 → 分割せず従来通り
+    for (let i = 0; i < bounds.length; i++) {
+      const start = (i === 0) ? b.start : bounds[i];      // 先頭の余り行は最初のサブに含める
+      const end = (i + 1 < bounds.length) ? bounds[i + 1] - 1 : b.end;
+      if (end >= start) out.push({ start, end });
+    }
+  }
+  return out;
+}
+
 /* ============================================================ ファイル分析 ============================================================ */
 
 // 基板用: WALTS_SubstrateScanner を ExcelJS Workbook 経由で呼ぶラッパー
@@ -5301,8 +5696,12 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
     // v5.24: 「開発品」シートは白slotも含め全て使用済扱い (在庫・予約にしない)
     const sheetIsDev = /開発品/.test(sn);
     const emptyRows = emptyNoteRows(ws, cols.slot);  // v5.31: 横長大結合(注文/未入荷メモ)が被る空スロット行
-    const blocks = findSlotBlocks(ws, cols.slot);
-    
+    // v5.82: 1ブロックに複数の入荷日が混在する場合は入荷日ごとに分割 (完成待ち等)。
+    //   ただし工程分割(FC150/ITO 等 splitCfg)は独自の加工日ロジックを持つため対象外(回帰回避)。
+    const blocks = splitCfg
+      ? findSlotBlocks(ws, cols.slot)
+      : splitBlocksByArrival(ws, findSlotBlocks(ws, cols.slot), cols['入荷日']);
+
     for (const block of blocks) {
       const { start, end } = block;
       let lotName = '';
@@ -5973,7 +6372,7 @@ const CACHE_STORE = 'inventory_cache';
 const CACHE_VERSION = 1;
 // 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
 // (キャッシュ全クリアになる)
-const CACHE_SCHEMA_VERSION = 'v5.78-mask-sheet-jump-2026-09-08';
+const CACHE_SCHEMA_VERSION = 'v5.82-arrival-split-2026-09-14';
 
 
 
