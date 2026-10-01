@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<title>WALTS 在庫管理ツール v5.49</title>
+<title>WALTS 在庫管理ツール v5.51</title>
 <style>
   :root {
     --bg: #eceef1;
@@ -2938,7 +2938,7 @@ table.history-table .h-stock { font-size: 16px; }
 <div class="app">
 
   <header class="top">
-    <h1>WALTS 在庫管理ツール <span class="sub">v5.49</span></h1>
+    <h1>WALTS 在庫管理ツール <span class="sub" id="app-ver">v5.51</span></h1>
     <div class="index-info-wrap" id="changes-box">
       <div class="changes-box" id="changes-display">
         <div class="lbl">📂 SharePoint との同期</div>
@@ -3274,9 +3274,10 @@ function setOrder(key, data) {
 //  ・CHANGELOG は「内部ビルドの細かい記録」(v5.7〜)。開発の全手順を残す。
 //  ・画面/社内向けには v5.41 以前(社内既知)はそのまま個別表示し、v5.42 以降の
 //    細かい更新を 5件ずつ束ねて「公開Rev v5.42〜」に採番して表示する(buildPublicChangelog)。
-//    → 社内で 41 だった版が急に 78 に飛ばず、5件ごとに +1 だけ増える(現在の公開版=v5.49)。
-//  ・そのため title/h1 は「公開版(v5.49)」、CHANGELOG 先頭は「内部ビルド(v5.79)」で数字が異なる。
-//    次の変更でも内部は v5.80… と刻み、5件たまるごとに公開版が +1 される。
+//    → 社内で 41 だった版が急に 89 に飛ばず、5件ごとに +1 だけ増える(公開版 = 41 + グループ数)。
+//  ・title/h1 の版数は renderChangelog() が buildPublicChangelog()[0] の公開Revに自動同期する
+//    (#app-ver と document.title)。HTMLの静的値は初期表示用のフォールバック。
+//    → 内部ビルドを刻むだけで公開版は自動で追従し、手動更新漏れによるズレが起きない。
 // ============================================================
 const CHANGELOG = [
   { v: 'v5.89', date: '2026-10-01', text: 'シリーズ帯の危険/警告バッジの並び順を規定: ①危険 ②警告 ③危険＋入荷予定 ④警告＋入荷予定(入荷予定ありはハッチング)。各区分の中は製品の並び順。入荷予定の無い要手当て品(危険→警告)が前、入荷予定で回復予定の品が後ろにまとまる。表示のみ(数え方は不変)' },
@@ -3411,6 +3412,12 @@ function renderChangelog() {
   const PUB = buildPublicChangelog();
   const latest = PUB[0];
   const past = PUB.slice(1);
+  // v5.90: ヘッダーの版数を公開Revの最新に自動同期(手動更新漏れでタイトルとズレないように)
+  if (latest && latest.v) {
+    const vs = document.getElementById('app-ver');
+    if (vs) vs.textContent = latest.v;
+    document.title = 'WALTS 在庫管理ツール ' + latest.v;
+  }
   const elLatest = document.getElementById('cl-latest');
   const elPast = document.getElementById('cl-past');
   const elToggle = document.getElementById('cl-toggle');
