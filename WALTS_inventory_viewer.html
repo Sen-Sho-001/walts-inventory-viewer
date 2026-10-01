@@ -615,14 +615,40 @@
     padding: 12px 16px;
     border-left: 8px solid var(--ink);
     background: #e5e7eb;
-    cursor: pointer;
+    cursor: default;       /* v5.86: 全体では開閉しない。開閉は gh-top(メイン名)のみ */
     user-select: none;
     transition: background 0.15s;
   }
-  .group-header:hover { background: #d8dadf; }
+  /* v5.86: メイン名行クリックでグループ全件開閉 */
   .group-header .gh-top {
     display: flex; align-items: center; gap: 14px;
+    cursor: pointer; border-radius: 6px; transition: background 0.15s;
   }
+  .group-header .gh-top:hover { background: #d8dadf; }
+  /* v5.86: 警告/危険バッジはクリックでその製品のみ表示 */
+  .gh-alert-clk { cursor: pointer; transition: filter .12s, transform .12s, box-shadow .12s; }
+  .gh-alert-clk:hover { filter: brightness(0.97); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+  /* v5.88: 入荷予定で在庫回復予定の品 = 斜めハッチングを重ねて「手当て済み(入荷待ち)」を示す。
+     .group-header .gh-alert の background(ショートハンド)に負けないよう詳細度を上げ、色は下地を活かし
+     background-image だけ重ねる。 */
+  .group-header .gh-alert.gh-alert-recover,
+  .sgroup-header-wrap .gh-alert.gh-alert-recover,
+  .group-header .gh-alert.warn.gh-alert-recover,
+  .sgroup-header-wrap .gh-alert.warn.gh-alert-recover {
+    background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.10) 0 5px, rgba(0,0,0,0) 5px 11px);
+    opacity: 0.92;
+  }
+  /* v5.86: 1製品フォーカス中の案内バー */
+  .focus-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin: 4px 0 10px; padding: 6px 12px; font-size: 13px;
+    background: #fff7e6; border: 1px solid #f0d9a8; border-radius: 8px; color: #7a5a13;
+  }
+  .focus-clear {
+    cursor: pointer; border: 1px solid #c9a24a; background: #fff; color: #7a5a13;
+    border-radius: 6px; padding: 3px 10px; font-size: 12px; font-weight: 700;
+  }
+  .focus-clear:hover { background: #fdf3dc; }
   .group-header .gtoggle {
     display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px;
@@ -1313,9 +1339,9 @@ h1 .sub { font-size: 14px; font-weight: 400; color: var(--ink-dim); margin-left:
 
 /* ===== v5.81: 在庫「推移」タブ ===== */
 #tab-trend { padding: 4px 2px 40px; }
-.trend-empty { max-width: 640px; margin: 40px auto; text-align: center; color: var(--ink-dim); }
+.trend-empty { max-width: 640px; margin: 40px auto; text-align: center; color: #c3ccd8; }
 .trend-empty .te-icon { font-size: 46px; }
-.trend-empty .te-title { font-size: 18px; font-weight: 800; color: var(--ink); margin: 6px 0 10px; }
+.trend-empty .te-title { font-size: 18px; font-weight: 800; color: #eef2f7; margin: 6px 0 10px; }
 .trend-empty p { font-size: 14px; line-height: 1.7; margin: 8px 0; }
 .trend-empty code { background: #eef1f5; padding: 1px 6px; border-radius: 4px; font-size: 13px; }
 .trend-empty .te-hint { font-size: 12px; color: var(--ink-dim); }
@@ -1346,8 +1372,32 @@ h1 .sub { font-size: 14px; font-weight: 400; color: var(--ink-dim); margin-left:
 .tc-line { fill: none; stroke-width: 2.5; }
 .tc-dot { stroke: #fff; stroke-width: 1.5; }
 .tc-legend { font-size: 13px; font-weight: 700; }
-.trend-delta-head { font-size: 15px; font-weight: 800; color: var(--ink); margin: 18px 2px 8px; }
-.trend-delta-head #trend-delta-sub { font-size: 12px; font-weight: 400; color: var(--ink-dim); margin-left: 8px; }
+/* v5.83: 濃紺の本体背景に載るのでヘッダー等は明色に */
+.trend-delta-head { font-size: 15px; font-weight: 800; color: #eef2f7; margin: 18px 2px 8px; }
+.trend-delta-head #trend-delta-sub { font-size: 12px; font-weight: 400; color: #b6c1d0; margin-left: 8px; }
+#trendb-forecast, #trendb-scenario, #trendb-monthly-table { color: var(--ink); }
+/* 日付軸トグル(発注日/納品日/検収日) */
+.tb-axistoggle { margin-left: 10px; font-weight: 400; }
+.tb-axistoggle .tb-axis { font-size: 12px; padding: 2px 10px; border: 1px solid #48597a; cursor: pointer; color: #cfd8e4; background: #2c3e57; }
+.tb-axistoggle .tb-axis:first-child { border-radius: 6px 0 0 6px; }
+.tb-axistoggle .tb-axis:not(:first-child) { border-left: none; }
+.tb-axistoggle .tb-axis:last-child { border-radius: 0 6px 6px 0; }
+.tb-axistoggle .tb-axis.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* 顧客凡例 */
+.tb-custlegend { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 8px 2px; font-size: 11px; }
+.tb-custlegend span { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-dim); }
+.tb-custlegend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+/* 月次×顧客テーブル */
+#trendb-monthly-table { overflow-x: auto; margin-top: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+#trendb-monthly-table table { border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+#trendb-monthly-table th, #trendb-monthly-table td { padding: 3px 7px; border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
+#trendb-monthly-table th:first-child, #trendb-monthly-table td:first-child { text-align: left; position: sticky; left: 0; background: var(--panel); z-index: 1; }
+#trendb-monthly-table thead th { background: #f2f5f8; color: var(--ink-dim); font-weight: 700; position: sticky; top: 0; }
+#trendb-monthly-table tr.tt-total td { font-weight: 800; background: #f7f9fb; }
+#trendb-monthly-table tr.tt-in td { color: #7a53c9; font-weight: 700; }
+#trendb-monthly-table td.z { color: #ccd2da; }
+#trendb-monthly-table .tt-cust { display: inline-flex; align-items: center; gap: 5px; }
+#trendb-monthly-table .tt-cust i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
 #trend-delta table { width: 100%; border-collapse: collapse; font-size: 13px; }
 #trend-delta th, #trend-delta td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 #trend-delta th { background: #f2f5f8; color: var(--ink-dim); font-weight: 700; position: sticky; top: 0; }
@@ -1363,6 +1413,60 @@ h1 .sub { font-size: 14px; font-weight: 400; color: var(--ink-dim); margin-left:
 #trend-delta .ev.gone { background: #eef0f2; color: #6b7280; }
 #trend-delta .tdmore { text-align: center; color: var(--accent); cursor: pointer; padding: 8px; font-size: 13px; }
 #trend-delta .tdmore:hover { text-decoration: underline; }
+
+/* v5.83: Track B(消費分析)由来の詳細推移 */
+.trendb-chart { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 6px 4px; overflow-x: auto; }
+.trendb-chart svg { display: block; width: 100%; height: auto; }
+.trendb-banner { flex-basis: 100%; width: 100%; background: #eef3fb; border: 1px solid #bcd2ee; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #2c4a70; line-height: 1.6; margin-bottom: 4px; }
+#trendb-forecast { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+#trendb-forecast .fc-card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; min-width: 120px; }
+#trendb-forecast .fc-card .fc-lbl { font-size: 11px; color: var(--ink-dim); font-weight: 700; }
+#trendb-forecast .fc-card .fc-val { font-size: 20px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+#trendb-forecast .fc-card .fc-sub { font-size: 11px; color: var(--ink-dim); }
+#trendb-forecast .fc-card.alert { border-color: #e0b4b4; background: #fdf1f0; }
+#trendb-forecast .fc-card.alert .fc-val { color: #c9402f; }
+#trendb-forecast .fc-card.warn { border-color: #e8d3a0; background: #fdf8ec; }
+#trendb-forecast .fc-card.ok .fc-val { color: #1f8a4c; }
+.tb-bar { fill: #2d6cc0; }
+.tb-bar:hover { fill: #1f52a0; }
+.tb-modetoggle { margin-left: 10px; font-weight: 400; }
+.tb-modetoggle .tb-mode { font-size: 12px; padding: 2px 10px; border: 1px solid var(--line); cursor: pointer; color: var(--ink-dim); background: #fff; }
+.tb-modetoggle .tb-mode:first-child { border-radius: 6px 0 0 6px; }
+.tb-modetoggle .tb-mode:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+.tb-modetoggle .tb-mode.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.tb-lotlegend { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 8px 2px; font-size: 11px; }
+.tb-lotlegend span { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-dim); }
+.tb-lotlegend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+/* v5.83: 分析タブ 表示スイッチ (最下部) */
+.trend-switch { max-width: 1000px; margin: 20px auto 30px; padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid #3a4c6a; border-radius: 8px; }
+.trend-switch .tsw { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #dfe6ef; cursor: pointer; }
+.trend-switch .tsw input { width: 16px; height: 16px; cursor: pointer; }
+.trend-switch .tsw-note { font-size: 12px; color: #9fb0c6; margin-top: 6px; line-height: 1.6; }
+.trend-switch code { background: rgba(255,255,255,0.12); color: #e6ecf3; padding: 1px 6px; border-radius: 4px; }
+/* v5.83①: 枯渇予測シナリオ */
+#trendb-scenario { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin: 4px 0 10px; }
+#trendb-scenario .sc-head { font-size: 14px; font-weight: 800; color: #556a1f; margin-bottom: 8px; }
+#trendb-scenario .sc-lead { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 10px; }
+#trendb-scenario .sc-lead input { width: 54px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; text-align: right; }
+#trendb-scenario .sc-rates { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+#trendb-scenario .sc-rate { border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; background: #fff; text-align: center; min-width: 92px; }
+#trendb-scenario .sc-rate:hover { border-color: var(--accent); }
+#trendb-scenario .sc-rate.active { background: #eaf1fb; border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+#trendb-scenario .sc-rate .sr-lbl { font-size: 12px; color: var(--ink-dim); }
+#trendb-scenario .sc-rate .sr-val { font-size: 15px; font-weight: 800; color: var(--ink); }
+#trendb-scenario .sc-rate.active .sr-val { color: var(--accent); }
+#trendb-scenario .sc-step { padding: 8px 10px; border-left: 3px solid #cdd8bb; background: #fafbf7; border-radius: 4px; margin: 6px 0; font-size: 13px; line-height: 1.6; }
+#trendb-scenario .sc-step b { font-size: 15px; }
+#trendb-scenario .sc-step .sc-em { color: var(--accent); font-weight: 800; }
+#trendb-scenario .sc-step .sc-alert { color: #c9402f; font-weight: 800; }
+#trendb-events table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#trendb-events th, #trendb-events td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+#trendb-events th { background: #f2f5f8; color: var(--ink-dim); font-weight: 700; }
+#trendb-events td.num { text-align: right; font-variant-numeric: tabular-nums; }
+#trendb-events .ev-in  { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 10px; background: #e9f2fb; color: #2d6cc0; }
+#trendb-events .ev-out { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 10px; background: #fdeceb; color: #c9402f; }
+#trendb-events .ev-future { color: #7a53c9; font-size: 11px; margin-left: 4px; }
+#trendb-events .tdmore { text-align: center; color: var(--accent); cursor: pointer; padding: 8px; font-size: 13px; }
 
 /* コントロールバー */
 .controls {
@@ -2395,6 +2499,7 @@ table.history-table .h-stock { font-size: 16px; }
     const records = [];
     if (ws.rowCount < 5) return records;
     let lastDateIso = '';
+    let lastLotSeen = '';   // v5.31: 同一シート内で直前に出現した非空Lot(空Lot行の引き継ぎ用)
     let r = 5;
     while (r <= ws.rowCount) {
       const dateV = getCellValue(ws, r, colMap.date);
@@ -2437,6 +2542,19 @@ table.history-table .h-stock { font-size: 16px; }
         effectiveIso = lastDateIso;
       }
 
+      // v5.31: 廃棄行は在庫を減らす操作だが、台帳では廃棄数量を入庫列に誤記入し在庫数量列だけ
+      //   手で0にしている例がある(FBW等)。そのまま読むと入荷として在庫が増えるので、
+      //   「廃棄/破棄」を含む行の入庫は入荷として数えない(実残は在庫数量列＝後段のロット調整で反映)。
+      const isWriteoff = /廃棄|破棄|廃却/.test(String(compT || '') + ' ' + String(compB || '') + ' ' + String(dateV || ''));
+      const inQtyEff = isWriteoff ? 0 : parseInQty(inV);
+      const inQ = inQtyEff;
+      const outQ = cellToNumber(saleV) + cellToNumber(procV) + cellToNumber(smpV);
+      // v5.31: Lot欄が空の取引行は、同一シート内の直前の非空Lotを引き継ぐ(未帰属出庫の誤配分を防ぐ)。
+      let lotNorm = normalizeText(lotV);
+      const lot2Norm = normalizeText(lotB);
+      if (!lotNorm && !lot2Norm && (inQ > 0 || outQ > 0) && lastLotSeen) lotNorm = lastLotSeen;
+      if (normalizeText(lotV)) lastLotSeen = normalizeText(lotV);
+
       records.push({
         sheet:      sheetName,
         row:        r,
@@ -2444,9 +2562,10 @@ table.history-table .h-stock { font-size: 16px; }
         date_iso:   effectiveIso,
         company:    normalizeText(compT),
         note:       normalizeText(compB),
-        lot:        normalizeText(lotV),
+        lot:        lotNorm,
         lot2:       normalizeText(lotB),
-        in_qty:     parseInQty(inV),
+        in_qty:     inQtyEff,
+        writeoff:   isWriteoff || undefined,
         out_sale:   cellToNumber(saleV),
         out_proc:   cellToNumber(procV),
         out_sample: cellToNumber(smpV),
@@ -2516,14 +2635,14 @@ table.history-table .h-stock { font-size: 16px; }
     const lotsMap = new Map();
     const order = [];
     const knownOrder = [];  // フル形式ロットの出現順 (省略形解決用)
-    const ensure = (lot) => {
+    const ensure = (lot, sheet) => {
       if (!lotsMap.has(lot)) {
-        lotsMap.set(lot, { in_total: 0, out_total: 0, sample_total: 0, first_in_iso: null, last_in_iso: null, estimated: false });
+        lotsMap.set(lot, { in_total: 0, out_total: 0, sample_total: 0, first_in_iso: null, last_in_iso: null, estimated: false, sheet: sheet || '' });
         order.push(lot);
       }
       return lotsMap.get(lot);
     };
-    let unattributedOut = 0;  // v5.26: Lot未記載の出庫・サンプル合計
+    const unattributedBySheet = new Map();  // v5.31: Lot未記載の出庫・サンプルをシート別に集計
     for (const rec of history) {
       // v5.26: 下段行のLot記載を結合 (同一文字列=セル結合の重複は無視)
       let rawLot = rec.lot || '';
@@ -2532,7 +2651,8 @@ table.history-table .h-stock { font-size: 16px; }
       }
       let entries = parseLotEntries(rawLot);
       if (!entries.length) {
-        unattributedOut += rec.out_sale + rec.out_proc + rec.out_sample;
+        const q = rec.out_sale + rec.out_proc + rec.out_sample;
+        unattributedBySheet.set(rec.sheet, (unattributedBySheet.get(rec.sheet) || 0) + q);
         continue;
       }
       // 省略形解決 → フルロットを既知リストへ登録
@@ -2575,7 +2695,7 @@ table.history-table .h-stock { font-size: 16px; }
       const procs = alloc(rec.out_proc);
       const smps  = alloc(rec.out_sample);
       entries.forEach((e, i) => {
-        const d = ensure(e.lot);
+        const d = ensure(e.lot, rec.sheet);
         d.in_total     += ins[i];
         d.out_total    += sales[i] + procs[i];
         d.sample_total += smps[i];
@@ -2598,44 +2718,47 @@ table.history-table .h-stock { font-size: 16px; }
         first_in_iso: d.first_in_iso,
         last_in_iso:  d.last_in_iso,
         estimated:    d.estimated,
+        sheet:        d.sheet,
       };
     });
-    // v5.25: マイナス残ロット(出庫の帰属ズレ)を古い正残ロットからFIFOで相殺
-    // 例: 0001が-19 / 0002が+19 → 0002から19を引き両方0にする (合計は不変)
     const byOldest = (a, b) => {
       const ka = a.last_in_iso || '0000-00-00';
       const kb = b.last_in_iso || '0000-00-00';
       return ka < kb ? -1 : (ka > kb ? 1 : 0);
     };
-    const negatives = res.filter(l => l.stock < 0);
-    if (negatives.length) {
-      const positives = res.filter(l => l.stock > 0).sort(byOldest);
-      for (const neg of negatives) {
-        let deficit = -neg.stock;
+    // v5.31: 相殺は「シート単位」で行う。1ファイルに旧製品/新製品シートが混在する場合、
+    //   旧シートの期首在庫消費(仕入前出庫でマイナス)や未記載出庫が、新シートのロットから
+    //   差し引かれて新製品在庫が過少になる汚染を防ぐ。
+    const sheetsInvolved = [...new Set(res.map(l => l.sheet))];
+    for (const sh of sheetsInvolved) {
+      const group = res.filter(l => l.sheet === sh);
+      const negatives = group.filter(l => l.stock < 0);
+      if (negatives.length) {
+        const positives = group.filter(l => l.stock > 0).sort(byOldest);
+        for (const neg of negatives) {
+          let deficit = -neg.stock;
+          for (const pos of positives) {
+            if (deficit <= 0) break;
+            if (pos.stock <= 0) continue;
+            const take = Math.min(pos.stock, deficit);
+            pos.stock -= take; neg.stock += take; deficit -= take;
+            pos.reconciled = true; neg.reconciled = true;
+          }
+        }
+      }
+      const ua = unattributedBySheet.get(sh) || 0;
+      if (ua > 0) {
+        const positives = group.filter(l => l.stock > 0).sort(byOldest);
+        let remain = ua;
         for (const pos of positives) {
-          if (deficit <= 0) break;
-          if (pos.stock <= 0) continue;
-          const take = Math.min(pos.stock, deficit);
-          pos.stock -= take;
-          neg.stock += take;
-          deficit   -= take;
-          pos.reconciled = true;
-          neg.reconciled = true;
+          if (remain <= 0) break;
+          const take = Math.min(pos.stock, remain);
+          pos.stock -= take; remain -= take; pos.reconciled = true;
         }
       }
     }
-    // v5.26: Lot未記載の出庫は「古い在庫から消費された」とみなしFIFOで控除
-    if (unattributedOut > 0) {
-      const positives = res.filter(l => l.stock > 0).sort(byOldest);
-      let remain = unattributedOut;
-      for (const pos of positives) {
-        if (remain <= 0) break;
-        const take = Math.min(pos.stock, remain);
-        pos.stock -= take;
-        remain    -= take;
-        pos.reconciled = true;
-      }
-    }
+    // 残ったマイナス(仕入前の期首在庫消費など、当シート内で相殺しきれない分)は0にクランプ
+    res.forEach(l => { if (l.stock < 0) { l.stock = 0; l.reconciled = true; } });
     return res;
   }
 
@@ -2717,12 +2840,19 @@ table.history-table .h-stock { font-size: 16px; }
     const pendingRecs   = allRecords.filter(r => r.is_pending);
     const confirmedRecs = allRecords.filter(r => !r.is_pending);
 
-    // 現有在庫 = 確定行のみの最終残
+    // 現有在庫 = アクティブなシート(最新の確定取引を持つシート)の最終確定残。
+    //   v5.31: 1ファイルに旧製品シートと新製品シートが混在すると、シート順の最後=旧シートの
+    //   終値(例: 0)を拾って新シートの在庫が無視される不具合があった。確定取引の日付が最新の
+    //   シートを「現行」とみなし、そのシートの最終残を現有在庫とする。
     let currentStock = 0;
     let lastTx = null;
     if (confirmedRecs.length) {
-      lastTx = confirmedRecs[confirmedRecs.length - 1];
-      currentStock = lastTx.stock;
+      const lastPerSheet = new Map();   // sheet → その最終確定レコード (confirmedRecsはシート順→row順)
+      confirmedRecs.forEach(rc => { lastPerSheet.set(rc.sheet, rc); });
+      for (const rec of lastPerSheet.values()) {
+        if (!lastTx || (rec.date_iso || '') > (lastTx.date_iso || '')) lastTx = rec;
+      }
+      currentStock = lastTx ? lastTx.stock : 0;
     }
 
     // 入荷予定・予約: 入荷予定=未確定の入庫合計 / 予約=未確定の出庫合計。
@@ -2743,6 +2873,23 @@ table.history-table .h-stock { font-size: 16px; }
     const reservedPending = reservedCurrent + reservedIncoming;
 
     const lots = aggregateLots(confirmedRecs);  // ロット別在庫は確定分のみ
+    // v5.31: ロット別在庫の合計を「現有在庫(在庫数量列=人手管理の実残)」に必ず一致させる。
+    //   基板台帳は廃棄を入庫列に誤記入したり、旧シートのロットに廃棄行が無い等で、ロット再構成
+    //   (入−出)が実残とズレる。実残(running balance)を正とし、過剰分は古いロットからFIFOで削り、
+    //   不足分は最新入荷ロットへ寄せて、ロット合計＝現有在庫 を保証する。
+    {
+      const byOldestL = (a, b) => ((a.last_in_iso || '0000-00-00') < (b.last_in_iso || '0000-00-00') ? -1 : 1);
+      const lotSum = lots.reduce((s, l) => s + (l.stock || 0), 0);
+      let diff = lotSum - currentStock;
+      if (diff > 0) {                                   // 過剰: 廃棄・未記録出庫 → 古いロットから削る
+        const pos = lots.filter(l => l.stock > 0).sort(byOldestL);
+        for (const l of pos) { if (diff <= 0) break; const t = Math.min(l.stock, diff); l.stock -= t; diff -= t; l.reconciled = true; }
+      } else if (diff < 0) {                             // 不足: 未記録入荷・パース欠落 → 最新入荷ロットへ寄せる
+        const cand = lots.filter(l => l.in_total > 0).sort(byOldestL);
+        const newest = cand.length ? cand[cand.length - 1] : (lots.length ? lots[lots.length - 1] : null);
+        if (newest) { newest.stock += -diff; newest.reconciled = true; }
+      }
+    }
     const { in_1y, out_1y, sample_1y } = compute1yTotals(confirmedRecs, fileModifiedDate);
     const primarySheet = sheetsProcessed.length ? sheetsProcessed[0].name : '';
 
@@ -2901,6 +3048,40 @@ table.history-table .h-stock { font-size: 16px; }
       <div class="trend-delta-head">📋 増減明細 <span id="trend-delta-sub"></span></div>
       <div id="trend-delta"></div>
     </div>
+    <!-- v5.83: 消費分析(Track B)由来の詳細推移 -->
+    <div id="trend-trackb" hidden>
+      <div class="trend-controls">
+        <label>種別: <select id="trendb-cat"></select></label>
+        <label>グループ: <select id="trendb-group"></select></label>
+        <label>製品: <select id="trendb-pick"></select></label>
+        <label>期間: <select id="trendb-range">
+          <option value="12">直近12ヶ月</option>
+          <option value="24" selected>直近24ヶ月</option>
+          <option value="36">直近36ヶ月</option>
+          <option value="0">全期間</option>
+        </select></label>
+        <span class="trend-range" id="trendb-note"></span>
+        <button type="button" class="trend-reload" onclick="document.getElementById('trend-file').click()">📁 別のデータ</button>
+      </div>
+      <div id="trendb-forecast"></div>
+      <div id="trendb-scenario"></div>
+      <div class="trend-delta-head">📉 在庫バーンダウン（過去の在庫推移）
+        <span class="tb-modetoggle">
+          <span class="tb-mode active" data-mode="lot" onclick="trendBSetBurnMode('lot')">ロット別</span>
+          <span class="tb-mode" data-mode="total" onclick="trendBSetBurnMode('total')">合計</span>
+        </span>
+      </div>
+      <div id="trendb-burndown" class="trendb-chart"></div>
+      <div class="trend-delta-head">📊 月次消費（いつ・どの顧客が使ったか）
+        <span class="tb-axistoggle">
+          <span class="tb-axis active" data-axis="order" onclick="trendBSetAxis('order')">発注日(消費)</span>
+          <span class="tb-axis" data-axis="deliver" onclick="trendBSetAxis('deliver')">納品日</span>
+          <span class="tb-axis" data-axis="accept" onclick="trendBSetAxis('accept')">検収日(売上)</span>
+        </span>
+      </div>
+      <div id="trendb-monthly" class="trendb-chart"></div>
+      <div id="trendb-monthly-table"></div>
+    </div>
   </div>
   
   <div class="footer-note">
@@ -2914,6 +3095,12 @@ table.history-table .h-stock { font-size: 16px; }
     <div class="cl-toggle" id="cl-toggle" onclick="toggleChangelog()" style="display: inline-block;">過去の変更点を表示 ▼</div>
     <div class="cl-past" id="cl-past"><div class="cl-row"><span class="clv">v5.60</span>PWB-0101(Φ6)をシート名のTYPEで2分割(カウントも分割): TYPE-A→PWB-0101JY Type-A Al-Si 3.0 um / それ以外(TYPE-B・無ラベル4.6um)をまとめてPWB-0101JY Type-B Al-Si 4.6 um。数え方変更につきキャッシュ更新＋core.js再生成<span class="cld">2026-09-08</span></div><div class="cl-row"><span class="clv">v5.59</span>PWB8をシート上部の TYPE-A/TYPE-B マーカーで2分割(カウントも分割): PWB8-0101JY Type-A Al-Si-Cu 4.0um / Type-B Al-Si 4.0um。STAC→STAC-0101JY も追加。数え方変更につきキャッシュ更新＋core.js再生成<span class="cld">2026-09-08</span></div><div class="cl-row"><span class="clv">v5.58</span>表示名対応表に IP40MB → IP40MB-0101JY (Micro Bump) を追加(対応表への追記反映)。表示名のみ<span class="cld">2026-09-08</span></div><div class="cl-row"><span class="clv">v5.57</span>表示名を対応表に合わせて一括変更(例: CC80→CC80-0101JY、FC150→FC150JY 各工程、MB130A→MB130A-STG0101JY PI/1.5um、ITO(1101)→ITO1101-0100JY 等)。表示名のみで在庫カウント・グループ分けは不変。加えてWM40をシート名の(WM40-XXXXJY)で0101/0102/0103に3分割(カウントも分割)。PWB-0101/PWB8のType分割は別途対応。数え方変更につきキャッシュ更新＋core.js再生成<span class="cld">2026-09-08</span></div><div class="cl-row"><span class="clv">v5.56</span>ITOを「マスク」でウエハ単位に3分割(ITO(1101)/ITO(1102)/ITO(マスク未確定))。マスク列(縦セル結合可・列位置はヘッダー"マスク"で自動検出)の値で振り分け、空欄=未確定。FC150の工程分割と同じ枠組み(PROCESS_SPLIT_CONFIGSにkind:maskを追加)で実装。数え方変更につきキャッシュ更新＋core.js再生成<span class="cld">2026-09-07</span></div><div class="cl-row"><span class="clv">v5.55</span>詳細カードの列名「入荷後予約」→「入予定予約」に変更(ウエハ・基板とも)。「現有予約」と対になり、入荷予定(未着)在庫の予約分と分かりやすく。補足は「入荷後に出荷」のまま。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.54</span>基板TOP帯アラームカードの入荷予定表示を、3段目追加ではなく1段目(数量セル)を改行して2行目に「入荷予定 N ケ（うち予約N）」を記載する形に変更。カードが縦に伸びすぎないように。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.53</span>基板の詳細カードをウエハと同じ表示方式に統一。ステータス枠(安全/警告/危険＋実在庫ケ)＋入荷予定を右横(合計・うち予約)＋数値4列(実在庫/入荷予定/現有予約/入荷後予約)。基板固有の最終取引/過去1年/経過は数値列の左にコンパクトに併記(ダミー概念はないため4列)。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.52</span>ウエハ詳細カードの列名「出荷待ち」→「現有予約」に変更(補足も「引当済み」→「予約済み」)。予約であって必ず出荷するとは限らないため、現有在庫の予約分と分かる表記に。入荷後予約と対で並ぶ。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.51</span>基板のTOP帯アラームカードにも入荷予定を表示。在庫が少ない/経過が長い警告品で入荷予定がある場合、3段目に「入荷予定 N ケ（うち予約N）」を薄紫で追加(数量/経過と同じ太線区切り)。ウエハ帯と同じく一番上のページで補充予定が分かるように。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.50</span>帯バッジの「＋予定N（うち予約N）」の数字を大きく(予定13→15px / 予約11→13px)して見やすく。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.49</span>帯バッジの予約併記を「・予約N」→「(うち予約N)」に変更。予約は予定の内数(合計に含まれる)なので、別数量に見えないよう明示。例「＋予定71(うち予約3)」。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.48</span>TOP帯の危険/警告バッジの「＋予定」も、フリー＋予約済の合計に変更し予約済分「(・予約N)」を併記。詳細カードの「うち予約」表示が小さかったので、文字を大きく(12px太字)しチップ表示にして視認性向上。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.47</span>ウエハ詳細カードのステータス右横「入荷予定」表示を、フリー分だけでなく予約済分も含めた合計に変更(＋予約済分を「うち予約 N」で補足)。従来はフリー在庫になりうる分のみで「予定がもっとあるはず」と誤解を生んだため。数値内訳(入荷予定=フリー/入荷後予約=予約済)の5列表示は従来どおり。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.46</span>基板帯アラームカードの「問題なし」側の色をグレー→基板の薄い緑(--ok-soft)に変更。グレーだと警告のように見えたため、安全=緑で直感的に。文字も落ち着いた緑に。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.45</span>基板シリーズ帯のアラームカード(数量/経過の2分割カード)の枠線をウエハ帯と同じ太さ(3px 赤)に、上下2分割の横線も同じ3pxに変更。前版で誤って基板"詳細"カードに付けた枠線は差し戻し(詳細は変更なし)。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.43</span>MB130Aの表示名を修正。膜厚(x.xum)はAl-Si-Cu金属層の厚さだが、従来「MB130A PI 1.5um」表示だと下地PI/SiNの厚さと誤解されたため「MB130A PI / Al-Si-Cu 1.5um」形式に変更(SiN側も同様)。表示名のみの変更で在庫の集計・グループ分け・並び替えは不変。ナビカードもΦ等を含む表示名に統一<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.42</span>凡例(しきい値)カードと基板シリーズ帯のアラーム色を、ウエハ帯と同じパステル配色に統一。凡例は危険=パステル赤(太線)/警告=パステル黄(オレンジ太線)、基板帯の「問題あり」半分も原色赤→パステル赤に。基板の詳細カードは変更なし。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.41</span>アラームバッジの「＋予定N」の文字を少し大きく(11→13px)して視認性を向上。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.40</span>アラームバッジを上段=品名/下段=枚数＋予定 の2段レイアウトに変更(品名を独立表示し枚数を下段へ)。高さは従来どおり危険/警告で統一。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.39</span>アラームバッジの枠線をさらに太く(3px)。詳細カードの入荷予定表示をステータス枠の下段→「右横」の固定幅枠に変更し、入荷予定の有無でカードの高さも幅も変わらないように統一(無い時は同じ枠を不可視で確保)。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.38</span>TOPアラームバッジの微調整。危険/警告バッジの高さを統一(min-height+上下中央寄せ、＋予定の有無で高さがばらつかない)。危険は背景の赤を少し強め、赤い太線(2px #d43b3b)で囲む。警告は現状のパステル黄のままオレンジ太線(2px #e8912e)で囲む。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.37</span>TOPアラームバッジの見た目調整。「＋予定N」を枚数の下段に移動(高さは増えるが視認性向上)。危険=赤/警告=黄の背景をパステル調に和らげ、文字を濃色に。詳細カードの数値5列は枚数による色変化(ゼロ淡色化/実在庫ゼロ赤)を廃止し、常に固定の意味色(実在庫=青/入荷予定=紫/出荷待ち・入荷後予約=橙/ダミー=黒)で統一。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.36</span>TOPシリーズ帯の危険/警告バッジにも入荷予定を表示(「品名 0枚 ＋予定14」)。実在庫が少なくても入荷予定があることが一覧で分かるように。あわせて詳細カードの数値5列が詰まって見えたため列間隔を拡大(列間36px/ステータス〜数値列44px)。表示のみ<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.35</span>ウエハの警告/危険判定を「実在庫」ベースに変更。従来は実在庫＋入荷予定の合計で判定していたため、実在庫0でも入荷予定があれば安全に見え誤解を生んでいた。今後は手元にすぐ使える実在庫のみでアラーム判定(危険10枚未満/警告25枚未満)し、入荷予定がある場合はステータス枠に「＋入荷予定 N枚」を補足表示。TOPアラーム・ナビカード・凡例も実在庫基準に統一。数え方(在庫の集計値)は不変で判定基準のみ変更<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.34</span>ウエハカードの在庫サマリーを見やすく再設計。従来の「即在庫+予約済」「入荷予定+予約済」の加算表記(A+B)をやめ、実在庫/入荷予定/出荷待ち/入荷後予約/ダミーの5列に分離し、それぞれ意味色(実在庫=青・入荷予定=紫・出荷待ち/入荷後予約=橙・ダミー=黒)と補足ラベル付きで表示。ゼロは淡色化(実在庫ゼロのみ在庫切れ=赤で強調)。数え方は不変(表示のみ)<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.33</span>入荷待ちウエハの誤計上を修正。入荷日セルに「予定/未定/?」等の未確定マーカーがある場合、その日付が過去でも実到着(現有在庫)とはみなさず入荷予定のまま数える。例: 入荷待ちシートのLotに「2026/1/14予定?」とあり予定日が過ぎていたウエハが即在庫25枚に誤計上されていたのを、入荷予定へ正しく分類。プレーンな過去日付(マーカー無し)は従来どおり実到着=現有在庫<span class="cld">2026-08-27</span></div><div class="cl-row"><span class="clv">v5.32</span>「ぱっと表示」対応。前回の解析結果(在庫/基板)をlocalStorageにスナップショット保存し、次回起動時にまず即描画→裏でSharePointを再取得して差し替える。2回目以降の起動で「認証中…取得中…」の空白待ちが消え、開いた瞬間に前回データが出る(初回OPENのみ通常取得)。スキーマ更新時や容量超過時はスナップショットを自動無効化。数え方は不変<span class="cld">2026-08-19</span></div><div class="cl-row"><span class="clv">v5.31</span>ウエハの空スロット除外に対応。W#(slot)列の右側に横長×縦長の大結合セル(注文済み/未入荷メモが空スロットに被さる。高さ≥3行・幅≥5列)がある行は、実物ウエハなしの空スロットとして数えない。色(白)は不安定なので使わず結合セルで判定。例MB50: 空スロット135枚をダミー計上していたのを除外<span class="cld">2026-08-06</span></div><div class="cl-row"><span class="clv">v5.30</span>基板に「入荷予定」概念を追加。未確定行(日付欄=入荷待ち/予約、または日付空欄+Lotに**)を分離し、現有在庫=確定行のみ・入荷予定=未確定入庫・予約=未確定出庫として算出。予約は現有で賄えれば現有から、超えたら入荷予定から引く。カードは「使える分(現有フリー)」を主表示し、入荷予定フリー/予約を別枠表示。アラーム判定も使える分ベースに変更<span class="cld">2026-07-30</span></div><div class="cl-row"><span class="clv">v5.29</span>FC150を加工工程で3品種に分割(SiNベース/PI塗布済/PI+ボール)。PI列・ボール列の注記で判定し、加工日が過ぎていれば完了(手元在庫)・未来なら加工中(入荷予定)。加工日の年が無ければ入荷後の最初の同月日を加工年に推定。PROCESS_SPLIT_CONFIGSに追加すれば他製品にも適用可<span class="cld">2026-07-29</span></div><div class="cl-row"><span class="clv">v5.28</span>【実験】新しい配色＋レイアウトテーマを試験導入(濃いめグレー背景・カード影・角丸・枠線・鮮やかなアクセント色)。シリーズ帯を太く枠線付きにし品名は【】表示、危険品は赤カード白抜き(品名+枚数)を帯に表示。基板側も同構成にし在庫100ケ未満を警告として帯に赤カード表示。品名カード見出しを大型化(品名の下に本社/Excel/ファイル名)。検索バーはタブ横へ、変更履歴は最下部へ移動。CSS末尾の THEME START〜THEME END を削除すればv5.27の見た目に戻せる。数え方・集計は変更なし<span class="cld">2026-07-27</span></div><div class="cl-row"><span class="clv">v5.27</span>ウエハのシリーズ見出しに所属品名を【A / B / C】形式で常時表示(危険=赤/警告=橙)。そのシリーズに危険品(使える分10枚未満)がある場合のみ、見出し内に薄赤カード(品名+枚数のみ)を表示。展開せず不足品がシリーズ単位で分かる。帯右の在庫合計表示は削除<span class="cld">2026-07-27</span></div><div class="cl-row"><span class="clv">v5.26</span>基板Lot記載の追加パターン対応(Lot未記載出庫のFIFO控除、入庫番号混入・省略形・各種内訳記法対応)、最古在庫の経過時間をヘッダー右側に大型表示、全体フォントサイズ2Up<span class="cld">2026-07-08</span></div><div class="cl-row"><span class="clv">v5.25</span>基板(KIT)の入庫日からの経過日数表示を追加(ロット別在庫に入庫日+経過期間、カードに最古在庫行、Lot列の複数ロット内訳/省略形/記入ズレ対応)<span class="cld">2026-07-08</span></div><div class="cl-row"><span class="clv">v5.24</span>「開発品」シートは白slotも含め全て使用済扱い(在庫・予約にしない)<span class="cld">2026-06-15</span></div><div class="cl-row"><span class="clv">v5.23</span>白slotでも備考に消費系記載(廃棄/開発使用/サンプル/不良/DC等)があれば使用済として在庫から除外<span class="cld">2026-06-08</span></div><div class="cl-row"><span class="clv">v5.22</span>末尾(数字)シート((2)等)の重複除外を廃止し実在在庫としてカウント<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.21</span>JSON出力時に品名解決がUIと一致しているか自己チェック(不一致なら警告)<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.20</span>JSONエクスポートの品名をUI表示と一致(Φ口径+全分割反映、生品名はproduct_raw)<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.19</span>画面上部に変更履歴を表示 (最新を常時表示、過去は折りたたみ)<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.18</span>MB130A を 下地(PI/SiN)×膜厚(x.xum) で品種分割<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.17</span>WLP 0.5P の在庫数を修正 (slot列に紛れる入庫番号/単価を除外)<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.16</span>WLP を独立グループ化し、ピッチ(0.3P/0.4P/0.5P)で品種分割<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.15</span>AS8R を「MBシリーズ（Wire Bonding）」へ移動<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.14</span>HPW を 表面仕様(SiN/PI) で品種分割<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.13</span>CC/IP を CC10/IP10・CC40/IP40・CC80/IP80 の独立グループに分割 (数字tier自動)<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.11</span>Model表記ゆれ(Ⅰ/Ⅱ・II・全角・数字)に対応<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.10</span>IP40 を Model I / Model II で品種分割<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.9</span>糸島 IP40 に Φ12 を表示<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.8</span>熱酸化膜ウエハ に Φ8 を表示<span class="cld">2026-06-02</span></div><div class="cl-row"><span class="clv">v5.7</span>Glass の在庫/予約/使用済を slotセルの色で判定するよう修正、入荷予定の表示を修正<span class="cld">2026-06-01</span></div></div>
   </div>
+</div>
+
+<!-- v5.83: 分析タブ(在庫推移) 表示スイッチ (検証用・既定オフ・localStorage保存) -->
+<div class="trend-switch">
+  <label class="tsw"><input type="checkbox" id="trend-tab-switch"><span>🧪 分析タブ（在庫推移）を表示する</span></label>
+  <div class="tsw-note">検証用スイッチです。オンにすると上部に「📈 在庫推移」タブが出ます（消費分析データ <code>在庫推移データ.json</code> を📁で読み込んで使用）。既定はオフ。設定はこのブラウザにのみ保存され、実在庫の表示には影響しません。</div>
 </div>
 
 <!-- 発注ダイアログ -->
@@ -3092,8 +3279,15 @@ function setOrder(key, data) {
 //    次の変更でも内部は v5.80… と刻み、5件たまるごとに公開版が +1 される。
 // ============================================================
 const CHANGELOG = [
+  { v: 'v5.89', date: '2026-10-01', text: 'シリーズ帯の危険/警告バッジの並び順を規定: ①危険 ②警告 ③危険＋入荷予定 ④警告＋入荷予定(入荷予定ありはハッチング)。各区分の中は製品の並び順。入荷予定の無い要手当て品(危険→警告)が前、入荷予定で回復予定の品が後ろにまとまる。表示のみ(数え方は不変)' },
+  { v: 'v5.88', date: '2026-10-01', text: 'シリーズ帯の危険/警告バッジで、入荷予定(未予約分)があり在庫が回復予定の製品は、斜めハッチングを掛けて帯の末尾へまとめるようにした。入荷予定が無く本当に手当てが必要な製品が前に並ぶので、優先度が分かりやすい(例 FC120は危険0枚だが入荷予定25で回復予定→ハッチングで末尾、入荷予定の無い警告品が前)。表示のみ(数え方は不変)' },
+  { v: 'v5.87', date: '2026-10-01', text: '入荷予定ロットが1枚ずつ別ロットに分割される不具合を修正(FC120等)。入荷日セルがロットの全スロットに縦結合されている場合、結合スレーブ行(2行目以降)にもマスターの日付が入って見えるため、各行を別の入荷日と誤判定し1枚ごとに分割していた。結合スレーブ行は新しい入荷日とみなさないよう修正(isArrivalCell)。例 FC120のSIF00-0006が25件→1ロット(未予約23＋予約2)に集約。合計枚数は元から正しく、ロットのまとまりのみ是正。数え方変更につきキャッシュ更新＋core.js反映' },
+  { v: 'v5.86', date: '2026-10-01', text: 'シリーズ帯の操作を分離。①帯の警告(黄)/危険(赤)バッジをクリックすると、そのシリーズでその製品カードだけを展開表示(「◯◯ のみ表示中」バーに全件表示ボタン付き)。②シリーズ全体の開閉は「FC シリーズ」等のメイン名(帯の左側)クリックで行う(従来は帯全体で開閉)。目的の製品へ素早く辿り着けるようにした。表示・操作のみ(数え方は不変)' },
+  { v: 'v5.85', date: '2026-10-01', text: 'ウエハ在庫カウントに顧客列の救済を追加。スロットの色が「在庫(白)」のままでも、顧客列に番号が入っていれば状態を補正: D番号(発注/消費)あり→使用済、M番号(見積/予約)あり→予約(D番号を優先)。色の塗り忘れで予約・使用済が在庫に混入するのを防ぐ(例 FC150SC SI920-0017でM番号記入の白スロットを予約に是正し在庫14→13・予約8→9)。備考欄の既存ルール(廃棄/不良/サンプル等→使用済)は変更なし。数え方変更につきキャッシュ更新＋core.js反映' },
+  { v: 'v5.84', date: '2026-09-17', text: '基板(KIT)の在庫カウントを改善。①1つのExcelに旧製品と新製品が別シートで入る場合(例 FC200(A)-0103JY(新)＋FC200-0102JY(旧))、旧シートの終値(0)を拾って新製品の在庫が0と誤表示される不具合を修正=最新取引日を持つシートの残を現有在庫とする。②「廃棄」行が廃棄数量を入庫列に誤記入している分を入荷として数えない。③ロット別の相殺(マイナス残・Lot未記載出庫の補填)をシート単位に分離し、旧シートの期首在庫消費が新製品ロットを目減りさせる汚染を防止。④Lot欄が空の取引は同一シート内の直前ロットを引き継ぎ。結果、ロット合計＝在庫数量(実残)を保証(例 FC200=51・FBW全廃棄=0)。数え方変更につきキャッシュ更新。基板消費分析ツール(Track B)と同一ロジック。あわせて、改名で旧名を併記した品名(例「…_E-700G_(旧)KIT FC200-0102JY…」)は表示上「(旧)」以降を省略し新名だけ表示(内部の検索・結合キーは従来どおり)' },
+  { v: 'v5.83', date: '2026-09-15', text: '(準備中・既定では非表示)「在庫推移」タブの製品選択を、プルダウン1本から絞り込み式(種別→グループ→製品)に変更。まず🌀ウエハ/🟫基板を選び、次に在庫表示と同じグループ(FCシリーズ/CC・IP系/熱酸化膜…や基板のPitch別)を選び、最後に製品を選ぶ。「全社合計」項目は削除。グループ分類は在庫タブと同じ定義を流用(GROUP_DEFS/SUB_GROUPS)。工程分割品を選ぶと親(合算)の履歴へ誘導するバナー表示は従来どおり。あわせて「ロット別バーンダウン」で、入荷日の無いロット(基板等はD番号→発注DBで消費日を復元できない)が丸ごと描画対象から外れ、在庫があるのにグラフが0で終わる不具合を修正。入荷日/使用日が無くても現在庫を水平線で表示し(凡例に「入荷日不明」)、在庫があることが分かるようにした。表示のみ(数え方・既存タブに影響なし)' },
   { v: 'v5.82', date: '2026-09-14', text: 'SIPOS(SI0631)等で、まだ製造中(完成待ちシート)のウエハが在庫計上される不具合を修正。入荷日欄に「上旬/中旬/下旬・頃」等の未確定記載がある分は入荷予定として扱う。加えて1つのslotブロックに複数の入荷日(確定日/予定/上旬)が混在する場合は入荷日ごとに分割し、確定到着分=現有在庫・予定分=入荷予定に正しく振り分け(工程分割のFC150/ITOは対象外で従来通り)。数え方変更につきキャッシュ更新＋core.js再生成' },
-  { v: 'v5.81', date: '2026-09-14', text: '(準備中・既定では非表示)「在庫推移」タブを内部追加。日次スナップショット履歴から在庫量の推移グラフと増減明細を表示する機能。データ連携の整備後に公開予定。表示のみ(数え方・既存タブに影響なし)' },
+  { v: 'v5.81', date: '2026-09-14', text: '(準備中・既定では非表示)「在庫推移」タブを内部追加。消費分析データ(在庫推移データ.json)から在庫バーンダウン(過去の在庫推移)・月次消費・枯渇予測・入出荷明細を表示、および日次スナップショット履歴の増減も表示可能。顧客名は含まない。データ連携の整備後に公開予定。表示のみ(数え方・既存タブに影響なし)' },
   { v: 'v5.80', date: '2026-09-09', text: '束ねた公開Revをクリックで「＋詳細N件 ▾」展開し、元の細かい変更点を全文表示できるように(情報は省略せず畳んで保持)。表示のみ' },
   { v: 'v5.79', date: '2026-09-09', text: '更新履歴を「5件ずつまとめた公開Rev」表示に変更。社内既知のv5.41以前は個別のまま、v5.42以降の細かい更新を5件ずつ束ねて公開版 v5.42〜v5.49 に採番(見出しも公開版v5.49に)。急なバージョン急増を避ける。表示のみ' },
   { v: 'v5.78', date: '2026-09-08', text: 'マスク別在庫検索のヒットを「シート単位」に細分化し、クリックでその在庫のあるシートへ直接ジャンプ(activeCellでシート指定)。マスク別×シート別に在庫/予約を集計するためキャッシュ更新＋core.js再生成。在庫のあるシートを上に表示' },
@@ -3441,10 +3635,28 @@ try {
 function saveGroupExpanded() {
   localStorage.setItem(GROUP_EXPAND_KEY, JSON.stringify([...GROUP_EXPANDED]));
 }
+// v5.86: グループ内「1製品だけ表示」フォーカス状態 (g.id → product名)。一時状態=保存しない。
+let GROUP_FOCUS = {};
 window.toggleGroup = function(gid) {
+  // フォーカス中にメイン名をクリック → 全件表示に戻す(展開は維持)
+  if (GROUP_FOCUS[gid]) { delete GROUP_FOCUS[gid]; GROUP_EXPANDED.add(gid); saveGroupExpanded(); render(); return; }
   if (GROUP_EXPANDED.has(gid)) GROUP_EXPANDED.delete(gid);
   else GROUP_EXPANDED.add(gid);
   saveGroupExpanded();
+  render();
+};
+// v5.86: 警告/危険バッジをクリック → そのグループでその製品だけを展開表示
+window.focusGroupProduct = function(gid, product) {
+  GROUP_FOCUS[gid] = product;
+  GROUP_EXPANDED.add(gid);
+  EXPANDED.add(product);
+  saveGroupExpanded(); saveExpanded();
+  render();
+  setTimeout(() => { const el = document.getElementById('pc-' + cssId(product)); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60);
+};
+window.clearGroupFocus = function(gid) {
+  delete GROUP_FOCUS[gid];
+  GROUP_EXPANDED.add(gid);
   render();
 };
 
@@ -3859,7 +4071,7 @@ function renderSubCard(s) {
       <div class="sub-header" onclick="toggleSubCard('${escape(s.product)}')">
         <span class="stoggle">▶</span>
         <div class="sub-title">
-          <h3 class="name">${escape(s.product)}${dormantTag}${s.web_url ? `<span class="file-link-group">
+          <h3 class="name">${escape(trimOldName(s.product))}${dormantTag}${s.web_url ? `<span class="file-link-group">
             <a class="file-link-btn web" href="#" onclick="openInExcelWeb(event, '${encodeURIComponent(s.web_url)}')" title="ブラウザのExcel Onlineでファイルを開く">📊 Excel on Browser</a>
           </span>` : ''}</h3>
           <div class="file">${escape(s.file)}</div>
@@ -3997,7 +4209,7 @@ function renderSubstrate() {
     const nameParts = [];
     const warnBadges = [];  // v5.28: 帯に赤カード(品名+数量+経過期間)で警告表示
     visible.forEach(s => {
-      nameParts.push(`<span class="gp-name">${escape(s.product)}</span>`);
+      nameParts.push(`<span class="gp-name">${escape(trimOldName(s.product))}</span>`);
       // 最古在庫ロットの入庫からの経過期間
       let elapsed = null;
       if (s.current_stock > 0) {
@@ -4023,7 +4235,7 @@ function renderSubstrate() {
           <span class="sg-alert">
             <span class="db-half db-qty ${qtyNg ? 'ng' : 'ok'}${subInc > 0 ? ' has-inc' : ''}">
               <span class="sg-qty-main">
-                <span class="db-name">${escape(s.product)}</span>
+                <span class="db-name">${escape(trimOldName(s.product))}</span>
                 <span class="db-num">${free}</span><span class="db-unit">ケ</span>
               </span>
               ${incLine}
@@ -4503,8 +4715,11 @@ function render() {
     
     // 検索クエリ時は実際にヒットするかでカード描画。クエリなしならグループ全品名を描画
     // v5.29: 同一ファイル由来の派生品種(FC150の3タイプ等)は1枚のカードにまとめ、薄い横線で区切る
+    // v5.86: フォーカス中(バッジクリック)はその製品のカードだけ描画。プレビュー/バッジは全品で作る。
+    const focusProd = (GROUP_FOCUS[g.id] && products.some(p => p.product === GROUP_FOCUS[g.id])) ? GROUP_FOCUS[g.id] : null;
+    const cardProducts = focusProd ? products.filter(p => p.product === focusProd) : products;
     const byFile = new Map();
-    for (const p of products) { const k = p.file || p.product; if (!byFile.has(k)) byFile.set(k, []); byFile.get(k).push(p); }
+    for (const p of cardProducts) { const k = p.file || p.product; if (!byFile.has(k)) byFile.set(k, []); byFile.get(k).push(p); }
     const cards = [];
     for (const grp of byFile.values()) {
       const inner = grp.map(renderProductCard).filter(c => c && c.trim());
@@ -4512,15 +4727,18 @@ function render() {
       cards.push(inner.length > 1 ? `<div class="file-group">${inner.join('')}</div>` : inner[0]);
     }
     if (cards.length === 0) continue;
-    
-    // 検索中は自動展開、そうでなければlocalStorageの状態に従う
+
+    // 検索中は自動展開、そうでなければlocalStorageの状態に従う(フォーカス中も展開)
     const autoExpand = q && cards.length > 0;
-    const isExpanded = GROUP_EXPANDED.has(g.id) || autoExpand;
+    const isExpanded = GROUP_EXPANDED.has(g.id) || autoExpand || !!focusProd;
     
     // 所属品名プレビュー(【A / B / C】・色分けなし) + 危険品バッジ(品名+枚数)
     const nameParts = [];
-    const dangerBadges = [];  // v5.27: シリーズ内の危険品を赤カードで表示
-    const warnBadges = [];    // v5.28: 警告品(使える分25枚未満)を薄黄カードで表示
+    // v5.89: バッジ並び順を規定 ①危険 ②警告 ③危険＋入荷予定 ④警告＋入荷予定。各内は製品の並び順。
+    const dangerBadges = [];       // ①危険(入荷予定なし)
+    const warnBadges = [];         // ②警告(入荷予定なし)
+    const dangerRecoverBadges = [];// ③危険＋入荷予定(回復予定・ハッチング)
+    const warnRecoverBadges = [];  // ④警告＋入荷予定(回復予定・ハッチング)
     products.forEach(p => {
       const avail = totalAvailable(p);
       const st = statusOf(p);
@@ -4534,13 +4752,19 @@ function render() {
       const inc = incTotalB > 0
         ? `<span class="db-incoming">＋予定${incTotalB}${incResvB > 0 ? `<span class="db-inc-resv">うち予約${incResvB}</span>` : ''}</span>`
         : '';
-      if (st === 'danger') {
-        dangerBadges.push(`<span class="gh-alert"><span class="gh-line1"><span class="db-name">${escape(displayName(p))}</span></span><span class="gh-line2"><span class="db-num">${avail}</span><span class="db-unit">枚</span>${inc}</span></span>`);
-      } else if (st === 'warn') {
-        warnBadges.push(`<span class="gh-alert warn"><span class="gh-line1"><span class="db-name">${escape(displayName(p))}</span></span><span class="gh-line2"><span class="db-num">${avail}</span><span class="db-unit">枚</span>${inc}</span></span>`);
-      }
+      const badgeClick = `onclick="event.stopPropagation();focusGroupProduct('${g.id}','${escape(p.product)}')"`;
+      if (st !== 'danger' && st !== 'warn') return;
+      // v5.88: 入荷予定(未予約分)があれば「在庫回復予定」= ハッチングを掛けて末尾へまとめる
+      const willRecover = incFreeB > 0;
+      const base = st === 'danger' ? 'gh-alert' : 'gh-alert warn';
+      const cls = base + ' gh-alert-clk' + (willRecover ? ' gh-alert-recover' : '');
+      const tip = willRecover ? '入荷予定で在庫回復予定／クリックでこの製品だけ表示' : 'クリックでこの製品だけ表示';
+      const html = `<span class="${cls}" ${badgeClick} title="${tip}"><span class="gh-line1"><span class="db-name">${escape(displayName(p))}</span></span><span class="gh-line2"><span class="db-num">${avail}</span><span class="db-unit">枚</span>${inc}</span></span>`;
+      if (st === 'danger') (willRecover ? dangerRecoverBadges : dangerBadges).push(html);
+      else (willRecover ? warnRecoverBadges : warnBadges).push(html);
     });
-    const badges = [...dangerBadges, ...warnBadges];  // 危険→警告の順に並べる
+    // v5.89: ①危険 ②警告 ③危険＋入荷予定 ④警告＋入荷予定 の順(各内は製品の並び順)
+    const badges = [...dangerBadges, ...warnBadges, ...dangerRecoverBadges, ...warnRecoverBadges];
     const previewHtml = `<span class="gp-bracket">【 </span>${nameParts.join('<span class="gp-bracket"> / </span>')}<span class="gp-bracket"> 】</span>`;
     // v5.28: 危険/警告品が無いシリーズも、バッジ1段分の高さを不可視の占位で確保し帯の高さを揃える
     const alertsHtml = badges.length
@@ -4552,10 +4776,13 @@ function render() {
     // v5.70: 熱酸化膜グループの上に「マスク別 在庫検索」窓を表示
     if (g.id === 'thermal') outHtml += renderThermalMaskSearchBox();
 
+    const focusBar = focusProd
+      ? `<div class="focus-bar">🔎 <b>${escape(displayName(cardProducts[0]))}</b> のみ表示中 <button type="button" class="focus-clear" onclick="clearGroupFocus('${g.id}')">▸ ${g.label} を全件表示</button></div>`
+      : '';
     outHtml += `
       <div class="group-block ${isExpanded?'expanded':''}">
-        <div class="group-header ${bandCls}" style="border-left-color:${g.color}" onclick="toggleGroup('${g.id}')" title="${escape(allNames)}">
-          <div class="gh-top">
+        <div class="group-header ${bandCls}" style="border-left-color:${g.color}" title="${escape(allNames)}">
+          <div class="gh-top" onclick="toggleGroup('${g.id}')" title="クリックで${g.label}を全件開閉">
             <span class="gtoggle">▶</span>
             <span class="gname" style="color:${g.color}">${g.label}</span>
             <span class="gcount">${cards.length}製品${q ? ' (検索ヒット)' : ''}</span>
@@ -4563,7 +4790,7 @@ function render() {
           </div>
           ${alertsHtml}
         </div>
-        <div class="group-body">${cards.join('')}</div>
+        <div class="group-body">${focusBar}${cards.join('')}</div>
       </div>
     `;
   }
@@ -4597,9 +4824,21 @@ document.querySelectorAll('.tab').forEach(tab => {
    在庫「推移」タブ (v5.81) — 履歴JSONL(スナップショット)を読み込み、
    在庫推移グラフ＋増減明細を表示。数え方には一切関与しない表示専用。
    ============================================================ */
-// 在庫推移タブの表示フラグ。本番Git配布=false(非表示・未完成のため)、ローカル検証時=true にする。
-// falseでもタブのコードは残るので、trueに戻すだけで再表示できる。
-const SHOW_TREND_TAB = false;
+// 在庫推移(分析)タブの表示は、最下部スイッチのランタイム状態(localStorage)で制御。既定=オフ。
+// 実在庫を見ながら検証できるよう、コードのフラグではなく画面スイッチで切替える。
+const TREND_TAB_KEY = 'walts_trend_tab';
+function trendTabEnabled() { try { return localStorage.getItem(TREND_TAB_KEY) === '1'; } catch (e) { return false; } }
+function applyTrendTabVisibility() {
+  const on = trendTabEnabled();
+  const tabBtn = document.querySelector('.tab[data-tab="trend"]');
+  const pane = document.getElementById('tab-trend');
+  if (tabBtn) tabBtn.style.display = on ? '' : 'none';
+  // オフにした時に分析タブを開いていたら、ウエハ在庫タブに戻す
+  if (!on && pane && pane.classList.contains('active')) {
+    const wafer = document.querySelector('.tab[data-tab="wafer"]');
+    if (wafer) wafer.click();
+  }
+}
 const trendState = { runs: [], events: [], prodDisp: {}, baselineTs: new Set(), loaded: false, deltaLimit: 200 };
 const TREND_COL = { stock: '#2d6cc0', resv: '#e08a00', inc: '#7a53c9' };
 
@@ -4812,8 +5051,14 @@ function trendRender() {
 }
 
 function trendLoadText(text, name) {
+  // v5.83: 消費分析(Track B)の推移データJSON({products:[{burndown...}]})なら詳細モードへ
+  let obj = null; try { obj = JSON.parse(text); } catch (e) {}
+  if (obj && Array.isArray(obj.products) && obj.products[0] &&
+      ('burndown' in obj.products[0] || 'monthly_consume' in obj.products[0])) {
+    trendLoadTrackB(obj, name); return;
+  }
   const parsed = trendParse(text);
-  if (!parsed.runs.length) { alert('履歴データ(run行)が見つかりませんでした。ファイル形式をご確認ください。'); return; }
+  if (!parsed.runs.length) { alert('履歴データが見つかりませんでした。スナップショット履歴(.jsonl)か、消費分析の推移データ(在庫推移データ.json)を読み込んでください。'); return; }
   trendState.runs = parsed.runs;
   trendState.events = parsed.events;
   trendState.prodDisp = parsed.prodDisp;
@@ -4852,12 +5097,420 @@ function trendLoadText(text, name) {
     rd.onload = () => trendLoadText(String(rd.result || ''), f.name);
     rd.readAsText(f, 'utf-8');
   });
-  // 在庫推移タブは既定で非表示(SHOW_TREND_TAB=false)。trueにすると再表示。
-  if (!SHOW_TREND_TAB) {
-    const tb = document.querySelector('.tab[data-tab="trend"]'); if (tb) tb.style.display = 'none';
-    const tp = document.getElementById('tab-trend'); if (tp) tp.style.display = 'none';
+  // 最下部の表示スイッチと連動 (既定オフ・localStorage保存)
+  const trendSwitch = document.getElementById('trend-tab-switch');
+  if (trendSwitch) {
+    trendSwitch.checked = trendTabEnabled();
+    trendSwitch.addEventListener('change', () => {
+      try { localStorage.setItem(TREND_TAB_KEY, trendSwitch.checked ? '1' : '0'); } catch (e) {}
+      applyTrendTabVisibility();
+    });
   }
+  applyTrendTabVisibility();
 })();
+
+/* ============================================================
+   在庫推移(詳細) — 消費分析(Track B)由来データ 在庫推移データ.json を表示
+   バーンダウン / 月次消費 / 枯渇予測 / 入出荷明細。数え方には関与しない表示専用。
+   ============================================================ */
+const trendB = { data: null, byName: {}, loaded: false, evLimit: 100 };
+const trendBScenario = { rateKey: 'last_12m', lead: 3 };  // 枯渇予測シナリオの選択状態
+const TRENDB_RATE_LABELS = { last_6m: '直近6ヶ月', last_12m: '直近12ヶ月', last_24m: '直近24ヶ月', lifetime: '通算平均' };
+function _tbDatePlusMonths(iso, months) {
+  const d = new Date((iso || trendB.data.today) + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + Math.round(months * 30.44));
+  return d.toISOString().slice(0, 10);
+}
+
+function trendLoadTrackB(obj, name) {
+  trendB.data = obj; trendB.loaded = true; trendB.byName = {}; trendB.evLimit = 100;
+  (obj.products || []).forEach(p => { trendB.byName[p.product] = p; });
+  document.getElementById('trend-empty').hidden = true;
+  document.getElementById('trend-main').hidden = true;
+  document.getElementById('trend-trackb').hidden = false;
+  document.getElementById('trend-count').textContent = `${(obj.products || []).length}製品`;
+  trendBBuildHierarchy();
+  trendBFillCat();
+  trendBFillGroup();
+  trendBFillPick();
+  trendBRender();
+}
+
+// 製品の種別(ウエハ/基板)判定: 基板管理表(SUBSTRATE)に同名があれば基板、それ以外はウエハ。
+function trendBCatOf(prod) {
+  return (trendB._subSet && trendB._subSet.has(prod)) ? 'sub' : 'wafer';
+}
+// 製品の所属グループ(在庫表示と同じ分類)を {id,label} で返す。
+function trendBGroupOf(prod) {
+  if (trendBCatOf(prod) === 'sub') {
+    try { for (const g of SUB_GROUPS) if (g.test(prod)) return { id: g.id, label: g.label }; } catch (e) {}
+    return { id: 'sub_other', label: 'その他基板' };
+  }
+  try { const g = groupOf(prod); if (g) return { id: g.id, label: g.label }; } catch (e) {}
+  return { id: 'other', label: 'その他' };
+}
+// 種別→グループ→製品 の3階層ツリーを構築(在庫表示のグループ順に整列)
+function trendBBuildHierarchy() {
+  trendB._subSet = new Set();
+  try { (SUBSTRATE || []).forEach(s => trendB._subSet.add(s.product)); } catch (e) {}
+  const tree = { wafer: { order: [], g: {} }, sub: { order: [], g: {} } };
+  Object.values(trendB.byName).forEach(p => {
+    const cat = trendBCatOf(p.product), g = trendBGroupOf(p.product), b = tree[cat];
+    if (!b.g[g.id]) { b.g[g.id] = { label: g.label, prods: [] }; b.order.push(g.id); }
+    b.g[g.id].prods.push(p);
+  });
+  const orderIdx = (cat, id) => {
+    const defs = cat === 'sub' ? (typeof SUB_GROUPS !== 'undefined' ? SUB_GROUPS : []) : (typeof GROUP_DEFS !== 'undefined' ? GROUP_DEFS : []);
+    const i = defs.findIndex(d => d.id === id); return i < 0 ? 999 : i;
+  };
+  ['wafer', 'sub'].forEach(cat => {
+    tree[cat].order.sort((a, b) => orderIdx(cat, a) - orderIdx(cat, b));
+    Object.values(tree[cat].g).forEach(o => o.prods.sort((a, b) => (a.product || '').localeCompare(b.product || '', 'ja')));
+  });
+  trendB.tree = tree;
+}
+function trendBFillCat() {
+  const sel = document.getElementById('trendb-cat'), cats = [];
+  if ((trendB.tree.wafer.order || []).length) cats.push(['wafer', '🌀 ウエハ']);
+  if ((trendB.tree.sub.order || []).length) cats.push(['sub', '🟫 基板']);
+  sel.innerHTML = cats.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+}
+function trendBFillGroup() {
+  const cat = document.getElementById('trendb-cat').value;
+  const b = trendB.tree[cat] || { order: [], g: {} }, sel = document.getElementById('trendb-group');
+  sel.innerHTML = b.order.map(id => `<option value="${escape(id)}">${escape(b.g[id].label)}（${b.g[id].prods.length}品名）</option>`).join('');
+}
+function trendBFillPick() {
+  const cat = document.getElementById('trendb-cat').value, gid = document.getElementById('trendb-group').value;
+  const b = trendB.tree[cat] || { g: {} }, grp = b.g[gid] || { prods: [] }, sel = document.getElementById('trendb-pick');
+  const hasHist = p => (p.monthly_consume || []).some(x => x.q > 0) || (p.burndown || []).length > 0;
+  sel.innerHTML = grp.prods.map(p => `<option value="${escape(p.product)}">${escape(trimOldName(p.product))}（在${p.current ? p.current.free : 0}）${hasHist(p) ? '' : ' ・履歴なし'}</option>`).join('');
+}
+function _tbMonthList(start, end) {  // "YYYY-MM" 昇順(両端含む)
+  const out = []; let y = +start.slice(0, 4), m = +start.slice(5, 7);
+  const ey = +end.slice(0, 4), em = +end.slice(5, 7);
+  while (y < ey || (y === ey && m <= em)) { out.push(`${y}-${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++; } }
+  return out;
+}
+function _tbAddMonths(ym, n) { let y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1 + n; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return `${y}-${String(m + 1).padStart(2, '0')}`; }
+
+function trendBAggregate() {
+  const bmap = {}, cmap = {}; const cur = { free: 0, reserved: 0, incoming_free: 0, incoming_reserved: 0, dummy: 0 };
+  (trendB.data.products || []).forEach(p => {
+    (p.burndown || []).forEach(x => bmap[x.m] = (bmap[x.m] || 0) + x.s);
+    (p.monthly_consume || []).forEach(x => cmap[x.m] = (cmap[x.m] || 0) + x.q);
+    if (p.current) { for (const k in cur) cur[k] += (p.current[k] || 0); }
+  });
+  const bkeys = Object.keys(bmap).sort(), ckeys = Object.keys(cmap).sort();
+  return {
+    product: '全社合計', unit: '枚', current: cur, forecast: null,
+    burndown: bkeys.map(m => ({ m, s: bmap[m] })),
+    monthly_consume: ckeys.map(m => ({ m, q: cmap[m] })),
+    events: [],  // 全社では明細は省略(件数過多)
+  };
+}
+function trendBSelected() {
+  return trendB.byName[document.getElementById('trendb-pick').value];
+}
+function _tbClipRange(series, key) {  // 直近Nヶ月に絞る
+  const r = +document.getElementById('trendb-range').value;
+  if (!r || series.length <= r) return series;
+  return series.slice(series.length - r);
+}
+
+// 工程分割品(自前の履歴なし+family指定あり)は、消費履歴を親(合算)から表示する
+function trendBHasOwnHist(p) { return (p.monthly_consume || []).some(x => x.q > 0) || (p.burndown || []).length > 0; }
+function trendBHistProduct(p) {
+  if (p && p.family && trendB.byName[p.family] && !trendBHasOwnHist(p)) return trendB.byName[p.family];
+  return p;
+}
+function trendBActive() { return trendBHistProduct(trendBSelected()); }
+function trendBRender() {
+  if (!trendB.loaded) return;
+  const sel = trendBSelected(); if (!sel) return;
+  const p = trendBHistProduct(sel);   // 履歴のソース(工程分割品は親品種)
+  document.getElementById('trendb-note').textContent = `単位: ${p.unit || '枚'}／現在 実在庫${p.current ? p.current.free : 0}・入荷予定${p.current ? p.current.incoming_free : 0}`;
+  trendBRenderForecast(p);
+  if (p !== sel) document.getElementById('trendb-forecast').insertAdjacentHTML('afterbegin',
+    `<div class="trendb-banner">🔗 工程分割品のため、消費履歴・予測は <b>${escape(trimOldName(p.product))}</b> を表示しています（現在の在庫は工程別のまま。合算値を表示中）。</div>`);
+  document.getElementById('trendb-burndown').innerHTML = trendBBurndownSVG(p);
+  document.getElementById('trendb-monthly').innerHTML = trendBMonthlyStackSVG(p);
+  document.getElementById('trendb-monthly-table').innerHTML = trendBMonthlyTable(p);
+}
+let trendBAxis = 'order';   // 'order'=発注日 / 'deliver'=納品日 / 'accept'=検収日
+const TRENDB_AXIS_LABEL = { order: '発注日(消費)', deliver: '納品日', accept: '検収日(売上)' };
+function trendBSetAxis(a) {
+  trendBAxis = a;
+  document.querySelectorAll('.tb-axistoggle .tb-axis').forEach(e => e.classList.toggle('active', e.dataset.axis === a));
+  const p = trendBActive();
+  document.getElementById('trendb-monthly').innerHTML = trendBMonthlyStackSVG(p);
+  document.getElementById('trendb-monthly-table').innerHTML = trendBMonthlyTable(p);
+}
+// 顧客用カラーパレット(多め)
+const TRENDB_CUST_COLORS = ['#3498db', '#2ecc71', '#e08a00', '#9b59b6', '#e74c3c', '#0f9aa0', '#c026a0', '#8a6d00', '#2d5a8a', '#5a8a2d', '#a0392d', '#2d8a6d', '#6d2d8a', '#8a2d5a', '#3d7a3d', '#7a5a2d', '#2d3d7a'];
+// 対象の月次系列(選択軸)と、直近Nヶ月に絞った月リストを返す
+function trendBMonthly(p) {
+  const ser = (p.monthly && p.monthly[trendBAxis]) ? p.monthly[trendBAxis] : (p.monthly_consume || []).map(x => ({ m: x.m, q: x.q, by: [] }));
+  return _tbClipRange(ser, 'q');
+}
+// 月ごとの入荷枚数(入荷マーカー用)
+function trendBArrivalsByMonth(p) {
+  const map = {};
+  (p.lots || []).forEach(l => { if (l.arrival) { const m = l.arrival.slice(0, 7); map[m] = (map[m] || 0) + (l.total || 0); } });
+  return map;
+}
+
+// 製品切替時にシナリオ既定値をセット(既定レート=rate_usedに一致する窓、リードタイム=forecast由来)
+function trendBResetScenario(p) {
+  let key = 'last_12m';
+  if (p && p.rates && p.rate_used != null) {
+    for (const k in p.rates) { if (p.rates[k] && Math.abs((p.rates[k].rate || 0) - p.rate_used) < 1e-6) { key = k; break; } }
+  }
+  trendBScenario.rateKey = key;
+  trendBScenario.lead = (p && p.forecast && p.forecast.lead_months != null) ? p.forecast.lead_months : 3;
+}
+
+// v5.83①: 5カード＋枯渇予測シナリオ(レート切替・リードタイム・推奨発注日を再計算)
+function trendBRenderForecast(p) {
+  const u = p.unit || '枚', c = p.current || {}, today = trendB.data.today;
+  const hasRates = p.rates && Object.keys(p.rates).length > 0;
+  if (!trendBScenario.rateKey || !(p.rates || {})[trendBScenario.rateKey]) trendBResetScenario(p);
+  const rk = trendBScenario.rateKey, lead = trendBScenario.lead;
+  const rate = hasRates && p.rates[rk] ? (p.rates[rk].rate || 0) : 0;
+  const avail = c.available != null ? c.available : (c.free || 0) + (c.incoming_free || 0);
+  const monthsLeft = rate > 0 ? avail / rate : null;
+  const runout = monthsLeft != null ? _tbDatePlusMonths(today, monthsLeft) : null;
+  const reorderMonths = monthsLeft != null ? monthsLeft - lead : null;
+  const reorder = reorderMonths != null ? _tbDatePlusMonths(today, Math.max(0, reorderMonths)) : null;
+  const urgent = reorderMonths != null && reorderMonths <= 0;
+  const cls = urgent ? 'alert' : (monthsLeft != null && monthsLeft < 6) ? 'warn' : 'ok';
+  // 5カード
+  const cards = [
+    `<div class="fc-card"><div class="fc-lbl">実在庫＋予約</div><div class="fc-val">${c.free || 0}<span style="font-size:13px;color:#888"> ＋${c.reserved || 0}</span></div><div class="fc-sub">${u}（予約=出荷待ち）</div></div>`,
+    `<div class="fc-card"><div class="fc-lbl">入荷予定＋予約</div><div class="fc-val">${c.incoming_free || 0}<span style="font-size:13px;color:#888"> ＋${c.incoming_reserved || 0}</span></div><div class="fc-sub">${u}（入荷後出荷）</div></div>`,
+  ];
+  if (hasRates) {
+    cards.push(`<div class="fc-card"><div class="fc-lbl">予測使用レート</div><div class="fc-val">${rate.toFixed(2)}</div><div class="fc-sub">${u}/月（${TRENDB_RATE_LABELS[rk] || rk}）</div></div>`);
+    cards.push(`<div class="fc-card ${cls}"><div class="fc-lbl">枯渇まで</div><div class="fc-val">${monthsLeft != null ? monthsLeft.toFixed(1) : '—'}</div><div class="fc-sub">ヶ月${runout ? '（' + runout + '）' : '（消費実績なし）'}</div></div>`);
+    cards.push(`<div class="fc-card ${urgent ? 'alert' : ''}"><div class="fc-lbl">推奨発注日</div><div class="fc-val" style="font-size:15px">${urgent ? '即発注' : (reorder || '—')}</div><div class="fc-sub">LT ${lead}ヶ月</div></div>`);
+  }
+  document.getElementById('trendb-forecast').innerHTML = cards.join('');
+  // シナリオ
+  const scBox = document.getElementById('trendb-scenario');
+  if (!hasRates) { scBox.innerHTML = ''; scBox.style.display = 'none'; return; }
+  scBox.style.display = '';
+  const rateBtns = ['last_6m', 'last_12m', 'last_24m', 'lifetime'].filter(k => p.rates[k]).map(k => {
+    const r = p.rates[k];
+    return `<div class="sc-rate ${k === rk ? 'active' : ''}" onclick="trendBScenario.rateKey='${k}';trendBRenderForecast(trendBActive())">
+      <div class="sr-lbl">${TRENDB_RATE_LABELS[k]}</div><div class="sr-val">${(r.rate || 0).toFixed(3)} ${u}/月</div></div>`;
+  }).join('');
+  const rd = p.rates[rk] || {};
+  const step1 = `<div class="sc-step">① 消費レート：${TRENDB_RATE_LABELS[rk]}で <b>${rd.wafers || 0}${u}</b> 使用 ÷ ${rd.months || 0}ヶ月 = <span class="sc-em">${rate.toFixed(3)} ${u}/月</span></div>`;
+  const step2 = `<div class="sc-step">② 枯渇まで：使える分 <b>${avail}${u}</b> ÷ ${rate.toFixed(3)} ${u}/月 = ${monthsLeft != null ? '<span class="sc-em">あと ' + monthsLeft.toFixed(1) + ' ヶ月</span>（予測枯渇日 ' + runout + '）' : '<span class="sc-em">消費実績なし（枯渇予測なし）</span>'}</div>`;
+  const step3 = monthsLeft != null
+    ? `<div class="sc-step">③ 推奨発注日：枯渇 ${monthsLeft.toFixed(1)}ヶ月 − リードタイム ${lead}ヶ月 = ${urgent ? '<span class="sc-alert">即発注（すでにリードタイム内）</span>' : '<span class="sc-em">' + reorder + '</span>'}</div>`
+    : '';
+  scBox.innerHTML = `<div class="sc-head">🧮 枯渇予測シナリオ（消費レートの取り方で変わります）</div>
+    <label class="sc-lead">発注リードタイム: <input type="number" id="trendb-lead" min="0" step="0.5" value="${lead}"> ヶ月
+      <span style="color:#888;font-size:12px">（加工先・製品で異なるため変更可）</span></label>
+    <div class="sc-rates">${rateBtns}</div>${step1}${step2}${step3}`;
+  const leadInput = document.getElementById('trendb-lead');
+  if (leadInput) leadInput.addEventListener('change', () => { trendBScenario.lead = parseFloat(leadInput.value) || 0; trendBRenderForecast(trendBActive()); });
+}
+
+// 折れ線(バーンダウン)＋将来の枯渇予測(点線)＋発注/枯渇マーカー
+const TRENDB_NOHIST = '<div style="padding:16px;color:#8a7a5a;background:#fdf8ec;border:1px solid #e8d3a0;border-radius:6px;font-size:13px;line-height:1.6">この製品は<b>消費日（D番号）が発注DBに紐づかず、消費履歴が復元できていない</b>ため、在庫推移・月次消費は表示できません。<br>現在在庫・入荷予定・入荷明細は上に表示しています（日付のある情報のみ）。</div>';
+let trendBBurnMode = 'lot';   // 'lot' = ロット別 / 'total' = 合計
+function trendBSetBurnMode(m) {
+  trendBBurnMode = m;
+  document.querySelectorAll('.tb-modetoggle .tb-mode').forEach(e => e.classList.toggle('active', e.dataset.mode === m));
+  document.getElementById('trendb-burndown').innerHTML = trendBBurndownSVG(trendBActive());
+}
+function trendBBurndownSVG(p) {
+  return trendBBurnMode === 'total' ? trendBTotalBurndownSVG(p) : trendBLotBurndownSVG(p);
+}
+
+// ロット別バーンダウン: 各ロットの自由在庫がどう減っているかを1本ずつ表示
+const TRENDB_LOT_COLORS = ['#2d6cc0', '#1f8a4c', '#e08a00', '#7a53c9', '#c9402f', '#0f9aa0', '#c026a0', '#8a6d00', '#3a78a8', '#5a4a8a'];
+function trendBLotBurndownSVG(p) {
+  const today = trendB.data.today;
+  const hasDated = l => (l.events || []).some(e => e.date);
+  // 入荷日が無いロット(基板等はD番号→発注DB結合ができず消費日不明)でも、入荷日→最古の使用日
+  // →製品の初回使用日→本日 の順でロット開始日を決めて描画対象に含める。
+  const lotStart = l => {
+    if (l.arrival) return l.arrival;
+    const ev = (l.events || []).filter(e => e.date).map(e => e.date).sort();
+    if (ev.length) return ev[0];
+    return p.first_use || today;
+  };
+  // 対象=入荷日 or 使用日 or 現在庫のいずれかがあるロット(在庫0かつ日付情報も無い=描いても情報ゼロは除外)
+  const lots = (p.lots || []).filter(l => l.arrival || hasDated(l) || (l.stock || 0) > 0);
+  if (!lots.length) return TRENDB_NOHIST;
+  let anyDateless = false;
+  // 各ロットのステップ点列(自由在庫) を作る
+  const series = lots.map((l, li) => {
+    const total = l.total || 0;
+    const start = lotStart(l);
+    const dateless = !l.arrival && !hasDated(l);   // 入荷日も使用日も無い=消費タイミング不明
+    if (dateless) anyDateless = true;
+    const freeAtArrival = total - (l.reserved || 0) - (l.defect || 0) - (l.undated_used || 0);
+    const evs = (l.events || []).filter(e => e.date).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
+    let pts;
+    if (dateless) {
+      // 消費タイミングが全く不明: 現在庫を水平線で示す(在庫があることは分かる=グラフが0にならない)
+      const s = Math.max(0, l.stock || 0);
+      pts = [{ d: start, y: s }, { d: today, y: s }];
+    } else {
+      pts = [{ d: start, y: total }, { d: start, y: Math.max(0, freeAtArrival), drop: true }];
+      let y = freeAtArrival;
+      evs.forEach(e => { y = Math.max(0, y - (e.qty || 0)); pts.push({ d: e.date > today ? today : e.date, y }); });
+      // 現在(today)まで水平に伸ばす。終端は現在の自由在庫(stock)
+      pts.push({ d: today, y: Math.max(0, l.stock || 0) });
+    }
+    return { lot: l.lot, is_dummy: !!l.is_dummy, dateless, rate: l.rate_per_month, color: TRENDB_LOT_COLORS[li % TRENDB_LOT_COLORS.length], pts, stock: l.stock || 0, total };
+  });
+  // X軸: 最古の開始日 〜 today (日付→数値)
+  const toNum = d => new Date(d + 'T00:00:00Z').getTime();
+  let minX = Math.min(...series.map(s => toNum(s.pts[0].d))), maxX = toNum(today);
+  if (maxX <= minX) maxX = minX + 86400000 * 30;
+  let maxY = 1; series.forEach(s => s.pts.forEach(p2 => { if (p2.y > maxY) maxY = p2.y; }));
+  maxY = Math.ceil(maxY * 1.08 / 5) * 5 || 5;
+  const W = 920, H = 320, L = 42, R = 14, T = 16, B = 40, pw = W - L - R, ph = H - T - B;
+  const xAt = t => L + (t - minX) / (maxX - minX) * pw;
+  const yAt = v => T + ph - (Math.max(0, v) / maxY) * ph;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  for (let g = 0; g <= 5; g++) { const v = maxY * g / 5, y = yAt(v); svg += `<line class="tc-grid" x1="${L}" y1="${y.toFixed(1)}" x2="${W - R}" y2="${y.toFixed(1)}"/><text class="tc-ylab" x="${L - 6}" y="${(y + 4).toFixed(1)}" text-anchor="end">${Math.round(v)}</text>`; }
+  // 年グリッド
+  const y0 = new Date(minX).getUTCFullYear(), y1 = new Date(maxX).getUTCFullYear();
+  for (let yy = y0; yy <= y1; yy++) { const t = toNum(`${yy}-01-01`); if (t < minX || t > maxX) continue; const x = xAt(t); svg += `<line class="tc-grid" x1="${x.toFixed(1)}" y1="${T}" x2="${x.toFixed(1)}" y2="${T + ph}"/><text class="tc-xlab" x="${x.toFixed(1)}" y="${T + ph + 16}" text-anchor="middle">${yy}</text>`; }
+  svg += `<line class="tc-axis" x1="${L}" y1="${T + ph}" x2="${W - R}" y2="${T + ph}"/>`;
+  // today マーカー(赤破線)
+  const tx = xAt(maxX); svg += `<line x1="${tx.toFixed(1)}" y1="${T}" x2="${tx.toFixed(1)}" y2="${T + ph}" stroke="#c9402f" stroke-width="1.2" stroke-dasharray="4 3"/><text x="${tx.toFixed(1)}" y="${T - 4}" text-anchor="end" font-size="10" fill="#c9402f">今日</text>`;
+  // 各ロット線 (ステップ)
+  series.forEach(s => {
+    let dpath = '';
+    s.pts.forEach((pt, i) => {
+      const x = xAt(toNum(pt.d)), yv = yAt(pt.y);
+      if (i === 0) { dpath = `M ${x.toFixed(1)} ${yv.toFixed(1)}`; }
+      else { const px = xAt(toNum(s.pts[i - 1].d)); dpath += ` L ${px.toFixed(1)} ${yv.toFixed(1)} L ${x.toFixed(1)} ${yv.toFixed(1)}`; }
+    });
+    const dash = s.is_dummy ? ' stroke-dasharray="3 3" opacity="0.55"' : '';
+    svg += `<path d="${dpath}" fill="none" stroke="${s.color}" stroke-width="2"${dash}><title>${escape(s.lot)}（満${s.total} → 現${s.stock}）${s.rate != null ? ' ' + s.rate + '枚/月' : ''}</title></path>`;
+    // 入荷○(入荷日ありのみ) と 現在＊
+    if (!s.dateless) { const a = s.pts[0]; svg += `<circle cx="${xAt(toNum(a.d)).toFixed(1)}" cy="${yAt(a.y).toFixed(1)}" r="3" fill="#fff" stroke="${s.color}" stroke-width="1.5"/>`; }
+    if (s.stock > 0) svg += `<text x="${tx.toFixed(1)}" y="${yAt(s.stock).toFixed(1)}" font-size="12" fill="${s.color}" font-weight="700">＊</text>`;
+  });
+  svg += `</svg>`;
+  // 凡例
+  const leg = series.map(s => `<span><i style="background:${s.color}${s.is_dummy ? ';opacity:.55' : ''}"></i>${escape(s.lot)}${s.is_dummy ? '(死蔵)' : ''}${s.dateless ? '(入荷日不明)' : ''}${s.rate != null ? ' ' + s.rate + '枚/月' : ''}</span>`).join('');
+  const datelessNote = anyDateless ? '。<b style="color:#b06a00">「入荷日不明」ロット</b>は消費日が復元できないため、現在庫を水平線で表示（推移は不明）' : '';
+  return svg + `<div class="tb-lotlegend">${leg}</div><div style="font-size:11px;color:#888;padding:2px 8px 4px">○=入荷(満タン)／＊=現在の自由在庫／破線=死蔵ロット(5年超)／赤破線=今日。入荷時に予約・不良・確保分を差し引いた自由分が使用ごとに減少${datelessNote}。</div>`;
+}
+function trendBTotalBurndownSVG(p) {
+  let hist = _tbClipRange(p.burndown || [], 's');
+  if (!hist.length) return TRENDB_NOHIST;
+  const today = (trendB.data.today || '').slice(0, 7) || hist[hist.length - 1].m;
+  const f = p.forecast || {};
+  const runoutM = f.runout ? f.runout.slice(0, 7) : null;
+  const reorderM = f.reorder ? f.reorder.slice(0, 7) : null;
+  // 軸: 履歴先頭 〜 max(today, runout)
+  let endM = today; if (runoutM && runoutM > endM) endM = runoutM;
+  const months = _tbMonthList(hist[0].m, endM);
+  const idx = {}; months.forEach((m, i) => idx[m] = i);
+  const histMap = {}; hist.forEach(x => histMap[x.m] = x.s);
+  // 将来予測: today時点の在庫 → runout で0 へ線形
+  const startStock = histMap[today] != null ? histMap[today] : hist[hist.length - 1].s;
+  const proj = [];
+  if (runoutM && idx[runoutM] != null && idx[today] != null && idx[runoutM] > idx[today]) {
+    const span = idx[runoutM] - idx[today];
+    for (let i = idx[today]; i <= idx[runoutM]; i++) proj.push({ i, y: startStock * (1 - (i - idx[today]) / span) });
+  }
+  const n = months.length;
+  const W = 920, H = 300, L = 46, R = 16, T = 20, B = 46, pw = W - L - R, ph = H - T - B;
+  let maxY = 1; hist.forEach(x => { if (x.s > maxY) maxY = x.s; }); if (startStock > maxY) maxY = startStock;
+  maxY = Math.ceil(maxY * 1.1 / 5) * 5 || 5;
+  const xAt = i => n === 1 ? L + pw / 2 : L + (i / (n - 1)) * pw;
+  const yAt = v => T + ph - (Math.max(0, v) / maxY) * ph;
+  const showEvery = n > 16 ? Math.ceil(n / 16) : 1;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  for (let g = 0; g <= 5; g++) { const v = maxY * g / 5, y = yAt(v); svg += `<line class="tc-grid" x1="${L}" y1="${y.toFixed(1)}" x2="${W - R}" y2="${y.toFixed(1)}"/><text class="tc-ylab" x="${L - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end">${Math.round(v)}</text>`; }
+  svg += `<line class="tc-axis" x1="${L}" y1="${T + ph}" x2="${W - R}" y2="${T + ph}"/>`;
+  months.forEach((m, i) => { if (i % showEvery !== 0 && i !== n - 1) return; svg += `<text class="tc-xlab" x="${xAt(i).toFixed(1)}" y="${T + ph + 16}" text-anchor="middle">${(+m.slice(5, 7))}/${m.slice(2, 4)}</text>`; });
+  // マーカー(発注=橙, 枯渇=赤, 現在=灰)
+  const vline = (m, color, label) => { if (idx[m] == null) return ''; const x = xAt(idx[m]); return `<line x1="${x.toFixed(1)}" y1="${T}" x2="${x.toFixed(1)}" y2="${T + ph}" stroke="${color}" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${x.toFixed(1)}" y="${T - 4}" text-anchor="middle" font-size="11" fill="${color}" font-weight="700">${label}</text>`; };
+  svg += vline(today, '#9aa5b3', '現在');
+  if (reorderM) svg += vline(reorderM, '#e08a00', '発注');
+  if (runoutM) svg += vline(runoutM, '#c9402f', '枯渇');
+  // 実績線
+  const hp = hist.map(x => `${xAt(idx[x.m]).toFixed(1)},${yAt(x.s).toFixed(1)}`).join(' ');
+  svg += `<polyline class="tc-line" stroke="#2d6cc0" points="${hp}"/>`;
+  hist.forEach(x => { if (idx[x.m] % showEvery === 0) svg += `<circle class="tc-dot" cx="${xAt(idx[x.m]).toFixed(1)}" cy="${yAt(x.s).toFixed(1)}" r="3" fill="#2d6cc0"><title>${x.m} 在庫${x.s}</title></circle>`; });
+  // 予測(点線)
+  if (proj.length > 1) { const pp = proj.map(o => `${xAt(o.i).toFixed(1)},${yAt(o.y).toFixed(1)}`).join(' '); svg += `<polyline fill="none" stroke="#c9402f" stroke-width="2" stroke-dasharray="5 4" points="${pp}"/>`; }
+  svg += `<circle cx="${L}" cy="12" r="5" fill="#2d6cc0"/><text class="tc-legend" x="${L + 10}" y="16" fill="#2d6cc0">実在庫(実績)</text>`;
+  if (proj.length > 1) svg += `<text class="tc-legend" x="${L + 110}" y="16" fill="#c9402f">— 枯渇予測</text>`;
+  svg += `</svg>`;
+  return svg;
+}
+
+// 顧客別 積み上げ 月次消費（選択軸）＋入荷マーカー
+function trendBMonthlyStackSVG(p) {
+  const data = trendBMonthly(p);
+  if (!data.length) return TRENDB_NOHIST;
+  const custs = p.customers || [];
+  const hasCust = custs.length && data.some(x => (x.by || []).length);
+  const arr = trendBArrivalsByMonth(p);
+  const n = data.length, W = 920, H = 260, L = 46, R = 16, T = 26, B = 46, pw = W - L - R, ph = H - T - B;
+  let maxY = 1; data.forEach(x => { if (x.q > maxY) maxY = x.q; }); maxY = Math.ceil(maxY * 1.15 / 5) * 5 || 5;
+  const bw = Math.max(3, pw / n * 0.68);
+  const xAt = i => L + (i + 0.5) * (pw / n);
+  const yAt = v => T + ph - (v / maxY) * ph;
+  const showEvery = n > 16 ? Math.ceil(n / 16) : 1;
+  const custTotals = custs.map((_, ci) => data.reduce((s, x) => s + ((x.by || [])[ci] || 0), 0));
+  const cc = ci => TRENDB_CUST_COLORS[ci % TRENDB_CUST_COLORS.length];
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  for (let g = 0; g <= 5; g++) { const v = maxY * g / 5, y = yAt(v); svg += `<line class="tc-grid" x1="${L}" y1="${y.toFixed(1)}" x2="${W - R}" y2="${y.toFixed(1)}"/><text class="tc-ylab" x="${L - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end">${Math.round(v)}</text>`; }
+  data.forEach((x, i) => {
+    const cx = xAt(i);
+    if (x.q > 0) {
+      if (hasCust) {
+        let acc = 0;
+        (x.by || []).forEach((q, ci) => { if (q > 0) { const y0 = yAt(acc), y1 = yAt(acc + q); svg += `<rect x="${(cx - bw / 2).toFixed(1)}" y="${y1.toFixed(1)}" width="${bw.toFixed(1)}" height="${(y0 - y1).toFixed(1)}" fill="${cc(ci)}"><title>${x.m} ${escape(custs[ci] || '')} ${q}枚</title></rect>`; acc += q; } });
+      } else {
+        const y1 = yAt(x.q); svg += `<rect class="tb-bar" x="${(cx - bw / 2).toFixed(1)}" y="${y1.toFixed(1)}" width="${bw.toFixed(1)}" height="${(yAt(0) - y1).toFixed(1)}"><title>${x.m} 消費${x.q}</title></rect>`;
+      }
+    }
+    const a = arr[x.m];
+    if (a) svg += `<text x="${cx.toFixed(1)}" y="${T - 6}" text-anchor="middle" font-size="10" fill="#7a53c9" font-weight="700">📦+${a}</text>`;
+    if (i % showEvery === 0 || i === n - 1) svg += `<text class="tc-xlab" x="${cx.toFixed(1)}" y="${T + ph + 16}" text-anchor="middle">${(+x.m.slice(5, 7))}/${x.m.slice(2, 4)}</text>`;
+  });
+  svg += `<line class="tc-axis" x1="${L}" y1="${T + ph}" x2="${W - R}" y2="${T + ph}"/></svg>`;
+  let leg = '';
+  if (hasCust) leg = '<div class="tb-custlegend">' + custs.map((c, ci) => custTotals[ci] > 0 ? `<span><i style="background:${cc(ci)}"></i>${escape(c)}</span>` : '').join('') + '<span><i style="background:#7a53c9"></i>📦=ウエハ入荷</span></div>';
+  return svg + leg;
+}
+
+// 月次×顧客 マトリクス表（いつ・どの顧客が・どれだけ）
+function trendBMonthlyTable(p) {
+  const data = trendBMonthly(p);
+  if (!data.length) return '';
+  const custs = p.customers || [];
+  const hasCust = custs.length && data.some(x => (x.by || []).length);
+  const arr = trendBArrivalsByMonth(p);
+  const cc = ci => TRENDB_CUST_COLORS[ci % TRENDB_CUST_COLORS.length];
+  const usedCi = custs.map((_, ci) => ci).filter(ci => data.reduce((s, x) => s + ((x.by || [])[ci] || 0), 0) > 0);
+  const cell = v => v > 0 ? `<td>${v}</td>` : '<td class="z">・</td>';
+  let h = `<table><thead><tr><th>顧客＼月（${TRENDB_AXIS_LABEL[trendBAxis]}）</th>` + data.map(x => `<th>${x.m.slice(2)}</th>`).join('') + '</tr></thead><tbody>';
+  h += '<tr class="tt-total"><td>合計</td>' + data.map(x => cell(x.q)).join('') + '</tr>';
+  if (hasCust) usedCi.forEach(ci => { h += `<tr><td><span class="tt-cust"><i style="background:${cc(ci)}"></i>${escape(custs[ci])}</span></td>` + data.map(x => cell((x.by || [])[ci] || 0)).join('') + '</tr>'; });
+  h += '<tr class="tt-in"><td>📦 ウエハ入荷</td>' + data.map(x => { const a = arr[x.m]; return a ? `<td>${a}</td>` : '<td class="z">・</td>'; }).join('') + '</tr>';
+  return h + '</tbody></table>';
+}
+
+document.getElementById('trendb-cat').addEventListener('change', () => { trendBFillGroup(); trendBFillPick(); trendB.evLimit = 100; trendBResetScenario(trendBActive()); trendBRender(); });
+document.getElementById('trendb-group').addEventListener('change', () => { trendBFillPick(); trendB.evLimit = 100; trendBResetScenario(trendBActive()); trendBRender(); });
+document.getElementById('trendb-pick').addEventListener('change', () => { trendB.evLimit = 100; trendBResetScenario(trendBActive()); trendBRender(); });
+document.getElementById('trendb-range').addEventListener('change', trendBRender);
 
 // v5.28: 開いているメニュー(ウエハ/基板のシリーズ・品名カード)をすべて閉じる
 window.collapseAllMenus = function() {
@@ -4979,6 +5632,20 @@ const CONSUMED_NOTE_KW = /廃棄|開発使用|展示|サンプル|不良|DC/;
 function isConsumedNote(v) {
   const s = cleanText(v);
   return s ? CONSUMED_NOTE_KW.test(s) : false;
+}
+
+// v5.85: 色が「在庫(白)」のままでも、顧客列に番号が入っていれば状態を補正する(色の付け忘れ救済)。
+//   D番号(発注/消費)あり → 使用済 / M番号(見積/予約)あり → 予約。D番号を優先。
+//   現在在庫シート(!useReverseLogic)かつ status==='在庫' のときのみ適用。
+const DNUM_SLOT = /D\d{3,}/;
+const MNUM_SLOT = /M\d{3,}/;
+function applyCustomerStatus(status, ws, r, cols, useReverseLogic) {
+  if (useReverseLogic || status !== '在庫' || !cols['顧客']) return status;
+  const cu = cleanText(ws.getCell(r, cols['顧客']).value);
+  if (!cu) return status;
+  if (DNUM_SLOT.test(cu)) return '使用済';
+  if (MNUM_SLOT.test(cu)) return '予約';
+  return status;
 }
 
 function fillDesc(fill) {
@@ -5466,8 +6133,14 @@ const WAFER_SIZE = {
   'PWB-0101 Type-A': 'Φ6',
   'PWB-0101 Type-B': 'Φ6',
 };
+// 表示名から「(旧)…」以降を除去 (製品改名で旧名を併記したファイル名を、表示上は新名だけにする。
+//   例: "KIT FC200(A)-0103JY_2×2(SAC)_E-700G_(旧)KIT FC200-0102JY…" → "KIT FC200(A)-0103JY_2×2(SAC)_E-700G")。
+//   全角/半角の「（旧）」に対応。製品キー(p.product)は生のまま=検索・結合・トグルに影響なし。
+function trimOldName(name) {
+  return String(name == null ? '' : name).replace(/[_\s]*[（(]旧[）)].*$/, '').trim();
+}
 function displayName(p) {
-  const base = displayNameBase(p);
+  const base = trimOldName(displayNameBase(p));
   if (/^Φ/.test(base)) return base;                 // 既に先頭にサイズあり → そのまま
   if (/^Glass\b/i.test(p.product)) return `Φ8 ${base}`;  // v5.67: Glassは全てΦ8を先頭に付加
   return `${base} (${WAFER_SIZE[p.product] || 'Φ8'})`;
@@ -5528,7 +6201,11 @@ function findSlotBlocks(ws, slotCol) {
 //   確定到着分=現有在庫 / 上旬・予定分=入荷予定 を正しく振り分けられる。
 //   境界(入荷日セル)が1つ以下なら分割しない=通常ロットは従来通り(回帰なし)。
 function isArrivalCell(ws, r, arrivalCol) {
-  const v = ws.getCell(r, arrivalCol).value;
+  const cell = ws.getCell(r, arrivalCol);
+  // v5.87: 縦結合セルのスレーブ(2行目以降)はマスターの値が返るだけで「新しい入荷日」ではない。
+  //   これを入荷日と誤判定すると、1ロット(入荷日が全slotに縦結合)が1枚ごとに分割される(FC120等)。
+  if (cell.isMerged && cell.master && cell.master.address !== cell.address) return false;
+  const v = cell.value;
   if (v === null || v === undefined || v === '') return false;
   if (v instanceof Date) return true;
   if (typeof v === 'number' && v > 30000 && v < 60000) return true;
@@ -5802,6 +6479,7 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
           if (emptyRows.has(r)) continue;  // v5.31: 空スロット(大結合メモ)は除外
           let status = classifier(ws.getCell(r, cols.slot));
           if (!useReverseLogic && status === '在庫' && cols['備考'] && isConsumedNote(ws.getCell(r, cols['備考']).value)) status = '使用済';
+          status = applyCustomerStatus(status, ws, r, cols, useReverseLogic);  // v5.85: 白でも顧客列のD番号→使用済/M番号→予約
           if (sheetIsDev && !useReverseLogic) status = '使用済';
           // 品種キーと工程状態(加工中→入荷予定)を判定
           let typeKey, stagePending = false;
@@ -5869,6 +6547,7 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
         if (!useReverseLogic && status === '在庫' && cols['備考'] && isConsumedNote(ws.getCell(r, cols['備考']).value)) {
           status = '使用済';
         }
+        status = applyCustomerStatus(status, ws, r, cols, useReverseLogic);  // v5.85: 白でも顧客列のD番号→使用済/M番号→予約
         // v5.24: 開発品シートは在庫・予約も含め全て使用済扱い
         if (sheetIsDev && !useReverseLogic) status = '使用済';
         if (useReverseLogic) { if (status === '未予約') countA++; else countB++; }
@@ -6372,7 +7051,7 @@ const CACHE_STORE = 'inventory_cache';
 const CACHE_VERSION = 1;
 // 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
 // (キャッシュ全クリアになる)
-const CACHE_SCHEMA_VERSION = 'v5.82-arrival-split-2026-09-14';
+const CACHE_SCHEMA_VERSION = 'v5.87-merged-arrival-2026-10-01';
 
 
 
