@@ -3022,9 +3022,10 @@ table.history-table .h-stock { font-size: 16px; }
     <div id="trend-empty" class="trend-empty">
       <div class="te-icon">📈</div>
       <div class="te-title">在庫の推移・変動を表示します</div>
-      <p>スナップショット履歴ファイル（<code>在庫履歴_YYYY-MM.jsonl</code>）を読み込むと、在庫量の<b>推移グラフ</b>と<b>増減明細</b>を表示します。</p>
-      <button type="button" class="trend-load" onclick="document.getElementById('trend-file').click()">📁 履歴ファイルを読み込む</button>
-      <p class="te-hint">※ 履歴は日次スナップショットで自動記録されます（社内PC）。手元のファイルをここにドラッグ＆ドロップでも読み込めます。</p>
+      <p>このタブを開くと、<b>SharePointの最新「在庫推移データ」を自動で読み込み</b>ます（毎日自動更新・在庫Excelと同じログイン）。</p>
+      <button type="button" class="trend-load" onclick="trendAutoLoad(true)">🔄 SharePointから取得</button>
+      <p class="te-hint">自動取得できない場合は、手元のファイル（<code>在庫推移データ.json</code> / <code>在庫履歴_*.jsonl</code>）を
+        <a href="#" onclick="document.getElementById('trend-file').click();return false;">📁 ここから読み込み</a>・ドラッグ＆ドロップでも表示できます。</p>
     </div>
     <div id="trend-main" hidden>
       <div class="trend-controls">
@@ -3061,6 +3062,7 @@ table.history-table .h-stock { font-size: 16px; }
           <option value="0">全期間</option>
         </select></label>
         <span class="trend-range" id="trendb-note"></span>
+        <button type="button" class="trend-reload" onclick="trendAutoLoad(true)" title="SharePointの最新データを取り直す">🔄 最新に更新</button>
         <button type="button" class="trend-reload" onclick="document.getElementById('trend-file').click()">📁 別のデータ</button>
       </div>
       <div id="trendb-forecast"></div>
@@ -3285,6 +3287,8 @@ function setOrder(key, data) {
 //    → 内部ビルドを刻むだけで公開版は自動で追従し、手動更新漏れによるズレが起きない。
 // ============================================================
 const CHANGELOG = [
+  { v: 'v5.92', date: '2026-10-15', text: '在庫推移(分析)タブの表示スイッチを「保存しない」仕様に変更。従来は最下部スイッチのオン/オフをlocalStorageに保存していたが、保存をやめてメモリ上のフラグのみとし、ページの読み込み(再読込・開き直し)のたびに必ずオフから始まるようにした(オンはその表示の間だけ有効)。起動時に旧保存値もクリーンアップ。既定オフの原則は不変。表示のみ(数え方・他の設定の保存に影響なし)' },
+  { v: 'v5.91', date: '2026-10-15', text: '在庫推移タブを「SharePoint自動読み込み」に対応。タブを開くと、毎日自動更新される在庫推移データ(SharePointの Claude_code_tools/在庫推移/在庫推移データ.json)を、在庫Excelと同じログインで自動取得して表示(手動📁が不要に)。取得できない場合は従来どおり手元ファイルの📁読込・ドラッグ&ドロップにフォールバック。コントロールに「🔄最新に更新」ボタンを追加。顧客名を含むデータはSharePointログインの内側に留まる(GitHubのHTMLには焼き込まない)。表示のみ(数え方に影響なし)' },
   { v: 'v5.90', date: '2026-10-14', text: '廃盤品「KIT CC80CL-0100JY【Cu無垢】」を非表示に。非表示リスト(HIDDEN_PRODUCTS)を基板にも適用できるよう基板用フィルタ(substrateVisible)を追加し、取得時・スナップショット表示の両方で除外(従来ウエハのみだった非表示を基板へ拡張)。表示のみ(数え方・既存タブに影響なし)' },
   { v: 'v5.89', date: '2026-10-01', text: 'シリーズ帯の危険/警告バッジの並び順を規定: ①危険 ②警告 ③危険＋入荷予定 ④警告＋入荷予定(入荷予定ありはハッチング)。各区分の中は製品の並び順。入荷予定の無い要手当て品(危険→警告)が前、入荷予定で回復予定の品が後ろにまとまる。表示のみ(数え方は不変)' },
   { v: 'v5.88', date: '2026-10-01', text: 'シリーズ帯の危険/警告バッジで、入荷予定(未予約分)があり在庫が回復予定の製品は、斜めハッチングを掛けて帯の末尾へまとめるようにした。入荷予定が無く本当に手当てが必要な製品が前に並ぶので、優先度が分かりやすい(例 FC120は危険0枚だが入荷予定25で回復予定→ハッチングで末尾、入荷予定の無い警告品が前)。表示のみ(数え方は不変)' },
@@ -4830,17 +4834,61 @@ document.querySelectorAll('.tab').forEach(tab => {
     // v5.81: しきい値の凡例フロートは推移タブでは無関係なので隠す
     const lf = document.getElementById('legend-float');
     if (lf) lf.style.display = (tab.dataset.tab === 'trend') ? 'none' : '';
+    // v5.91: 推移タブを開いたら、SharePointの最新推移データを自動取得(未読込時のみ)
+    if (tab.dataset.tab === 'trend') trendAutoLoad();
   });
 });
+
+// v5.91: 在庫推移データの自動取得。毎日の run_batch が SharePoint(既定ドライブ)の
+//   Claude_code_tools/在庫推移/在庫推移データ.json を更新し、ここが在庫Excelと同じMSAL認証で取得する。
+//   顧客名を含むためSharePointログインの内側に留まる(GitHubのHTMLには焼き込まない)。
+const TREND_SP_PATH = 'Claude_code_tools/在庫推移/在庫推移データ.json';
+let trendAutoTried = false;
+// 失敗時に確実に手動フォールバック表示へ戻せるよう、元の空状態HTMLを一度だけ保持。
+const TREND_EMPTY_HTML = (document.getElementById('trend-empty') || {}).innerHTML || '';
+async function trendFetchFromSharePoint() {
+  const token = await getAccessToken();
+  const r1 = await fetch(`https://graph.microsoft.com/v1.0/sites/${SP_CONFIG.hostname}:${SP_CONFIG.sitePath}`, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r1.ok) throw new Error('サイト情報 HTTP ' + r1.status);
+  const site = await r1.json();
+  const r2 = await fetch(`https://graph.microsoft.com/v1.0/sites/${site.id}/drive`, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r2.ok) throw new Error('ドライブ情報 HTTP ' + r2.status);
+  const drive = await r2.json();
+  const url = `https://graph.microsoft.com/v1.0/drives/${drive.id}/root:/${encodeURIComponent(TREND_SP_PATH)}:/content`;
+  const r3 = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r3.ok) throw new Error('推移データ取得 HTTP ' + r3.status + (r3.status === 404 ? '(ファイル未配置?)' : ''));
+  const obj = await r3.json();
+  trendLoadTrackB(obj, 'SharePoint最新');
+}
+// 推移タブを開いた時: 未読込なら自動取得。失敗時は手動📁のフォールバックへ戻す。
+async function trendAutoLoad(force) {
+  if (trendB.loaded && !force) return;
+  if (trendAutoTried && !force) return;
+  trendAutoTried = true;
+  const empty = document.getElementById('trend-empty');
+  if (empty && !trendB.loaded) {
+    empty.hidden = false;
+    empty.innerHTML = '<div class="te-icon">⏳</div><div class="te-title">在庫推移データを取得中…</div><p class="te-hint">SharePointから最新の在庫推移データを読み込んでいます。</p>';
+  }
+  try {
+    await trendFetchFromSharePoint();
+  } catch (e) {
+    console.warn('[trend] SharePoint自動取得に失敗:', e && e.message);
+    trendAutoTried = false;                       // 次回また試せるように
+    if (empty && !trendB.loaded) empty.innerHTML = TREND_EMPTY_HTML;   // 手動📁のフォールバック表示へ確実に戻す
+  }
+}
+window.trendAutoLoad = trendAutoLoad;
 
 /* ============================================================
    在庫「推移」タブ (v5.81) — 履歴JSONL(スナップショット)を読み込み、
    在庫推移グラフ＋増減明細を表示。数え方には一切関与しない表示専用。
    ============================================================ */
-// 在庫推移(分析)タブの表示は、最下部スイッチのランタイム状態(localStorage)で制御。既定=オフ。
-// 実在庫を見ながら検証できるよう、コードのフラグではなく画面スイッチで切替える。
-const TREND_TAB_KEY = 'walts_trend_tab';
-function trendTabEnabled() { try { return localStorage.getItem(TREND_TAB_KEY) === '1'; } catch (e) { return false; } }
+// 在庫推移(分析)タブの表示は、最下部スイッチのランタイム状態で制御。既定=オフ。
+// ★保存しない: メモリ上のフラグのみ。読み込み(再読込/開き直し)のたびに必ずオフから始まる。
+const TREND_TAB_KEY = 'walts_trend_tab';   // 旧実装で保存した値のクリーンアップ用に残す
+let trendTabOn = false;                    // ランタイム状態(永続化しない)
+function trendTabEnabled() { return trendTabOn; }
 function applyTrendTabVisibility() {
   const on = trendTabEnabled();
   const tabBtn = document.querySelector('.tab[data-tab="trend"]');
@@ -5110,12 +5158,14 @@ function trendLoadText(text, name) {
     rd.onload = () => trendLoadText(String(rd.result || ''), f.name);
     rd.readAsText(f, 'utf-8');
   });
-  // 最下部の表示スイッチと連動 (既定オフ・localStorage保存)
+  // 最下部の表示スイッチと連動 (既定オフ・保存しない=毎回オフから開始)
+  try { localStorage.removeItem(TREND_TAB_KEY); } catch (e) {}  // 旧実装の保存値を掃除
   const trendSwitch = document.getElementById('trend-tab-switch');
   if (trendSwitch) {
-    trendSwitch.checked = trendTabEnabled();
+    trendTabOn = false;
+    trendSwitch.checked = false;
     trendSwitch.addEventListener('change', () => {
-      try { localStorage.setItem(TREND_TAB_KEY, trendSwitch.checked ? '1' : '0'); } catch (e) {}
+      trendTabOn = trendSwitch.checked;   // メモリのみ。再読込でオフに戻る
       applyTrendTabVisibility();
     });
   }
