@@ -3123,11 +3123,16 @@ table.history-table .h-stock { font-size: 16px; }
 <script>
 // v5.0: INVENTORYはSharePointから取得 (起動時に集計、再取得ボタンで更新可能)
 let INVENTORY = [];
-// v5.68: 非表示にする品種 (もう使わない等)。生品名(p.product)で完全一致。
-const HIDDEN_PRODUCTS = new Set(['MB130A PI 2.0um']);
+// v5.68: 非表示にする品種 (もう使わない/廃盤等)。品名(p.product)で完全一致。ウエハ・基板共通。
+// v5.90: 基板の廃盤品「KIT CC80CL-0100JY【Cu無垢】」を追加。
+const HIDDEN_PRODUCTS = new Set(['MB130A PI 2.0um', 'KIT CC80CL-0100JY【Cu無垢】']);
 // 表示対象のみに絞る (非表示品種 + TTV未保証を除外)。fetch/snapshot 両方で使用。
 function inventoryVisible(arr) {
   return (arr || []).filter(p => !HIDDEN_PRODUCTS.has(p.product) && !/ミラーウエハ.*TTV未保証|TTV未保証/.test(p.product));
+}
+// v5.90: 基板(SUBSTRATE)の非表示フィルタ (HIDDEN_PRODUCTS を品名で適用)。
+function substrateVisible(arr) {
+  return (arr || []).filter(s => !HIDDEN_PRODUCTS.has(s.product));
 }
 
 // v5.70: 熱酸化膜グループ専用「マスク別 在庫検索」
@@ -3280,6 +3285,7 @@ function setOrder(key, data) {
 //    → 内部ビルドを刻むだけで公開版は自動で追従し、手動更新漏れによるズレが起きない。
 // ============================================================
 const CHANGELOG = [
+  { v: 'v5.90', date: '2026-10-14', text: '廃盤品「KIT CC80CL-0100JY【Cu無垢】」を非表示に。非表示リスト(HIDDEN_PRODUCTS)を基板にも適用できるよう基板用フィルタ(substrateVisible)を追加し、取得時・スナップショット表示の両方で除外(従来ウエハのみだった非表示を基板へ拡張)。表示のみ(数え方・既存タブに影響なし)' },
   { v: 'v5.89', date: '2026-10-01', text: 'シリーズ帯の危険/警告バッジの並び順を規定: ①危険 ②警告 ③危険＋入荷予定 ④警告＋入荷予定(入荷予定ありはハッチング)。各区分の中は製品の並び順。入荷予定の無い要手当て品(危険→警告)が前、入荷予定で回復予定の品が後ろにまとまる。表示のみ(数え方は不変)' },
   { v: 'v5.88', date: '2026-10-01', text: 'シリーズ帯の危険/警告バッジで、入荷予定(未予約分)があり在庫が回復予定の製品は、斜めハッチングを掛けて帯の末尾へまとめるようにした。入荷予定が無く本当に手当てが必要な製品が前に並ぶので、優先度が分かりやすい(例 FC120は危険0枚だが入荷予定25で回復予定→ハッチングで末尾、入荷予定の無い警告品が前)。表示のみ(数え方は不変)' },
   { v: 'v5.87', date: '2026-10-01', text: '入荷予定ロットが1枚ずつ別ロットに分割される不具合を修正(FC120等)。入荷日セルがロットの全スロットに縦結合されている場合、結合スレーブ行(2行目以降)にもマスターの日付が入って見えるため、各行を別の入荷日と誤判定し1枚ごとに分割していた。結合スレーブ行は新しい入荷日とみなさないよう修正(isArrivalCell)。例 FC120のSIF00-0006が25件→1ロット(未予約23＋予約2)に集約。合計枚数は元から正しく、ロットのまとまりのみ是正。数え方変更につきキャッシュ更新＋core.js反映' },
@@ -7393,7 +7399,7 @@ async function bootSharePointFlow(forceRefresh = false) {
 
     // v5.1/v5.68: 非表示品種(TTV未保証・もう使わない品種)を除外
     INVENTORY = inventoryVisible(wafer);
-    SUBSTRATE = substrate;
+    SUBSTRATE = substrateVisible(substrate);
     const honshaCount = stats.wafer_honsha.ok;
     const itoshimaCount = stats.wafer_itoshima.ok;
     const substrateCount = stats.substrate_honsha.ok;
@@ -7474,7 +7480,7 @@ document.getElementById('btn-export-json').addEventListener('click', () => {
   const snap = loadSnapshot();
   if (snap) {
     INVENTORY = inventoryVisible(snap.inventory);   // v5.68: 旧スナップショットにも非表示フィルタを適用
-    SUBSTRATE = snap.substrate;
+    SUBSTRATE = substrateVisible(snap.substrate);   // v5.90: 基板の非表示フィルタ(旧スナップショットにも)
     renderAll();
     const st = document.getElementById('fetch-status-text');
     if (st) {
