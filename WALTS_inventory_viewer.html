@@ -1900,6 +1900,11 @@ tr.dummy-row .lot-name { font-style: italic; }
 .pc-stat.dummy-mini .val-combo .val-plus { font-size: 14px; }
 .pc-stat.dummy-mini .sub { font-size: 11px; color: var(--ink-faint); }
 
+/* v5.94: 基板の保管期限超過ロット(ダミー)ピル */
+.lot-pill.dummy-pill { opacity: 0.6; background: #f1eae0; }
+.sub-lots-dummy { margin-top: 4px; }
+.sub-lots-dummy > .lbl { color: #8a6d00; font-weight: 700; }
+
 /* 出所バッジ */
 .origin-badge {
   display: inline-block; padding: 3px 10px;
@@ -2343,6 +2348,19 @@ table.history-table .h-stock { font-size: 16px; }
  * =========================================================================== */
 (function (root) {
   'use strict';
+
+  // v5.94: FC向けKIT基板の保管期限(年)。対象=FC系(FC120/150/150LC/200)+01A系ピッチ基板(01A120P/150P/200P)。
+  //   表面処理: SACを含めば5年(SAC優先) → それ以外でNiAu/NiPdAu/OSPを含めば4年 → どれも無ければ null(期限なし)。
+  //   対象外(CC80/FBW/STAC/WLP/LCD等)・表面処理不明(Cu無垢/ITO等)は null を返しダミー化しない。
+  function kitShelfYears(name) {
+    const nm = name || '';
+    const isFcKit = /FC\d/i.test(nm) || /01A\d+P/i.test(nm);
+    if (!isFcKit) return null;
+    const n = nm.replace(/[\s\-]/g, '').toUpperCase();   // Ni-Pd-Au / NiPd-Au / NiPdAu を正規化
+    if (/SAC/.test(n)) return 5;                         // SAC優先
+    if (/NIPDAU/.test(n) || /NIAU/.test(n) || /OSP/.test(n)) return 4;
+    return null;
+  }
 
   const HEADER_RULES = [
     ['date',       [/^日付$/]],
@@ -2890,6 +2908,27 @@ table.history-table .h-stock { font-size: 16px; }
         if (newest) { newest.stock += -diff; newest.reconciled = true; }
       }
     }
+    // v5.94: 保管期限超過ロットをダミー化。
+    //   対象=FC向けKIT基板(FC系+01A系ピッチ基板)。期限=SACを含む→5年(SAC優先)/NiAu・NiPdAu・OSP→4年。
+    //   表面処理が判定できない or 対象外(CC80/FBW/STAC/WLP/LCD, Cu無垢/ITO等)→期限なし(ダミー化しない)。
+    //   経過起点=ロット入庫日(first_in_iso)。超過分は実在庫(current_stock/current_free)から外す。
+    let dummyStock = 0;
+    {
+      const shelfY = kitShelfYears(product);
+      if (shelfY != null) {
+        const NOWMS = Date.now();
+        for (const l of lots) {
+          if ((l.stock || 0) > 0 && l.first_in_iso) {
+            const yrs = (NOWMS - Date.parse(l.first_in_iso)) / (365.25 * 86400000);
+            if (yrs >= shelfY) { l.is_dummy = true; dummyStock += l.stock; }
+          }
+        }
+      }
+      if (dummyStock > 0) {
+        currentStock = Math.max(0, currentStock - dummyStock);
+        currentFree  = Math.max(0, currentFree  - dummyStock);
+      }
+    }
     const { in_1y, out_1y, sample_1y } = compute1yTotals(confirmedRecs, fileModifiedDate);
     const primarySheet = sheetsProcessed.length ? sheetsProcessed[0].name : '';
 
@@ -2910,6 +2949,7 @@ table.history-table .h-stock { font-size: 16px; }
       in_1y:         in_1y,
       out_1y:        out_1y,
       sample_1y:     sample_1y,
+      dummy_stock:   dummyStock,   // v5.94: 保管期限超過(ダミー)。実在庫から外した分
       lots:          lots,
       history:       allRecords,
       last_tx:       lastTx,
@@ -2997,6 +3037,16 @@ table.history-table .h-stock { font-size: 16px; }
         <span class="tl-card danger">危険 <b>10枚</b> 未満</span>
         <span class="tl-card warn">警告 <b>25枚</b> 未満</span>
         <div style="font-size:11px;color:var(--ink-dim);margin-top:5px;">入荷予定は在庫に含めず別表示</div>
+      </div>
+      <div class="lp-section">
+        <div class="lp-head">⏳ 保管期限（入荷から超過→ダミー化）</div>
+        <div style="font-size:12px;color:var(--ink);line-height:1.7;">
+          🌀 WB系TEG（MBシリーズ・AS8R）… <b>4年</b><br>
+          🌀 その他ウエハ … <b>5年</b><br>
+          🟫 FC向けKIT基板 SAC … <b>5年</b><br>
+          🟫 FC向けKIT基板 NiAu/NiPdAu/OSP … <b>4年</b>
+        </div>
+        <div style="font-size:11px;color:var(--ink-dim);margin-top:4px;">超過ロットは実在庫から外し「ダミー」列に計上（基板はFC系＋01A系が対象。混在はSAC優先）</div>
       </div>
       <div class="lp-section">
         <div class="lp-head">🟫 基板在庫</div>
@@ -3287,6 +3337,8 @@ function setOrder(key, data) {
 //    → 内部ビルドを刻むだけで公開版は自動で追従し、手動更新漏れによるズレが起きない。
 // ============================================================
 const CHANGELOG = [
+  { v: 'v5.94', date: '2026-10-23', text: 'FC向けKIT基板にも保管期限(ダミー化)を導入。対象=FC系(FC120/150/150LC/200)＋01A系ピッチ基板(01A120P/150P/200P)。期限=表面処理がSACを含めば5年(SAC優先)、それ以外でNiAu/NiPdAu/OSPを含めば4年。対象外(CC80/FBW/STAC/WLP/LCD)や表面処理不明(Cu無垢/ITO等)は期限なし(現状維持)。経過起点=ロット入庫日(first_in_iso)。超過ロットは実在庫(現有フリー/現有在庫)から外し、詳細カードに「ダミー」列＋「⏳ダミー(保管期限超過)」ロットピルを追加。右の凡例フロートにも基板の保管期限を追記。基板スキャナ(インライン＋from_chat/WALTS_substrate_scanner.js)の両方に実装。数え方変更につきキャッシュ更新' },
+  { v: 'v5.93', date: '2026-10-22', text: 'ウエハの保管期限(ダミー化)ルールを製品別に変更。WB系TEG(MBシリーズ＋AS8R)は入荷から4年、その他ウエハは従来どおり5年を超えたロットをダミー化(実在庫から外し「ダミー」列に計上)。右の凡例フロートに「⏳保管期限」欄を追加(WB系=4年/その他=5年)。現時点ではWB系の4〜5年帯に現役在庫は無く在庫数への即時影響なし(効くのは今後4年を越えてから)。数え方変更につきキャッシュ更新＋core.js再生成' },
   { v: 'v5.92', date: '2026-10-15', text: '在庫推移(分析)タブの表示スイッチを「保存しない」仕様に変更。従来は最下部スイッチのオン/オフをlocalStorageに保存していたが、保存をやめてメモリ上のフラグのみとし、ページの読み込み(再読込・開き直し)のたびに必ずオフから始まるようにした(オンはその表示の間だけ有効)。起動時に旧保存値もクリーンアップ。既定オフの原則は不変。表示のみ(数え方・他の設定の保存に影響なし)' },
   { v: 'v5.91', date: '2026-10-15', text: '在庫推移タブを「SharePoint自動読み込み」に対応。タブを開くと、毎日自動更新される在庫推移データ(SharePointの Claude_code_tools/在庫推移/在庫推移データ.json)を、在庫Excelと同じログインで自動取得して表示(手動📁が不要に)。取得できない場合は従来どおり手元ファイルの📁読込・ドラッグ&ドロップにフォールバック。コントロールに「🔄最新に更新」ボタンを追加。顧客名を含むデータはSharePointログインの内側に留まる(GitHubのHTMLには焼き込まない)。表示のみ(数え方に影響なし)' },
   { v: 'v5.90', date: '2026-10-14', text: '廃盤品「KIT CC80CL-0100JY【Cu無垢】」を非表示に。非表示リスト(HIDDEN_PRODUCTS)を基板にも適用できるよう基板用フィルタ(substrateVisible)を追加し、取得時・スナップショット表示の両方で除外(従来ウエハのみだった非表示を基板へ拡張)。表示のみ(数え方・既存タブに影響なし)' },
@@ -4011,7 +4063,13 @@ function renderSubCard(s) {
   // ロット別在庫ピル (v5.25: 入庫日+経過期間 / v5.25: 在庫が残っているロットのみ表示)
   // v5.25: 品名の現在在庫が0以下なら経過表示しない (在庫にない品の入庫時期は非表示)
   const hasStock = s.current_stock > 0;
-  const stockedLots = (s.lots || []).filter(l => l.stock > 0);
+  const stockedLots = (s.lots || []).filter(l => l.stock > 0 && !l.is_dummy);
+  const dummyLots   = (s.lots || []).filter(l => l.stock > 0 && l.is_dummy);  // v5.94: 保管期限超過
+  const dummyPills = dummyLots.map(l => {
+    let ageHtml = '';
+    if (l.last_in_iso) { const e = subElapsed(l.last_in_iso); if (e) ageHtml = `<span class="lot-age age-alert" title="入庫 ${escape(l.last_in_iso)}">${subDateShort(l.last_in_iso)}入庫・${e.label}</span>`; }
+    return `<span class="lot-pill dummy-pill" title="保管期限超過のためダミー化(実在庫に含めず)"><span class="pn">${escape(l.lot)}</span><span class="pq">${l.stock}</span><span class="dummy-tag">DUMMY</span>${ageHtml}</span>`;
+  }).join('');
   const lotPills = stockedLots.map(l => {
     const cls = '';
     let ageHtml = '';
@@ -4025,7 +4083,7 @@ function renderSubCard(s) {
   // v5.25: 最古在庫 (在庫ありロットの中で最も古い入庫日)
   // v5.26: 縦並びの行ではなく、ヘッダー右側の空きスペースに大きく表示
   let oldestBig = '';
-  const stocked = hasStock ? (s.lots || []).filter(l => l.stock > 0 && l.last_in_iso) : [];
+  const stocked = hasStock ? (s.lots || []).filter(l => l.stock > 0 && l.last_in_iso && !l.is_dummy) : [];
   if (stocked.length) {
     const oldest = stocked.reduce((a, b) => (a.last_in_iso <= b.last_in_iso ? a : b));
     const e = subElapsed(oldest.last_in_iso);
@@ -4139,6 +4197,12 @@ function renderSubCard(s) {
               <div class="col-unit">ケ</div>
               <div class="col-sub">入荷後に出荷</div>
             </div>
+            <div class="pc-col col-dummy ${(s.dummy_stock||0)===0?'zero':''}">
+              <div class="col-label">ダミー</div>
+              <div class="col-val">${s.dummy_stock||0}</div>
+              <div class="col-unit">ケ</div>
+              <div class="col-sub">期限超過</div>
+            </div>
           </div>
         </div>
       </div>
@@ -4148,6 +4212,12 @@ function renderSubCard(s) {
           <div class="sub-lots">
             <span class="lbl">ロット別:</span>
             ${lotPills}
+          </div>
+        ` : ''}
+        ${dummyLots.length > 0 ? `
+          <div class="sub-lots sub-lots-dummy">
+            <span class="lbl">⏳ ダミー(保管期限超過):</span>
+            ${dummyPills}
           </div>
         ` : ''}
         <div class="sub-history">
@@ -6315,10 +6385,13 @@ async function analyzeSubstrateWorkbook(arrayBuffer, filename, fileMeta) {
   return summary;
 }
 
+// 保管上限(年): WB系TEG(MBシリーズ+AS8R)=4年、その他ウエハ=5年。入荷からの経過がこれ以上でダミー化。
+function waferDummyYears(name) { return (/^MB\d/i.test(name) || /^AS8R\b/i.test(name)) ? 4 : 5; }
+
 async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(arrayBuffer);
-  
+
   const baseProduct = extractProductName(filename) || filename;
   // v5.10: 1ファイルを複数品名に分割できるよう summary をマップ管理。
   //   既定は baseProduct 単一。IP40 は シート名の Model 表記で Model I / II に分割。
@@ -6519,7 +6592,8 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
       let isDummy = false;
       if (arrivalDt) {
         const years = (TODAY - arrivalDt) / (365.25 * 86400000);
-        if (years >= 5) isDummy = true;  // v5.2: 5年以上をダミーに (旧: 2年ダミー/5年除外を廃止)
+        // v5.93: WB系TEG(MB+AS8R)=4年、その他ウエハ=5年でダミー化 (旧: 一律5年。v5.2: 5年。旧々: 2年ダミー/5年除外)
+        if (years >= waferDummyYears(baseProduct)) isDummy = true;
       }
       
       const lotLocs = new Set();
@@ -7114,7 +7188,7 @@ const CACHE_STORE = 'inventory_cache';
 const CACHE_VERSION = 1;
 // 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
 // (キャッシュ全クリアになる)
-const CACHE_SCHEMA_VERSION = 'v5.87-merged-arrival-2026-10-01';
+const CACHE_SCHEMA_VERSION = 'v5.94-kit-shelf-dummy-2026-10-23';
 
 
 
@@ -7504,7 +7578,7 @@ document.getElementById('btn-export-json').addEventListener('click', () => {
   const exportObj = {
     generated_at: new Date().toISOString(),
     folder: 'combined',
-    schema_note: 'product = UI表示名(displayName: Φ口径+分割反映済). product_raw = 生品名. dummy=入荷5年以上(dummy_stock/dummy_reserved).',
+    schema_note: 'product = UI表示名(displayName: Φ口径+分割反映済). product_raw = 生品名. dummy=保管超過(WB系TEG[MB+AS8R]=入荷4年以上/その他ウエハ=5年以上)(dummy_stock/dummy_reserved).',
     inventory_count: INVENTORY.length,
     substrate_count: SUBSTRATE.length,
     inventory: resolvedInventory,
