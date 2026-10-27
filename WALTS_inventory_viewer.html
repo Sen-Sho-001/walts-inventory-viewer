@@ -1886,6 +1886,22 @@ tr.dummy-row .lot-name { font-style: italic; }
   border-radius: 4px; letter-spacing: 0.05em;
   vertical-align: 1px;
 }
+/* v6.01: ダミー(保管期限超過)の経過年数 */
+.dummy-age {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  color: #8a6d00; background: #fbf1d6; border: 1px solid #e3cf8f;
+  padding: 1px 6px; margin-left: 5px; border-radius: 4px; vertical-align: 1px;
+}
+/* v6.04: 現在のルール(更新履歴の上に常時表示) */
+.rules-box { background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--accent); border-radius: 10px; padding: 14px 18px; margin: 10px 0 14px; }
+.rules-title { font-size: 15px; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
+.rules-grid { display: flex; flex-wrap: wrap; gap: 18px 34px; }
+.rules-sec { flex: 1 1 340px; min-width: 280px; }
+.rules-head { font-size: 13px; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
+.rules-list { margin: 0; padding-left: 20px; font-size: 13.5px; color: var(--ink); line-height: 1.9; }
+.rules-list b { color: var(--ink); }
+.rules-sub { font-size: 11px; color: var(--ink-dim); margin-left: 4px; }
+.rules-note { font-size: 11.5px; color: var(--ink-dim); margin-top: 6px; line-height: 1.6; }
 
 /* ダミーブロックは控えめサイズ */
 .pc-stat.dummy-mini {
@@ -1904,6 +1920,67 @@ tr.dummy-row .lot-name { font-style: italic; }
 .lot-pill.dummy-pill { opacity: 0.6; background: #f1eae0; }
 .sub-lots-dummy { margin-top: 4px; }
 .sub-lots-dummy > .lbl { color: #8a6d00; font-weight: 700; }
+
+/* v5.95: 見積フォロー タブ */
+.quote-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 12px; font-size: 14px;
+  padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); }
+.quote-controls select { font-size: 14px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); }
+.quote-controls .q-filter { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.quote-search { font-size: 14px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); min-width: 240px; }
+/* v6.03: 明細/集計トグル */
+.q-viewtoggle { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.q-viewtoggle .q-view { font-size: 13px; padding: 5px 12px; cursor: pointer; background: #fff; color: var(--ink-dim); user-select: none; }
+.q-viewtoggle .q-view + .q-view { border-left: 1px solid var(--line); }
+.q-viewtoggle .q-view.active { background: #22314a; color: #fff; font-weight: 700; }
+/* v6.03: 製品別集計の「予約解除すべき」強調 */
+table.quote-table td.q-release { color: #b02626; font-weight: 700; }
+table.quote-table tbody tr.q-release-row { background: #fdeceb; }
+table.quote-table td.q-relms { font-size: 12px; color: #b02626; }
+table.quote-table tfoot tr.q-sumfoot td { background: #eef1f6; font-weight: 700; border-top: 2px solid #22314a; }
+table.quote-table tfoot tr.q-sumfoot td.q-release { color: #b02626; }
+.quote-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.qs-chip { font-size: 13px; padding: 4px 10px; border-radius: 14px; background: var(--card, #fff); border: 1px solid var(--line, #d5d9e0); color: var(--ink, #333); }
+.qs-chip b { font-size: 15px; margin-left: 3px; }
+.qs-chip.open   { border-color: #9cc0ef; }
+.qs-chip.expired{ border-color: #e39; background: #fdebf0; color: #b02a52; }
+.qs-chip.soon   { border-color: #e8912e; background: #fdf3e6; color: #a35b12; }
+.qs-chip.won    { border-color: #3a9a5a; background: #eaf7ee; color: #1f7a42; }
+.qs-chip.wait   { border-color: #c9a227; background: #fbf6e3; color: #8a6d00; }
+.qs-chip.lost   { border-color: #d43b3b; background: #fdeceb; color: #b02626; }
+table.quote-table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--panel); }
+table.quote-table th, table.quote-table td { border: 1px solid var(--line, #e0e3ea); padding: 7px 10px; text-align: left; vertical-align: top; }
+table.quote-table th { background: #16233a; color: #fff; font-weight: 700; position: sticky; top: 0; z-index: 1; }
+/* 既定行(未期限切れのオープン等)は白パネル地＋濃い文字で確実に読めるように */
+table.quote-table tbody tr { background: var(--panel); color: var(--ink); }
+table.quote-table tbody tr:nth-child(even) { background: #f6f8fb; }
+table.quote-table td.q-m { font-weight: 700; white-space: nowrap; }
+table.quote-table td.q-issue { white-space: nowrap; color: var(--ink-dim, #666); }
+table.quote-table td.q-term { white-space: nowrap; font-weight: 700; }
+.q-term.q-expired { color: #b02626; }
+.q-term.q-soon { color: #a35b12; }
+.q-term.q-nodate { color: #888; font-weight: 400; }
+.q-term.q-act-won { color: #1f7a42; }
+.q-term.q-act-lost { color: #b02626; }
+table.quote-table tbody tr.q-won { background: #eaf7ee; }
+table.quote-table tbody tr.q-wait { background: #fbf6e3; }
+table.quote-table tbody tr.q-lost { background: #fdeceb; }
+.q-term.q-act-wait { color: #8a6d00; }
+table.quote-table tbody tr.q-expiredrow { background: #fff0f4; }
+table.quote-table tbody tr.q-unknown { color: #999; }
+.q-status { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 10px; background: #eef1f6; color: #444; }
+.q-status.q-won { background: #d7eede; color: #1f7a42; font-weight: 700; }
+.q-status.q-lost { background: #f7d9d7; color: #b02626; font-weight: 700; }
+.q-status.q-unknown { background: #eee; color: #999; }
+td.q-none { text-align: center; color: #999; padding: 20px; }
+/* v5.96: 製品名リンク(シートへジャンプ) / D番号(書換先) */
+.q-prodlink { color: var(--accent, #1a4d8f); text-decoration: none; font-weight: 600; cursor: pointer; }
+.q-prodlink:hover { text-decoration: underline; }
+table.quote-table td.q-pieces { white-space: nowrap; text-align: right; font-weight: 700; color: var(--ink); }
+table.quote-table td.q-pieces .q-unit { font-size: 11px; font-weight: 400; color: var(--ink-dim); margin-left: 1px; }
+table.quote-table td.q-d { white-space: nowrap; }
+.q-dno { font-weight: 700; color: #1f7a42; letter-spacing: 0.2px; }
+.q-dsrc { font-size: 10px; color: #b07a12; background: #fdf3e6; border-radius: 6px; padding: 1px 5px; margin-left: 5px; vertical-align: middle; }
+table.quote-table th .th-sub { font-size: 10px; font-weight: 400; opacity: 0.8; margin-left: 3px; }
 
 /* 出所バッジ */
 .origin-badge {
@@ -2349,16 +2426,17 @@ table.history-table .h-stock { font-size: 16px; }
 (function (root) {
   'use strict';
 
-  // v5.94: FC向けKIT基板の保管期限(年)。対象=FC系(FC120/150/150LC/200)+01A系ピッチ基板(01A120P/150P/200P)。
+  // 保管期限(年)の対象KIT基板。対象=FC系(FC120/150/150LC/200)+01A系ピッチ基板(01A120P/150P/200P)+CC80+WLP(v6.00で追加)。
   //   表面処理: SACを含めば5年(SAC優先) → それ以外でNiAu/NiPdAu/OSPを含めば4年 → どれも無ければ null(期限なし)。
-  //   対象外(CC80/FBW/STAC/WLP/LCD等)・表面処理不明(Cu無垢/ITO等)は null を返しダミー化しない。
+  //   対象外(FBW/STAC/LCD等)・表面処理不明(Cu無垢/ITO等)は null を返しダミー化しない。
   function kitShelfYears(name) {
     const nm = name || '';
-    const isFcKit = /FC\d/i.test(nm) || /01A\d+P/i.test(nm);
-    if (!isFcKit) return null;
+    const inScope = /FC\d/i.test(nm) || /01A\d+P/i.test(nm) || /CC80/i.test(nm) || /WLP/i.test(nm);
+    if (!inScope) return null;
     const n = nm.replace(/[\s\-]/g, '').toUpperCase();   // Ni-Pd-Au / NiPd-Au / NiPdAu を正規化
     if (/SAC/.test(n)) return 5;                         // SAC優先
     if (/NIPDAU/.test(n) || /NIAU/.test(n) || /OSP/.test(n)) return 4;
+    if (/無垢/.test(nm)) return 4;                        // Cu無垢(無メッキ)も4年
     return null;
   }
 
@@ -2909,7 +2987,7 @@ table.history-table .h-stock { font-size: 16px; }
       }
     }
     // v5.94: 保管期限超過ロットをダミー化。
-    //   対象=FC向けKIT基板(FC系+01A系ピッチ基板)。期限=SACを含む→5年(SAC優先)/NiAu・NiPdAu・OSP→4年。
+    //   対象=KIT基板(FC系+01A系ピッチ基板+CC80+WLP)。期限=SACを含む→5年(SAC優先)/NiAu・NiPdAu・OSP→4年。
     //   表面処理が判定できない or 対象外(CC80/FBW/STAC/WLP/LCD, Cu無垢/ITO等)→期限なし(ダミー化しない)。
     //   経過起点=ロット入庫日(first_in_iso)。超過分は実在庫(current_stock/current_free)から外す。
     let dummyStock = 0;
@@ -3008,6 +3086,9 @@ table.history-table .h-stock { font-size: 16px; }
     <div class="tab" data-tab="trend">
       <span class="tab-main">📈 在庫推移<span class="count" id="trend-count">履歴未読込</span></span>
     </div>
+    <div class="tab" data-tab="quote">
+      <span class="tab-main">📋 見積フォロー<span class="count" id="quote-count">未読込</span></span>
+    </div>
     <!-- v5.28: 開いたメニューを一括で閉じる (展開状態はlocalStorageに保存されるため) -->
     <button type="button" class="btn-collapse-all" onclick="collapseAllMenus()" title="ウエハ・基板の開いているシリーズ/品名をすべて閉じます">▸ すべて閉じる</button>
     <!-- v5.28: 検索バーはタブの横に配置 (アクティブタブ側のみ表示) -->
@@ -3025,36 +3106,7 @@ table.history-table .h-stock { font-size: 16px; }
     </div>
   </div>
 
-  <!-- v5.28: しきい値の凡例フロート (スクロールしても右側に固定) -->
-  <div class="legend-float" id="legend-float">
-    <div class="lf-head" onclick="toggleLegendFloat()" title="クリックで開閉">
-      <span>🔖 凡例（しきい値）</span>
-      <span class="lf-toggle" id="lf-toggle">▲</span>
-    </div>
-    <div class="lf-body">
-      <div class="lp-section">
-        <div class="lp-head">🌀 ウエハ実在庫</div>
-        <span class="tl-card danger">危険 <b>10枚</b> 未満</span>
-        <span class="tl-card warn">警告 <b>25枚</b> 未満</span>
-        <div style="font-size:11px;color:var(--ink-dim);margin-top:5px;">入荷予定は在庫に含めず別表示</div>
-      </div>
-      <div class="lp-section">
-        <div class="lp-head">⏳ 保管期限（入荷から超過→ダミー化）</div>
-        <div style="font-size:12px;color:var(--ink);line-height:1.7;">
-          🌀 WB系TEG（MBシリーズ・AS8R）… <b>4年</b><br>
-          🌀 その他ウエハ … <b>5年</b><br>
-          🟫 FC向けKIT基板 SAC … <b>5年</b><br>
-          🟫 FC向けKIT基板 NiAu/NiPdAu/OSP … <b>4年</b>
-        </div>
-        <div style="font-size:11px;color:var(--ink-dim);margin-top:4px;">超過ロットは実在庫から外し「ダミー」列に計上（基板はFC系＋01A系が対象。混在はSAC優先）</div>
-      </div>
-      <div class="lp-section">
-        <div class="lp-head">🟫 基板在庫</div>
-        <span class="tl-card danger">数量 <b>100ケ</b> 未満</span>
-        <span class="tl-card danger">経過 <b>4年</b> 以上</span>
-      </div>
-    </div>
-  </div>
+  <!-- v6.05: しきい値フロートは削除。ルールは最下部「📋 在庫ルール」に集約 -->
 
   <div class="tab-content active" id="tab-wafer">
 
@@ -3135,10 +3187,69 @@ table.history-table .h-stock { font-size: 16px; }
       <div id="trendb-monthly-table"></div>
     </div>
   </div>
-  
+
+  <!-- v5.95: 見積フォロー タブ -->
+  <div class="tab-content" id="tab-quote">
+    <div id="quote-empty" class="trend-empty">
+      <div class="te-icon">📋</div>
+      <div class="te-title">見積フォロー（在庫予約中のM番号）</div>
+      <p>在庫で予約（M番号）が入っている見積の<b>有効期限までの残日数</b>・<b>受注/失注</b>状況を一覧します。見積データ（db24）は在庫Excelと同じログインでSharePointから読み込みます。</p>
+      <button type="button" class="trend-load" onclick="quoteAutoLoad(true)">🔄 見積データを取得</button>
+      <p class="te-hint">「見積検索ツール」の最新データ（毎日更新）を参照します。</p>
+    </div>
+    <div id="quote-main" hidden>
+      <div class="quote-controls">
+        <label>見積有効期間:
+          <select id="quote-validity" onchange="renderQuoteTable()">
+            <option value="30">発行日＋30日</option>
+            <option value="60">発行日＋60日</option>
+            <option value="90" selected>発行日＋90日</option>
+            <option value="120">発行日＋120日</option>
+            <option value="180">発行日＋180日</option>
+          </select>
+        </label>
+        <span class="q-viewtoggle">
+          <span class="q-view active" data-view="detail" onclick="quoteSetView('detail')">明細</span>
+          <span class="q-view" data-view="summary" onclick="quoteSetView('summary')">製品ごと集計</span>
+        </span>
+        <label class="q-filter"><input type="checkbox" id="quote-only-action"> 要対応のみ表示</label>
+        <input type="text" id="quote-search" class="quote-search" placeholder="🔍 製品名・M/D番号・顧客で絞り込み" oninput="renderQuoteTable()">
+        <span class="trend-range" id="quote-note"></span>
+        <button type="button" class="trend-reload" onclick="quoteExportCsv()" title="表示中の全件を製品ごとにまとめてCSV出力(Excel対応)">⬇️ CSV出力</button>
+        <button type="button" class="trend-reload" onclick="quoteAutoLoad(true)" title="見積データを取り直す">🔄 最新に更新</button>
+      </div>
+      <div id="quote-summary" class="quote-summary"></div>
+      <div id="quote-table-wrap"></div>
+    </div>
+  </div>
+
   <div class="footer-note">
     💡 「即在庫」=現有ロットの塗りつぶしなしslot / 「即在庫の予約」=現有ロットのベージュslot / 「入荷予定」=入荷待ちロットの全slot / 「入荷予定の予約」=入荷後すぐ出荷予定の予約済slot<br>
     🔧 scanner.py が各エクセルから自動抽出。発注状態はブラウザの localStorage に保存(実運用ではNAS上の orders.csv へ保存)。
+  </div>
+
+  <!-- v6.04: 現在のルール(保管期限・しきい値)を更新履歴の上に常時表示 -->
+  <div class="rules-box" id="rules-box">
+    <div class="rules-title">📋 在庫ルール（現在の設定）</div>
+    <div class="rules-grid">
+      <div class="rules-sec">
+        <div class="rules-head">⏳ 保管期限（入荷／入庫から超過 → 実在庫から外し「ダミー」列へ）</div>
+        <ul class="rules-list">
+          <li>🌀 WB系TEG（MBシリーズ・AS8R）… <b>4年</b></li>
+          <li>🌀 その他ウエハ … <b>5年</b></li>
+          <li>🟫 KIT基板 表面処理 <b>SAC</b> … <b>5年</b></li>
+          <li>🟫 KIT基板 表面処理 <b>NiAu / NiPdAu / OSP / Cu無垢</b> … <b>4年</b></li>
+        </ul>
+        <div class="rules-note">対象基板＝FC系・01A系ピッチ・CC80・WLP ／ 表面処理が混在する場合はSAC優先 ／ ITO等は対象外（ダミー化しない）。経過の起点はウエハ＝入荷日、基板＝入庫日。</div>
+      </div>
+      <div class="rules-sec">
+        <div class="rules-head">🚦 在庫アラームしきい値</div>
+        <ul class="rules-list">
+          <li>🌀 ウエハ実在庫 … 危険 <b>10枚</b> 未満 ／ 警告 <b>25枚</b> 未満<span class="rules-sub">（入荷予定は含めず別表示）</span></li>
+          <li>🟫 基板在庫 … 数量 <b>100ケ</b> 未満で警告表示</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <!-- v5.28: 変更履歴はページ最下部に配置 -->
@@ -3337,6 +3448,20 @@ function setOrder(key, data) {
 //    → 内部ビルドを刻むだけで公開版は自動で追従し、手動更新漏れによるズレが起きない。
 // ============================================================
 const CHANGELOG = [
+  { v: 'v6.08', date: '2026-10-27', text: '見積フォロー(明細)の並び順を在庫重視に変更。D番号への書き換え漏れ(受注)は在庫に直接関係しないため最下段へ移動し、在庫を解放すべき「失注」「期限切れ」を上位に表示(失注→期限切れ→期限の近い順→不明→受注)。表示のみ' },
+  { v: 'v6.07', date: '2026-10-27', text: '基板の保管期限で「Cu無垢(無メッキ)」も4年の対象に追加(NiAu/NiPdAu/OSPと同じ4年)。従来は表面処理不明として対象外だった。実データでは CC80(T)【Cu無垢】78枚(入庫5.0年)がダミー化(CC80CL【Cu無垢】は在庫0・廃盤非表示)。ルール表記も更新。数え方変更につきキャッシュ更新' },
+  { v: 'v6.06', date: '2026-10-27', text: 'ウエハ詳細カードの「ダミー」列の補足ラベルが固定で「5年経過」になっていた不具合を修正。製品別に保管期限を反映し、WB系TEG(MBシリーズ・AS8R)は「4年超」、その他ウエハは「5年超」と表示。実際のダミー化判定は元から正しく4年(WB)/5年(他)。表示のみ' },
+  { v: 'v6.05', date: '2026-10-27', text: '右側のしきい値フロート(凡例)を削除。ルールは最下部「📋在庫ルール」欄に集約した(保管期限=WB系TEG4年/その他ウエハ5年/KIT基板SAC5年・NiAu/NiPdAu/OSP4年)。WB系TEGのダミー化は4年で正しく動作することを確認済み。表示のみ' },
+  { v: 'v6.04', date: '2026-10-27', text: '現在の在庫ルール(保管期限・しきい値)を更新履歴の上に常時表示する「📋在庫ルール」欄を新設。右の凡例フロートにあった基板の古い「経過4年以上」表示を削除し、保管期限は表面処理別ルール(SAC5年/NiAu・NiPdAu・OSP4年、対象=FC系・01A系・CC80・WLP、混在SAC優先)に一本化。表示のみ' },
+  { v: 'v6.03', date: '2026-10-27', text: '見積フォローに「製品ごと集計」表示を追加(明細/集計トグル)。製品ごとに予約枚数を「予約中」と「予約解除すべき」の2区分で集計(予約解除すべき=失注＋期限切れ、予約中=受注含むそれ以外)。合計枚数と解除対象M番号も表示し、解除すべき枚数が多い順に並べる。CSVもトグルに連動して集計形式で出力(製品名/予約中/予約解除すべき/合計/解除対象M番号)。表示のみ' },
+  { v: 'v6.02', date: '2026-10-27', text: '見積フォローに「⬇️CSV出力」ボタンを追加。製品ごとにまとめ(製品名→M番号順)、製品名/M番号/予約枚数/D番号(書換先)/D番号出所/顧客/担当者/発行日/有効期限/残日数/状態/見積状況(db24)/品名/シート を出力。Excelで文字化けしないUTF-8(BOM付き)。行計算は表示と共通化(quoteComputeRows)。表示のみ' },
+  { v: 'v6.01', date: '2026-10-27', text: 'ダミー(保管期限超過)に「◯年経過」を明示表示。ウエハはロット表のDUMMYタグ横に入荷からの経過年、基板はダミーロット行に入庫からの経過年を表示(経過の起点はダミー判定と同じ入荷日/入庫日)。何年保管超過かが一目で分かる。表示のみ' },
+  { v: 'v6.00', date: '2026-10-27', text: '基板の保管期限(ダミー化)の対象に CC80 と WLP を追加。期限ルールは従来どおり(SAC=5年/NiAu・NiPdAu・OSP=4年、Cu無垢・ITOは対象外、起点=入庫日)。実データでは CC80(T)【Cu+OSP】178枚(入庫5.0年)と WLP(S)【NiAu】270枚(入庫4.4年)がダミー化、CC80【Cu無垢】78枚と CC80【Ni-Pd-Au】24枚(期限内)は在庫のまま。凡例フロートの対象表記も更新。基板スキャナ(インライン＋from_chat)の両方に反映。数え方変更につきキャッシュ更新' },
+  { v: 'v5.99', date: '2026-10-27', text: '見積フォローに「予約(枚数)」列を追加。M番号ごとに在庫で予約されているウエハ枚数を表示(集計ループでM番号別の予約スロット数を記録し正確に算出。1ロットに複数M番号が混在する例外時のみ均等割り概算)。表示専用' },
+  { v: 'v5.98', date: '2026-10-27', text: '見積フォロー: 受注でもD番号が未採番(db30未登録)の案件を「受注済 → D番号発行待ち」として区別表示(黄系)。受注直後でまだ発注処理前=書換えるD番号が存在しないケース(db24で受注かつD No.空は134件)。サマリーも「受注→要書換(D番号あり)」と「受注・D番号待ち」に分離し、要書換(D番号あり)を上に並べた。表示専用' },
+  { v: 'v5.97', date: '2026-10-27', text: '見積フォロー: ①受注判定を db30のD番号(実注文)優先に変更。db24の見積状況が「失注」のままでも db30に注文(新DNo.)があれば「受注済(db30)→D番号へ要書換」として扱う(db24の更新漏れを拾う。見積状況バッジはdb24のまま表示しズレを可視化)。②製品名・M/D番号・顧客で絞り込める検索ボックスを追加。表示専用(在庫の数え方に影響なし)' },
+  { v: 'v5.96', date: '2026-10-27', text: '見積フォロータブに「D番号(書換先)」列を追加し、製品名クリックで該当シートへジャンプできるようにした。D番号は db30(仕入販売管理) の「見積No→新DNo.」から取得(TOKIUMツールがSharePointへ毎日配信する db30_仕入販売管理_最新.csv を読み込み結合)。受注なのに在庫がMのまま=書換え先のD番号が一目で分かるので、M→D書換えの検索の手間を削減。db30に無くdb24にD No.がある場合は仮表示(db24タグ)。製品名はExcel on Browserで予約のあるシートを直接開く。db30取得に失敗しても見積表は表示(D番号のみ空)。表示専用(在庫の数え方に影響なし)' },
+  { v: 'v5.95', date: '2026-10-27', text: '「📋 見積フォロー」タブを新設。在庫で予約(M番号)が入っている見積について、見積有効期限までの残日数・受注/失注状況を一覧表示(製品名/M番号/顧客/発行日/見積までの期限/見積状況)。見積データは既存の「見積検索ツール」がSharePointへ毎日配信しているdata.js(db24由来)を読み込んで在庫のM番号と結合(新たなダウンロードはせず・顧客名はログイン内に留める)。見積有効期間は画面で可変(発行日＋30/60/90/120/180日・既定90)。db24で受注済なのに在庫がMのまま=「D番号へ要書換」、失注なのに予約が残る=「予約解放」として色分け強調し、「要対応のみ表示」も可。表示専用(在庫の数え方に影響なし)' },
   { v: 'v5.94', date: '2026-10-23', text: 'FC向けKIT基板にも保管期限(ダミー化)を導入。対象=FC系(FC120/150/150LC/200)＋01A系ピッチ基板(01A120P/150P/200P)。期限=表面処理がSACを含めば5年(SAC優先)、それ以外でNiAu/NiPdAu/OSPを含めば4年。対象外(CC80/FBW/STAC/WLP/LCD)や表面処理不明(Cu無垢/ITO等)は期限なし(現状維持)。経過起点=ロット入庫日(first_in_iso)。超過ロットは実在庫(現有フリー/現有在庫)から外し、詳細カードに「ダミー」列＋「⏳ダミー(保管期限超過)」ロットピルを追加。右の凡例フロートにも基板の保管期限を追記。基板スキャナ(インライン＋from_chat/WALTS_substrate_scanner.js)の両方に実装。数え方変更につきキャッシュ更新' },
   { v: 'v5.93', date: '2026-10-22', text: 'ウエハの保管期限(ダミー化)ルールを製品別に変更。WB系TEG(MBシリーズ＋AS8R)は入荷から4年、その他ウエハは従来どおり5年を超えたロットをダミー化(実在庫から外し「ダミー」列に計上)。右の凡例フロートに「⏳保管期限」欄を追加(WB系=4年/その他=5年)。現時点ではWB系の4〜5年帯に現役在庫は無く在庫数への即時影響なし(効くのは今後4年を越えてから)。数え方変更につきキャッシュ更新＋core.js再生成' },
   { v: 'v5.92', date: '2026-10-15', text: '在庫推移(分析)タブの表示スイッチを「保存しない」仕様に変更。従来は最下部スイッチのオン/オフをlocalStorageに保存していたが、保存をやめてメモリ上のフラグのみとし、ページの読み込み(再読込・開き直し)のたびに必ずオフから始まるようにした(オンはその表示の間だけ有効)。起動時に旧保存値もクリーンアップ。既定オフの原則は不変。表示のみ(数え方・他の設定の保存に影響なし)' },
@@ -3538,6 +3663,8 @@ function agoLabel(days) {
   if (days < 365) return Math.round(days / 30) + 'ヶ月前';
   return Math.round(days / 365) + '年前';
 }
+// v6.01: ダミー(保管期限超過)ロットの経過年ラベル "N年経過" (入荷/入庫ISOから。subElapsedは関数宣言で巻き上げ)
+function dummyAgeLabel(iso) { const e = subElapsed(iso); return e ? e.label + '経過' : ''; }
 function minutesAgo(date) {
   const diff = Math.floor((TODAY - date) / 60000);
   if (diff < 60) return diff + '分前';
@@ -4066,8 +4193,10 @@ function renderSubCard(s) {
   const stockedLots = (s.lots || []).filter(l => l.stock > 0 && !l.is_dummy);
   const dummyLots   = (s.lots || []).filter(l => l.stock > 0 && l.is_dummy);  // v5.94: 保管期限超過
   const dummyPills = dummyLots.map(l => {
+    // 経過の起点はダミー判定と同じ入庫日(first_in_iso)。無ければlast_in_isoで代替。
+    const baseIso = l.first_in_iso || l.last_in_iso;
     let ageHtml = '';
-    if (l.last_in_iso) { const e = subElapsed(l.last_in_iso); if (e) ageHtml = `<span class="lot-age age-alert" title="入庫 ${escape(l.last_in_iso)}">${subDateShort(l.last_in_iso)}入庫・${e.label}</span>`; }
+    if (baseIso) { const e = subElapsed(baseIso); if (e) ageHtml = `<span class="lot-age age-alert" title="入庫 ${escape(baseIso)}">${subDateShort(baseIso)}入庫・${e.label}経過</span>`; }
     return `<span class="lot-pill dummy-pill" title="保管期限超過のためダミー化(実在庫に含めず)"><span class="pn">${escape(l.lot)}</span><span class="pq">${l.stock}</span><span class="dummy-tag">DUMMY</span>${ageHtml}</span>`;
   }).join('');
   const lotPills = stockedLots.map(l => {
@@ -4492,7 +4621,7 @@ function renderProductCard(p) {
               <div class="col-label">ダミー</div>
               <div class="col-val">${(p.dummy_stock||0)+(p.dummy_reserved||0)}</div>
               <div class="col-unit">枚</div>
-              <div class="col-sub">5年経過</div>
+              <div class="col-sub">${waferDummyYears(p.product)}年超</div>
             </div>
           </div>
         </div>
@@ -4635,7 +4764,7 @@ function renderStockRow(product, l, extraCls) {
   
   return `
     <tr class="lot-row ${rowCls}">
-      <td class="lot-name">${escape(l.lot)}${l.is_dummy ? '<span class="dummy-tag">DUMMY</span>' : ''}<span class="sheet">${escape(l.sheet)}${webLinkBtn ? `<span class="file-link-group" style="margin-left:6px">${webLinkBtn}</span>` : ''}</span></td>
+      <td class="lot-name">${escape(l.lot)}${l.is_dummy ? `<span class="dummy-tag">DUMMY</span>${l.arrival_iso ? `<span class="dummy-age" title="入荷 ${escape(l.arrival_iso)}">${dummyAgeLabel(l.arrival_iso)}</span>` : ''}` : ''}<span class="sheet">${escape(l.sheet)}${webLinkBtn ? `<span class="file-link-group" style="margin-left:6px">${webLinkBtn}</span>` : ''}</span></td>
       <td class="qty-cell" style="white-space:nowrap">${qtyCombinedHtml}</td>
       <td class="reserved-cell">${reservedHtml}</td>
       <td class="date-cell">${dateHtml}</td>
@@ -4901,11 +5030,13 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
     const tools = document.getElementById('tools-' + tab.dataset.tab);
     if (tools) tools.classList.add('active');
-    // v5.81: しきい値の凡例フロートは推移タブでは無関係なので隠す
+    // v5.81: しきい値の凡例フロートは推移/見積タブでは無関係なので隠す
     const lf = document.getElementById('legend-float');
-    if (lf) lf.style.display = (tab.dataset.tab === 'trend') ? 'none' : '';
+    if (lf) lf.style.display = (tab.dataset.tab === 'trend' || tab.dataset.tab === 'quote') ? 'none' : '';
     // v5.91: 推移タブを開いたら、SharePointの最新推移データを自動取得(未読込時のみ)
     if (tab.dataset.tab === 'trend') trendAutoLoad();
+    // v5.95: 見積フォロータブを開いたら、見積データを自動取得(未読込時のみ)
+    if (tab.dataset.tab === 'quote') quoteAutoLoad();
   });
 });
 
@@ -4949,6 +5080,379 @@ async function trendAutoLoad(force) {
   }
 }
 window.trendAutoLoad = trendAutoLoad;
+
+/* ============================================================
+   見積フォロー タブ (v5.95)
+   在庫で予約(M番号)が入っている見積について、見積有効期限までの残日数と
+   受注/失注状況を一覧する。見積データ(db24由来)は既存の「見積検索ツール」が
+   SharePointへ毎日配信している data.js を読み込んで結合する(新たなDLは行わない)。
+   顧客名を含むためSharePointログインの内側に留まる(GitHubのHTMLには焼き込まない)。
+   表示専用(在庫の数え方には一切関与しない)。
+   ============================================================ */
+const QUOTE_SP_PATH = 'Claude_code_tools/見積検索ツール/data.js';
+// v5.96: D番号(書換え先)は db30(仕入販売管理) の「見積No → 新DNo.」が確定値。TOKIUMツールがSharePointへ毎日配信。
+const DB30_SP_PATH = 'Claude_code_tools/TOKIUMツール/db30_仕入販売管理_最新.csv';
+const quoteState = { loaded: false, tried: false, lookup: null, generated: '', dmap: null, view: 'detail' };
+const QUOTE_EMPTY_HTML = (document.getElementById('quote-empty') || {}).innerHTML || '';
+const QUOTE_MNUM_RE = /M\d{3,}/g;
+
+// 発行日文字列 "YYYY/M/D" → Date (不正は null)
+function quoteParseDate(s) {
+  const m = String(s || '').trim().match(/^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})/);
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3]);
+  return isNaN(d) ? null : d;
+}
+// 見積状況 → 区分
+function quoteStatusKind(st) {
+  const s = String(st || '').trim();
+  if (/受注/.test(s)) return 'won';     // 受注・受注【内示】
+  if (/失注|中止/.test(s)) return 'lost';
+  return 'open';                          // 提出済・提示済・フォロー中・再見積 等
+}
+// data.js のテキストを実行して window.QV_* を得る → M番号ルックアップ構築
+function quoteBuildLookup() {
+  const cols = window.QV_COLS || [];
+  const rows = window.QV_ROWS || [];
+  const idx = {};
+  ['新見積No.', '発行日', '見積状況', 'D No.', '品名', '顧客名', '担当者'].forEach(name => { idx[name] = cols.indexOf(name); });
+  const map = new Map();
+  for (const r of rows) {
+    const mno = String(r[idx['新見積No.']] || '').trim();
+    if (!mno) continue;
+    map.set(mno, {
+      issue:  idx['発行日'] >= 0 ? String(r[idx['発行日']] || '').trim() : '',
+      status: idx['見積状況'] >= 0 ? String(r[idx['見積状況']] || '').trim() : '',
+      dno:    idx['D No.'] >= 0 ? String(r[idx['D No.']] || '').trim() : '',
+      hin:    idx['品名'] >= 0 ? String(r[idx['品名']] || '').trim() : '',
+      cust:   idx['顧客名'] >= 0 ? String(r[idx['顧客名']] || '').trim() : '',
+      tanto:  idx['担当者'] >= 0 ? String(r[idx['担当者']] || '').trim() : '',
+    });
+  }
+  quoteState.lookup = map;
+  quoteState.generated = (window.QV_META && window.QV_META.generated) || '';
+}
+// SharePoint既定ドライブのdriveIdを解決(在庫Excelと同じサイト/ドライブ)
+async function spResolveDriveId(token) {
+  const r1 = await fetch(`https://graph.microsoft.com/v1.0/sites/${SP_CONFIG.hostname}:${SP_CONFIG.sitePath}`, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r1.ok) throw new Error('サイト情報 HTTP ' + r1.status);
+  const site = await r1.json();
+  const r2 = await fetch(`https://graph.microsoft.com/v1.0/sites/${site.id}/drive`, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r2.ok) throw new Error('ドライブ情報 HTTP ' + r2.status);
+  return (await r2.json()).id;
+}
+async function quoteFetchFromSharePoint(token, driveId) {
+  const url = `https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${encodeURIComponent(QUOTE_SP_PATH)}:/content`;
+  const r3 = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r3.ok) throw new Error('見積データ取得 HTTP ' + r3.status + (r3.status === 404 ? '(見積検索ツール/data.js 未配置?)' : ''));
+  const text = await r3.text();
+  // data.js は window.QV_COLS/QV_ROWS/QV_META を設定する。実行して取り込む(自社SharePoint内の自社データ)。
+  (new Function(text))();
+  quoteBuildLookup();
+}
+// v5.96: db30(仕入販売管理CSV)から 見積No → 新DNo.(D番号) を構築。M→D書換え用の確定値。
+function quoteParseCsvLine(line) {
+  const out = []; let cur = '', q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q) { if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else { if (ch === '"') q = true; else if (ch === ',') { out.push(cur); cur = ''; } else cur += ch; }
+  }
+  out.push(cur); return out;
+}
+function quoteParseDb30(text) {
+  const lines = text.split(/\r?\n/);
+  const map = new Map();
+  if (lines.length) {
+    const hdr = quoteParseCsvLine(lines[0]).map(h => h.replace(/^﻿/, '').replace(/^"|"$/g, '').trim());
+    const di = hdr.findIndex(h => /DNo/.test(h.replace(/[\s　]/g, '')));  // 新 DNo.
+    const mi = hdr.findIndex(h => h === '見積No');
+    if (di >= 0 && mi >= 0) {
+      for (let r = 1; r < lines.length; r++) {
+        if (!lines[r]) continue;
+        const cells = quoteParseCsvLine(lines[r]);
+        const mno = (cells[mi] || '').trim(), dno = (cells[di] || '').trim();
+        if (!mno || !dno) continue;
+        if (!map.has(mno)) map.set(mno, []);
+        const arr = map.get(mno); if (!arr.includes(dno)) arr.push(dno);
+      }
+    }
+  }
+  quoteState.dmap = map;
+}
+async function quoteFetchDb30(token, driveId) {
+  const url = `https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${encodeURIComponent(DB30_SP_PATH)}:/content`;
+  const r = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r.ok) throw new Error('db30取得 HTTP ' + r.status);
+  quoteParseDb30(await r.text());
+}
+// 在庫(INVENTORY)の予約ロットから M番号 → 製品名/顧客(生)/Excelリンク(シート)/予約枚数 を収集
+function collectInventoryQuoteMs() {
+  const byM = new Map();  // M番号 → { products:Set, custRaw:Set, web_url, sheet, pieces }
+  for (const p of (INVENTORY || [])) {
+    const prod = displayName(p);
+    for (const l of (p.lots || [])) {
+      if (l.is_incoming) continue;
+      if (!(l.reserved > 0)) continue;
+      // このロットの予約顧客に含まれるM番号(重複除去)
+      const distinct = [...new Set((l.customers || []).flatMap(c => String(c || '').match(QUOTE_MNUM_RE) || []))];
+      if (!distinct.length) continue;
+      for (const m of distinct) {
+        if (!byM.has(m)) byM.set(m, { products: new Set(), custRaw: new Set(), web_url: '', sheet: '', pieces: 0 });
+        const e = byM.get(m);
+        e.products.add(prod);
+        if (!e.web_url && p.web_url) { e.web_url = p.web_url; e.sheet = l.sheet || ''; }  // M番号が居るシートへ飛べるよう保持
+        for (const c of (l.customers || [])) if (String(c).indexOf(m) >= 0) e.custRaw.add(String(c).trim());
+        // 予約枚数: m_counts(スロット単位の正確値)優先。無ければロット予約数を均等割りで概算。
+        let cnt;
+        if (l.m_counts && l.m_counts[m] != null) cnt = l.m_counts[m];
+        else cnt = distinct.length === 1 ? (l.reserved || 0) : Math.round((l.reserved || 0) / distinct.length);
+        e.pieces += cnt;
+      }
+    }
+  }
+  return byM;
+}
+// 見積フォローの行データを計算して並べ替えて返す(表示・CSV出力の共通処理)
+function quoteComputeRows(validity) {
+  const lookup = quoteState.lookup || new Map();
+  const dmap = quoteState.dmap || new Map();
+  const byM = collectInventoryQuoteMs();
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const rows = [];
+  for (const [m, e] of byM) {
+    const q = lookup.get(m) || null;
+    const db24kind = q ? quoteStatusKind(q.status) : 'unknown';
+    const issueDt = q ? quoteParseDate(q.issue) : null;
+    let daysLeft = null, expiry = null;
+    if (issueDt) { expiry = new Date(issueDt.getTime() + validity * 86400000); daysLeft = Math.round((expiry - today) / 86400000); }
+    const dArr = dmap.get(m) || [];
+    let dno = dArr.join(', ');
+    let dnoSrc = dArr.length ? 'db30' : '';
+    if (!dno && q && q.dno) { dno = q.dno; dnoSrc = 'db24'; }
+    let kind;
+    if (dArr.length) kind = 'won';
+    else kind = db24kind;
+    rows.push({
+      m, products: [...e.products].sort().join(' / '),
+      web_url: e.web_url || '', sheet: e.sheet || '', pieces: e.pieces || 0,
+      cust: q && q.cust ? q.cust : [...e.custRaw][0] || '',
+      tanto: q ? q.tanto : '', hin: q ? q.hin : '',
+      issue: q ? q.issue : '', status: q ? q.status : '(db24に無し)',
+      dno, dnoSrc, kind, db24kind, daysLeft, expiry,
+    });
+  }
+  // 並び: 在庫に効く順。①失注(予約解除すべき) ②オープン(期限切れ→期限近い順) ③不明 ④受注=D番号書換(在庫上は重要でないので最下段)
+  const kindRank = { lost: 0, open: 1, unknown: 2, won: 3 };
+  rows.sort((a, b) => {
+    if (kindRank[a.kind] !== kindRank[b.kind]) return kindRank[a.kind] - kindRank[b.kind];
+    if (a.kind === 'won') { const ad = a.dno ? 0 : 1, bd = b.dno ? 0 : 1; if (ad !== bd) return ad - bd; }
+    if (a.kind === 'open') { const ad = a.daysLeft == null ? 1e9 : a.daysLeft, bd = b.daysLeft == null ? 1e9 : b.daysLeft; return ad - bd; }
+    return a.m.localeCompare(b.m);
+  });
+  return rows;
+}
+// 状態(見積までの期限)のプレーンテキスト(CSV用)
+function quoteTermPlain(r) {
+  if (r.kind === 'won') return r.dno ? (r.db24kind === 'won' ? '受注済→D番号へ要書換' : '受注済(db30)→D番号へ要書換') : '受注済→D番号発行待ち';
+  if (r.kind === 'lost') return '失注→予約解放';
+  if (r.kind === 'unknown') return '—';
+  if (r.daysLeft == null) return '発行日不明';
+  if (r.daysLeft < 0) return `期限切れ ${-r.daysLeft}日`;
+  return `あと ${r.daysLeft}日`;
+}
+// 予約解除すべき = 失注 または 期限切れ(オープンだが有効期限超過)。受注・有効オープンは「予約中」側。
+function quoteIsRelease(r) {
+  return r.kind === 'lost' || (r.kind === 'open' && r.daysLeft != null && r.daysLeft < 0);
+}
+// 製品ごとに予約枚数を「予約中 / 予約解除すべき」で集計
+function quoteAggregateByProduct(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    const key = r.products || '(不明)';
+    if (!map.has(key)) map.set(key, { product: key, reserved: 0, release: 0, releaseMs: [] });
+    const g = map.get(key);
+    if (quoteIsRelease(r)) { g.release += r.pieces || 0; if (r.pieces > 0) g.releaseMs.push(r.m); }
+    else g.reserved += r.pieces || 0;
+  }
+  const arr = [...map.values()];
+  arr.sort((a, b) => (b.release - a.release) || a.product.localeCompare(b.product, 'ja'));  // 解除すべき多い順
+  return arr;
+}
+function renderQuoteTable() {
+  if (!quoteState.loaded) return;
+  const wrap = document.getElementById('quote-table-wrap');
+  const sumEl = document.getElementById('quote-summary');
+  const validity = parseInt(document.getElementById('quote-validity').value, 10) || 90;
+  const onlyAction = document.getElementById('quote-only-action').checked;
+  const rows = quoteComputeRows(validity);
+
+  const nWonReady = rows.filter(r => r.kind === 'won' && r.dno).length;   // D番号あり=すぐ書換え可
+  const nWonWait = rows.filter(r => r.kind === 'won' && !r.dno).length;   // 受注だがD番号未採番(db30未登録)
+  const nLost = rows.filter(r => r.kind === 'lost').length;
+  const nExpired = rows.filter(r => r.kind === 'open' && r.daysLeft != null && r.daysLeft < 0).length;
+  const nSoon = rows.filter(r => r.kind === 'open' && r.daysLeft != null && r.daysLeft >= 0 && r.daysLeft <= 14).length;
+  const nOpen = rows.filter(r => r.kind === 'open').length;
+
+  sumEl.innerHTML =
+    `<span class="qs-chip">在庫予約のM番号 <b>${rows.length}</b></span>` +
+    `<span class="qs-chip open">オープン <b>${nOpen}</b></span>` +
+    `<span class="qs-chip expired">期限切れ <b>${nExpired}</b></span>` +
+    `<span class="qs-chip soon">期限間近(14日) <b>${nSoon}</b></span>` +
+    `<span class="qs-chip won">受注→要書換 <b>${nWonReady}</b></span>` +
+    (nWonWait ? `<span class="qs-chip wait">受注・D番号待ち <b>${nWonWait}</b></span>` : '') +
+    `<span class="qs-chip lost">失注→要解放 <b>${nLost}</b></span>`;
+
+  const qq = ((document.getElementById('quote-search') || {}).value || '').trim().toLowerCase();
+
+  // 製品ごと集計ビュー(予約解除すべき=失注・期限切れ / 予約中=受注含むそれ以外)
+  if (quoteState.view === 'summary') {
+    const base = qq ? rows.filter(r => (r.products + ' ' + r.m + ' ' + r.dno + ' ' + r.cust + ' ' + r.hin + ' ' + r.status).toLowerCase().includes(qq)) : rows;
+    const groups = quoteAggregateByProduct(base);
+    const sBody = groups.map(g => `<tr class="${g.release > 0 ? 'q-release-row' : ''}">
+        <td class="q-prod">${escape(g.product)}</td>
+        <td class="q-pieces">${g.reserved}</td>
+        <td class="q-pieces q-release">${g.release}</td>
+        <td class="q-pieces">${g.reserved + g.release}</td>
+        <td class="q-cust q-relms">${g.releaseMs.length ? escape(g.releaseMs.join(', ')) : ''}</td>
+      </tr>`).join('');
+    const totR = groups.reduce((s, g) => s + g.reserved, 0), totX = groups.reduce((s, g) => s + g.release, 0);
+    wrap.innerHTML = `<table class="quote-table">
+      <thead><tr><th>製品名</th><th>予約中<span class="th-sub">(枚)</span></th><th>予約解除すべき<span class="th-sub">(枚)</span></th><th>合計<span class="th-sub">(枚)</span></th><th>解除対象M番号</th></tr></thead>
+      <tbody>${sBody || '<tr><td colspan="5" class="q-none">該当なし</td></tr>'}</tbody>
+      <tfoot><tr class="q-sumfoot"><td>合計 ${groups.length} 製品</td><td class="q-pieces">${totR}</td><td class="q-pieces q-release">${totX}</td><td class="q-pieces">${totR + totX}</td><td></td></tr></tfoot>
+    </table>`;
+    const noteS = document.getElementById('quote-note');
+    if (noteS) noteS.textContent = `${qq ? `絞り込み ${groups.length} 製品・` : ''}製品ごと集計（予約解除すべき=失注・期限切れ ／ 予約中=受注含む）・有効期間 発行日＋${validity}日`;
+    const qcS = document.getElementById('quote-count');
+    if (qcS) qcS.textContent = `${rows.length}件`;
+    return;
+  }
+
+  let shown = onlyAction ? rows.filter(r => r.kind === 'won' || r.kind === 'lost' || (r.kind === 'open' && r.daysLeft != null && r.daysLeft < 0)) : rows;
+  if (qq) shown = shown.filter(r => (r.products + ' ' + r.m + ' ' + r.dno + ' ' + r.cust + ' ' + r.hin + ' ' + r.status).toLowerCase().includes(qq));
+
+  const body = shown.map(r => {
+    let rowCls = '', term = '', termCls = '';
+    if (r.kind === 'won') {
+      rowCls = 'q-won';
+      if (r.dno) {
+        termCls = 'q-act-won';
+        // db24がまだ受注になっていない(失注/オープン等)のにdb30に注文がある=db24更新漏れを明示
+        term = (r.db24kind === 'won') ? '受注済 → D番号へ要書換' : '受注済(db30) → D番号へ要書換';
+      } else {
+        // 受注だがD番号未採番(db30未登録)。書換えるD番号がまだ無い
+        termCls = 'q-act-wait'; rowCls = 'q-wait';
+        term = '受注済 → D番号発行待ち';
+      }
+    }
+    else if (r.kind === 'lost') { rowCls = 'q-lost'; term = '失注 → 予約解放'; termCls = 'q-act-lost'; }
+    else if (r.kind === 'unknown') { rowCls = 'q-unknown'; term = '—'; }
+    else {
+      if (r.daysLeft == null) { term = '発行日不明'; termCls = 'q-nodate'; }
+      else if (r.daysLeft < 0) { term = `期限切れ ${-r.daysLeft}日`; termCls = 'q-expired'; rowCls = 'q-expiredrow'; }
+      else if (r.daysLeft <= 14) { term = `あと ${r.daysLeft}日`; termCls = 'q-soon'; }
+      else { term = `あと ${r.daysLeft}日`; }
+    }
+    const statusBadge = `<span class="q-status q-${r.db24kind}">${escape(r.status)}</span>`;
+    const prodCell = r.web_url
+      ? `<a href="#" class="q-prodlink" onclick="openInExcelWeb(event, '${encodeURIComponent(r.web_url)}', '${encodeURIComponent(r.sheet || '')}')" title="このシートをExcelで開く${r.sheet ? '（' + escape(r.sheet) + '）' : ''}">${escape(r.products)}</a>`
+      : escape(r.products);
+    const dnoCell = r.dno
+      ? `<span class="q-dno">${escape(r.dno)}</span>${r.dnoSrc === 'db24' ? '<span class="q-dsrc">db24</span>' : ''}`
+      : '';
+    return `<tr class="${rowCls}">
+      <td class="q-prod">${prodCell}</td>
+      <td class="q-m">${escape(r.m)}</td>
+      <td class="q-pieces">${r.pieces ? r.pieces + '<span class="q-unit">枚</span>' : ''}</td>
+      <td class="q-d">${dnoCell}</td>
+      <td class="q-cust">${escape(r.cust)}</td>
+      <td class="q-issue">${escape(r.issue || '—')}</td>
+      <td class="q-term ${termCls}">${term}</td>
+      <td class="q-st">${statusBadge}</td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<table class="quote-table">
+    <thead><tr>
+      <th>製品名</th><th>M番号</th><th>予約</th><th>D番号<span class="th-sub">(書換先)</span></th><th>顧客</th><th>発行日</th><th>見積までの期限</th><th>見積状況</th>
+    </tr></thead>
+    <tbody>${body || '<tr><td colspan="8" class="q-none">該当なし</td></tr>'}</tbody>
+  </table>`;
+
+  const note = document.getElementById('quote-note');
+  if (note) note.textContent = `${(qq || onlyAction) ? `表示 ${shown.length} / 全 ${rows.length} 件・` : ''}見積データ ${quoteState.generated || ''}・有効期間 発行日＋${validity}日`;
+  const qc = document.getElementById('quote-count');
+  if (qc) qc.textContent = `${rows.length}件`;
+}
+async function quoteAutoLoad(force) {
+  if (quoteState.loaded && !force) { renderQuoteTable(); return; }
+  if (quoteState.tried && !force) return;
+  quoteState.tried = true;
+  const empty = document.getElementById('quote-empty');
+  const main = document.getElementById('quote-main');
+  if (empty && !quoteState.loaded) {
+    empty.hidden = false;
+    empty.innerHTML = '<div class="te-icon">⏳</div><div class="te-title">見積データを取得中…</div><p class="te-hint">SharePointから見積(見積検索ツール)とD番号(db30)を読み込んでいます。</p>';
+  }
+  try {
+    const token = await getAccessToken();
+    const driveId = await spResolveDriveId(token);
+    await quoteFetchFromSharePoint(token, driveId);                 // db24(見積)は必須
+    try { await quoteFetchDb30(token, driveId); }                   // db30(D番号)は失敗しても表は出す
+    catch (e2) { console.warn('[quote] db30(D番号)取得に失敗・D番号は空表示:', e2 && e2.message); quoteState.dmap = quoteState.dmap || new Map(); }
+    quoteState.loaded = true;
+    if (empty) empty.hidden = true;
+    if (main) main.hidden = false;
+    renderQuoteTable();
+  } catch (e) {
+    console.warn('[quote] 見積データ取得に失敗:', e && e.message);
+    quoteState.tried = false;
+    if (empty && !quoteState.loaded) empty.innerHTML = QUOTE_EMPTY_HTML;
+  }
+}
+// 見積フォローをCSV出力(製品ごとにまとめる=製品名→M番号順)。Excel対応のためUTF-8 BOM付き。
+function quoteExportCsv() {
+  if (!quoteState.loaded) { alert('見積データが未読込です。タブを開いて読み込んでから出力してください。'); return; }
+  const validity = parseInt(document.getElementById('quote-validity').value, 10) || 90;
+  const fmtDate = (dt) => dt ? `${dt.getFullYear()}/${dt.getMonth() + 1}/${dt.getDate()}` : '';
+  const lines = [];
+  const isSummary = quoteState.view === 'summary';
+  if (isSummary) {
+    // 製品ごと集計: 予約中/予約解除すべき/合計 の枚数 + 解除対象M番号
+    const groups = quoteAggregateByProduct(quoteComputeRows(validity));
+    lines.push(['製品名', '予約中(枚)', '予約解除すべき(枚)', '合計(枚)', '解除対象M番号']);
+    for (const g of groups) lines.push([g.product, g.reserved, g.release, g.reserved + g.release, g.releaseMs.join(' ')]);
+  } else {
+    const rows = quoteComputeRows(validity).slice();
+    rows.sort((a, b) => a.products.localeCompare(b.products, 'ja') || a.m.localeCompare(b.m));  // 製品ごとにまとめる
+    lines.push(['製品名', 'M番号', '予約枚数', 'D番号(書換先)', 'D番号出所', '顧客', '担当者', '発行日', '有効期限', '残日数', '状態', '見積状況(db24)', '品名(db24)', 'シート']);
+    for (const r of rows) lines.push([
+      r.products, r.m, r.pieces || 0, r.dno || '', r.dnoSrc || '',
+      r.cust || '', r.tanto || '', r.issue || '', fmtDate(r.expiry),
+      (r.daysLeft == null ? '' : r.daysLeft), quoteTermPlain(r),
+      r.status || '', r.hin || '', r.sheet || '',
+    ]);
+  }
+  const esc = (v) => { const s = String(v == null ? '' : v); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = '﻿' + lines.map(row => row.map(esc).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date(); const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  a.href = url; a.download = `見積フォロー${isSummary ? '_製品別集計' : ''}_${ymd}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function quoteSetView(v) {
+  quoteState.view = (v === 'summary') ? 'summary' : 'detail';
+  document.querySelectorAll('#tab-quote .q-view').forEach(el => el.classList.toggle('active', el.dataset.view === quoteState.view));
+  renderQuoteTable();
+}
+window.quoteSetView = quoteSetView;
+window.quoteExportCsv = quoteExportCsv;
+window.quoteAutoLoad = quoteAutoLoad;
+window.renderQuoteTable = renderQuoteTable;
 
 /* ============================================================
    在庫「推移」タブ (v5.81) — 履歴JSONL(スナップショット)を読み込み、
@@ -5687,6 +6191,8 @@ function renderAll() {
   renderSubstrate();
   document.getElementById('wafer-count').textContent = INVENTORY.length + '品名';
   document.getElementById('substrate-count').textContent = SUBSTRATE.length + '品名';
+  // v6.09: 在庫の(再)読込時、見積フォローが読込済みなら再描画(在庫読込途中にタブを開いて0件のまま残るのを防ぐ)
+  try { if (quoteState.loaded) renderQuoteTable(); } catch (e) {}
 }
 
 /* ============================================================
@@ -6709,12 +7215,18 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
       }
 
       const uniqCustomers = [...new Set(customers)].sort();
+      // v5.99: 見積フォロー用にM番号別の予約スロット数(枚数)を記録(customersは予約スロット1件=1要素の非重複前リスト)
+      const lotMCounts = {};
+      for (const c of customers) {
+        const mm = String(c || '').match(/M\d{3,}/g);
+        if (mm) [...new Set(mm)].forEach(x => { lotMCounts[x] = (lotMCounts[x] || 0) + 1; });
+      }
       const lotInfo = {
         lot: lotName, sheet: sn,
         arrival_disp: arrivalDisp,
         arrival_iso: arrivalDt ? arrivalDt.toISOString().substring(0,10) : null,
         arrival_wildcard: hasWildcard, arrival_empty: isEmpty, arrival_future: isFuture,
-        customers: uniqCustomers, locations: [...lotLocs].sort(),
+        customers: uniqCustomers, m_counts: lotMCounts, locations: [...lotLocs].sort(),
         is_dummy: isDummy, is_incoming: isIncoming,
       };
 
@@ -7188,7 +7700,7 @@ const CACHE_STORE = 'inventory_cache';
 const CACHE_VERSION = 1;
 // 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
 // (キャッシュ全クリアになる)
-const CACHE_SCHEMA_VERSION = 'v5.94-kit-shelf-dummy-2026-10-23';
+const CACHE_SCHEMA_VERSION = 'v6.07-kit-cumuku-4yr-2026-10-27';
 
 
 
