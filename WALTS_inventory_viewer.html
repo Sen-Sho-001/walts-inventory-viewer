@@ -3221,7 +3221,7 @@ table.history-table .h-stock { font-size: 16px; }
         <input type="text" id="quote-search" class="quote-search" placeholder="🔍 製品名・M/D番号・顧客で絞り込み" oninput="renderQuoteTable()">
         <span class="trend-range" id="quote-note"></span>
         <button type="button" class="trend-reload" onclick="quoteExportCsv()" title="表示中の全件を製品ごとにまとめてCSV出力(Excel対応)">⬇️ CSV出力</button>
-        <button type="button" class="trend-reload" onclick="quoteAutoLoad(true)" title="見積データを取り直す">🔄 最新に更新</button>
+        <button type="button" class="trend-reload" onclick="quoteRefreshAll()" title="見積データ(db24/db30)と在庫(Excel)の両方を取り直す。予約解除なども反映されます">🔄 最新に更新</button>
       </div>
       <div id="quote-summary" class="quote-summary"></div>
       <div id="quote-table-wrap"></div>
@@ -3453,6 +3453,7 @@ function setOrder(key, data) {
 //    → 内部ビルドを刻むだけで公開版は自動で追従し、手動更新漏れによるズレが起きない。
 // ============================================================
 const CHANGELOG = [
+  { v: 'v6.12', date: '2026-10-28', text: '見積フォローの「🔄最新に更新」で、見積データ(db24/db30)だけでなく在庫(Excel)も取り直すように変更。従来は見積データのみ再取得で、在庫側の予約解除などがリストに反映されなかった。これでボタン1つで予約解除も反映される(在庫の再取得は全ファイル対象のため少し時間がかかる)。表示のみ' },
   { v: 'v6.11', date: '2026-10-27', text: '基板の詳細カードに「保管期限」を常時表示(最終取引・過去1年と並べてメタ情報に追加)。表面処理別の期限(SAC5年/NiAu・NiPdAu・OSP・Cu無垢4年)を表示し、対象外(ITO等)は「対象外（期限なし）」。帯ではなくカード内で、在庫の有無に関わらず常に見えるようにした。表示のみ' },
   { v: 'v6.10', date: '2026-10-27', text: '基板の「経過」警告色を表面処理別の保管期限基準に修正。従来は一律4年(48ヶ月)で警告色だったため、SAC(5年)品が4年超で誤って警告表示されていた(例 FC120 SAC 4年2ヶ月→緑が正)。保管期限超過=赤/残6ヶ月=黄/それ以外=緑とし、対象外(ITO等)は経過警告なし。シリーズ帯のアラームカードと詳細カード(最古在庫バッジ・ロットピル)の両方に適用。帯の最古在庫はダミーを除いた現役在庫で判定。表示のみ' },
   { v: 'v6.09', date: '2026-10-27', text: '見積フォローが在庫読込の途中にタブを開くと0件のまま残る問題を修正。在庫の(再)読込完了時に見積フォローを自動再描画するようにした。表示のみ' },
@@ -5475,6 +5476,19 @@ function quoteSetView(v) {
   document.querySelectorAll('#tab-quote .q-view').forEach(el => el.classList.toggle('active', el.dataset.view === quoteState.view));
   renderQuoteTable();
 }
+// v6.12: 「最新に更新」= 見積データ(db24/db30)と在庫(Excel)の両方を取り直す。
+//   在庫を取り直すことで、予約解除などの在庫側の変更も反映される(bootSharePointFlow完了時のrenderAllで見積も再描画)。
+async function quoteRefreshAll() {
+  const empty = document.getElementById('quote-empty');
+  const main = document.getElementById('quote-main');
+  // 進捗表示(見積側)
+  if (main && !main.hidden) { /* 既に表示中 */ }
+  try { await quoteAutoLoad(true); } catch (e) { console.warn('[quote] 見積再取得失敗:', e && e.message); }
+  // 在庫も取り直す(重い。完了時にrenderAll→renderQuoteTableで反映)
+  try { if (typeof bootSharePointFlow === 'function') await bootSharePointFlow(true); } catch (e) { console.warn('[quote] 在庫再取得失敗:', e && e.message); }
+  try { renderQuoteTable(); } catch (e) {}
+}
+window.quoteRefreshAll = quoteRefreshAll;
 window.quoteSetView = quoteSetView;
 window.quoteExportCsv = quoteExportCsv;
 window.quoteAutoLoad = quoteAutoLoad;
