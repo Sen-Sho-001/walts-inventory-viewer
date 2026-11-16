@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<title>WALTS 在庫管理ツール v6.00</title>
+<title>WALTS 在庫管理ツール v6.32</title>
 <style>
   :root {
     --bg: #eceef1;
@@ -3263,7 +3263,7 @@ table.history-table .h-stock { font-size: 16px; }
 <div class="app">
 
   <header class="top">
-    <h1>WALTS 在庫管理ツール <span class="sub" id="app-ver">v6.00</span></h1>
+    <h1>WALTS 在庫管理ツール <span class="sub" id="app-ver">v6.32</span></h1>
     <div class="index-info-wrap" id="changes-box">
       <div class="changes-box" id="changes-display">
         <div class="lbl">📂 SharePoint との同期</div>
@@ -3661,6 +3661,7 @@ function setOrder(key, data) {
 //    → 内部ビルドを刻むだけで公開版は自動で追従し、手動更新漏れによるズレが起きない。
 // ============================================================
 const CHANGELOG = [
+  { v: 'v6.32', date: '2026-11-16', text: '①更新ボタン(再読込)でときどき「データ取得に失敗しました」と出る不具合を修正。原因はログインのポップアップで、クリック操作のない自動起動時に開くとブラウザにブロックされていた。(a)認証情報の保存先を sessionStorage→localStorage に変更し、ブラウザを閉じて開き直してもログインを保持（裏で自動的にトークン更新＝ポップアップ不要）。(b)自動起動時はポップアップを一切開かず、ログインが必要なときは「🔑 ログインして取得」ボタンを表示し、押した瞬間（＝クリック操作）にだけログイン画面を開くようにした。初回のみ一度ログインが必要（以降は自動）。②更新履歴とヘッダーのバージョン表示を修正。従来は v5系前提の版数処理のため v6.xx の更新履歴が最新行に出ず下部に埋もれ、ヘッダー表示も v6.00 固定で更新しても変わらなかった。v6.xx は束ねず個別に新しい順で先頭表示し、ヘッダー/タイトルのバージョンは常に最新の v6.xx を自動反映。いずれも表示・認証まわりのみ（在庫の数え方・キャッシュへの影響なし）' },
   { v: 'v6.31', date: '2026-11-16', text: '糸島保管ウエハの産地判定を「フォルダ」から「ファイル名」に変更し、糸島ファイルを本社フォルダへ移動しても糸島のまま分類・表示されるようにした（糸島ファイルは口径φ○○inchを名前に持つか★ITO/★SI0631始まり。本社の★製品名とは別名で衝突しない）。あわせて、取得時にフォルダが存在しない(404)場合は致命的エラーにせずスキップするよう変更（糸島フォルダを無くして本社へ集約しても読み込みが止まらない）。現行フォルダ構成では結果は不変（数え方・キャッシュへの影響なし）。表示・分類のみ' },
   { v: 'v6.25', date: '2026-11-04', text: '工程分割品(FC150等)で「入荷予定」の表示を区別。入荷日が未来ではなく“加工中”を理由に入荷予定扱いになっているロット＝ベースウエハは既に手元にある追加工中なので、入荷予定ロット欄に「🔧 追加工中（ベースウエハ入荷済 ＋入荷日）」と表示（見出しも「追加工中ロット（ベースウエハ入荷済）」等に切替）。本当の新規入荷予定（入荷日が未来/未定）は従来どおり。表示のみ（枚数は不変）' },
   { v: 'v6.24', date: '2026-11-04', text: 'FC150等の工程判定に「同色バッチ引き継ぎ」を追加。加工中メモが1セルだけ／1行ずつバラ書き(staircase)でも、PI列・ボール列で同じ塗り色のセルは同じ加工バッチとみなし、空・断片セルもそのメモ(加工中/予定/日付)を引き継いで数える。セル結合しなくても色を揃えれば正しくカウント。従来はメモ文字のあるセルだけ拾っていたため、バラ書きの端数が漏れていた。数え方が変わるためキャッシュ版数も更新' },
@@ -3802,10 +3803,13 @@ const PUBLIC_REV_SUMMARIES = {
 };
 function _revMinor(v) { return parseInt(String(v).replace(/^v?5\./, ''), 10); }
 // 内部CHANGELOG → 公開向け(新しい順)。v5.42以降を5件ずつ束ね、v5.41以下は個別のまま後ろに続ける。
+function _isV6(v) { return /^v?6\./.test(String(v)); }  // v6.xx は束ねず個別表示(新しい順)
 function buildPublicChangelog() {
+  const v6List = CHANGELOG.filter(c => _isV6(c.v));      // v6.xx: CHANGELOGの並び(新しい順)のまま先頭に出す
+  const rest = CHANGELOG.filter(c => !_isV6(c.v));       // v5.xx以下だけを従来の束ねロジックで処理
   const isNew = c => _revMinor(c.v) > PUBLIC_BASELINE;
-  const known = CHANGELOG.filter(c => !isNew(c));  // v5.41以下(社内既知・新しい順のまま)
-  const fresh = CHANGELOG.filter(isNew).sort((a, b) => _revMinor(a.v) - _revMinor(b.v));  // 昇順(古い順)
+  const known = rest.filter(c => !isNew(c));  // v5.41以下(社内既知・新しい順のまま)
+  const fresh = rest.filter(isNew).sort((a, b) => _revMinor(a.v) - _revMinor(b.v));  // 昇順(古い順)
   const groups = [];
   for (let i = 0; i < fresh.length; i += REV_GROUP_SIZE) groups.push(fresh.slice(i, i + REV_GROUP_SIZE));
   const pub = groups.map((g, idx) => {
@@ -3820,7 +3824,7 @@ function buildPublicChangelog() {
       items: g.slice().reverse().map(c => ({ v: c.v, text: c.text, date: c.date })),  // 各Rev内は新しい順
     };
   }).reverse();  // 新しい順
-  return pub.concat(known);
+  return v6List.concat(pub, known);  // v6.xx(新しい順) → v5.42+の束ねRev → v5.41以下
 }
 // v5.19: 変更履歴の描画 (最新1件は常時表示、過去は折りたたみ)
 // v5.79: 公開Rev(5件ずつ束ね)で表示する
@@ -3829,8 +3833,9 @@ function renderChangelog() {
   const PUB = buildPublicChangelog();
   const latest = PUB[0];
   const past = PUB.slice(1);
-  // v6.00: 公開版をメジャー改訂 v6.00 に固定(ヘッダー・タイトル)。更新履歴の束ねRev(v5.XX)は履歴として下に残す。
-  const APP_DISPLAY_VERSION = 'v6.00';
+  // v6.32: ヘッダー/タイトルの表示バージョンは、CHANGELOG先頭(最新)のv6.xxを自動反映する。
+  //   (従来は 'v6.00' 固定で、更新しても表示が変わらなかった。)束ねRev(v5.XX)は履歴として下に残す。
+  const APP_DISPLAY_VERSION = (CHANGELOG.find(c => /^v?6\./.test(c.v)) || {}).v || 'v6.00';
   {
     const vs = document.getElementById('app-ver');
     if (vs) vs.textContent = APP_DISPLAY_VERSION;
@@ -8365,13 +8370,21 @@ async function initMsal() {
       authority: `https://login.microsoftonline.com/${SP_CONFIG.tenantId}`,
       redirectUri: SP_CONFIG.redirectUri,
     },
-    cache: { cacheLocation: 'sessionStorage' },
+    cache: { cacheLocation: 'localStorage' },  // v6.32: ブラウザ再起動後もアカウントを保持しサイレント取得を効かせる(従来sessionStorageは閉じると消えて再ログイン必須だった)
   });
   await msalInstance.initialize();
   return msalInstance;
 }
 
-async function getAccessToken() {
+// v6.32: interactive=false のときはポップアップを開かず「要ログイン」を投げる。
+//   → 起動時の自動取得でクリック操作なしにポップアップを開くとブラウザにブロックされ
+//      「データ取得に失敗しました」になるのを防ぐ(ログインはボタンのクリック起点でのみ開く)。
+function _needsLoginError() {
+  const err = new Error('サインインが必要です（ログインボタンを押してください）');
+  err.code = 'NEEDS_INTERACTIVE_LOGIN';
+  return err;
+}
+async function getAccessToken(interactive = true) {
   if (cachedAccessToken) return cachedAccessToken;
   const instance = await initMsal();
   const request = { scopes: SP_CONFIG.scopes };
@@ -8381,10 +8394,12 @@ async function getAccessToken() {
     try {
       result = await instance.acquireTokenSilent({ ...request, account });
     } catch (e) {
-      console.warn('Silent token acquisition failed, falling back to popup:', e);
+      console.warn('Silent token acquisition failed:', e);
+      if (!interactive) throw _needsLoginError();
       result = await instance.acquireTokenPopup(request);
     }
   } else {
+    if (!interactive) throw _needsLoginError();
     result = await instance.acquireTokenPopup(request);
   }
   cachedAccessToken = result.accessToken;
@@ -8535,9 +8550,10 @@ window.cacheDebug = {
 // opts.forceRefresh = true でキャッシュ無視
 async function fetchInventoryFromSharePoint(progressCb, opts = {}) {
   const forceRefresh = opts.forceRefresh === true;
+  const interactive = opts.interactive !== false;  // v6.32: 既定はクリック起点(true)。自動起動時のみ false
   await ensureCacheSchema();
-  
-  const token = await getAccessToken();
+
+  const token = await getAccessToken(interactive);
   const allWafer = [];
   const allSubstrate = [];
   const stats = {
@@ -8721,7 +8737,7 @@ async function fetchInventoryFromSharePoint(progressCb, opts = {}) {
 }
 
 // === v5.0: 起動フロー ===
-async function bootSharePointFlow(forceRefresh = false) {
+async function bootSharePointFlow(forceRefresh = false, interactive = true) {
   const statusText = document.getElementById('fetch-status-text');
   const fetchCounts = document.getElementById('fetch-counts');
   const refetchBtn = document.getElementById('btn-refetch');
@@ -8737,7 +8753,7 @@ async function bootSharePointFlow(forceRefresh = false) {
     const t0 = performance.now();
     const { wafer, substrate, stats } = await fetchInventoryFromSharePoint(
       (msg) => { statusText.textContent = msg; },
-      { forceRefresh }
+      { forceRefresh, interactive }
     );
     const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
 
@@ -8760,6 +8776,23 @@ async function bootSharePointFlow(forceRefresh = false) {
     attnNotesFetch(forceRefresh);  // v6.18: 要対応の共有コメント(SharePoint)を読み込む(更新時は取り直す)
   } catch (err) {
     console.error('SharePoint fetch error:', err);
+    // v6.32: 自動起動でログインが必要な場合は、失敗表示ではなくログインボタンを出す。
+    //   (ポップアップはユーザーのクリック操作がないとブラウザにブロックされるため)
+    if (err && err.code === 'NEEDS_INTERACTIVE_LOGIN') {
+      statusText.textContent = '';
+      const msg = document.createElement('span');
+      msg.textContent = '🔑 ログインが必要です — ';
+      const loginBtn = document.createElement('button');
+      loginBtn.textContent = 'ログインして取得';
+      loginBtn.style.cssText = 'padding:4px 14px; font-size:14px; cursor:pointer; vertical-align:middle;';
+      loginBtn.addEventListener('click', () => { cachedAccessToken = null; bootSharePointFlow(forceRefresh, true); });
+      statusText.appendChild(msg);
+      statusText.appendChild(loginBtn);
+      errorPanel.style.display = 'none';
+      refetchBtn.disabled = false;
+      renderAll();  // 前回スナップショット or 空のまま画面は出す
+      return;
+    }
     statusText.textContent = '❌ データ取得に失敗しました';
     errorPanel.style.display = 'block';
     errorMsg.textContent = err.message || String(err);
@@ -8771,7 +8804,7 @@ async function bootSharePointFlow(forceRefresh = false) {
 // === v5.0: ボタンイベント ===
 document.getElementById('btn-refetch').addEventListener('click', () => {
   cachedAccessToken = null;  // 念のためトークン破棄して再取得
-  bootSharePointFlow(true);  // v5.2: 再取得は必ずキャッシュを無視して全件再解析
+  bootSharePointFlow(true, true);  // v5.2: 再取得は必ずキャッシュを無視。v6.32: クリック起点なので対話ログイン可
 });
 
 document.getElementById('btn-export-json').addEventListener('click', () => {
@@ -8839,7 +8872,7 @@ document.getElementById('btn-export-json').addEventListener('click', () => {
   } else {
     renderAll();  // 初回はUIスケルトン
   }
-  bootSharePointFlow();
+  bootSharePointFlow(false, false);  // v6.32: 自動起動は非対話(サイレント取得のみ)。要ログイン時はボタンを出す
 })();
 
 </script>
