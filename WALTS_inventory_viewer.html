@@ -3661,6 +3661,7 @@ function setOrder(key, data) {
 //    → 内部ビルドを刻むだけで公開版は自動で追従し、手動更新漏れによるズレが起きない。
 // ============================================================
 const CHANGELOG = [
+  { v: 'v6.31', date: '2026-11-16', text: '糸島保管ウエハの産地判定を「フォルダ」から「ファイル名」に変更し、糸島ファイルを本社フォルダへ移動しても糸島のまま分類・表示されるようにした（糸島ファイルは口径φ○○inchを名前に持つか★ITO/★SI0631始まり。本社の★製品名とは別名で衝突しない）。あわせて、取得時にフォルダが存在しない(404)場合は致命的エラーにせずスキップするよう変更（糸島フォルダを無くして本社へ集約しても読み込みが止まらない）。現行フォルダ構成では結果は不変（数え方・キャッシュへの影響なし）。表示・分類のみ' },
   { v: 'v6.25', date: '2026-11-04', text: '工程分割品(FC150等)で「入荷予定」の表示を区別。入荷日が未来ではなく“加工中”を理由に入荷予定扱いになっているロット＝ベースウエハは既に手元にある追加工中なので、入荷予定ロット欄に「🔧 追加工中（ベースウエハ入荷済 ＋入荷日）」と表示（見出しも「追加工中ロット（ベースウエハ入荷済）」等に切替）。本当の新規入荷予定（入荷日が未来/未定）は従来どおり。表示のみ（枚数は不変）' },
   { v: 'v6.24', date: '2026-11-04', text: 'FC150等の工程判定に「同色バッチ引き継ぎ」を追加。加工中メモが1セルだけ／1行ずつバラ書き(staircase)でも、PI列・ボール列で同じ塗り色のセルは同じ加工バッチとみなし、空・断片セルもそのメモ(加工中/予定/日付)を引き継いで数える。セル結合しなくても色を揃えれば正しくカウント。従来はメモ文字のあるセルだけ拾っていたため、バラ書きの端数が漏れていた。数え方が変わるためキャッシュ版数も更新' },
   { v: 'v6.23', date: '2026-11-04', text: 'ウエハTOPを「左=シリーズ一覧ナビ／右=詳細カードを最初から表示」に刷新。左に常時出るシリーズ一覧（数値なし・ダーク基調・状態ランプ●のみ）をクリックでそのシリーズに絞り込み、「すべて」で全シリーズ表示。アコーディオンの開閉は廃止し、選んだシリーズの製品詳細（実在庫/入荷予定/現有予約/入予定予約/ダミー）を最初から表示。要対応ゾーンは引き続き最上部。選択シリーズは記憶。表示のみ' },
@@ -8338,6 +8339,20 @@ const SP_CONFIG = {
   },
 };
 
+// v6.31: 産地(本社/糸島)をフォルダではなく「ファイル名」で判定する。
+//   狙い: 糸島フォルダのファイルを本社フォルダへ移動しても、糸島の表示・分類が維持され、
+//        糸島フォルダが空/削除されても壊れない(フォルダ取得の404スキップと併用)。
+//   糸島ファイルは口径(φ○○inch)を名前に持つ(φ12inch IP40.xlsx 等)か、下記の例外名。
+//   本社ファイルは「★製品名.xlsx」で、inch も ITO/SI0631 も含まないため衝突しない。
+//   ※ファイル名は今後も変えない前提。新たに糸島ファイルを増やす場合は下の判定に追記。
+function isItoshimaFile(name) {
+  const n = String(name || '').toLowerCase().replace(/\s+/g, '');
+  if (/inch/.test(n)) return true;                 // φ12inch / φ8inch / ★φ4inch 等
+  if (n.startsWith('★ito')) return true;           // ★ITO_250127.xlsx (本社にITOは無い)
+  if (n.startsWith('★si0631')) return true;        // ★SI0631_250120.xlsx (SIPOS, 本社に無い)
+  return false;
+}
+
 // === v5.0: MSAL認証 ===
 let msalInstance = null;
 let cachedAccessToken = null;
@@ -8560,6 +8575,13 @@ async function fetchInventoryFromSharePoint(progressCb, opts = {}) {
     if (progressCb) progressCb(`📂 ${folderLabel}: ファイル一覧取得中...`);
     const listUrl = `https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${encodeURIComponent(folderPath)}:/children?$top=200`;
     const r3 = await fetch(listUrl, { headers: { Authorization: 'Bearer ' + token } });
+    // v6.31: フォルダが存在しない(404)場合は致命的エラーにせずスキップ。
+    //   → 糸島フォルダを無くして本社へ集約しても、読み込み全体が止まらない。
+    if (r3.status === 404) {
+      console.warn(`[Skip] ${folderLabel} (${folderPath}) が見つかりません。スキップします。`);
+      if (progressCb) progressCb(`⏭️ ${folderLabel}: フォルダ無し（スキップ）`);
+      continue;
+    }
     if (!r3.ok) throw new Error(`${folderLabel} ファイル一覧取得失敗: HTTP ${r3.status}`);
     const list = await r3.json();
     const allEntries = list.value || [];
@@ -8624,13 +8646,15 @@ async function fetchInventoryFromSharePoint(progressCb, opts = {}) {
         const buf = await r.arrayBuffer();
         const isGlass = /glass/i.test(fileMeta.name);
         const isWlp = /(^|[^A-Za-z])WLP([^A-Za-z]|$)/i.test(fileMeta.name.replace(/\.[^.]+$/, ''));
+        // v6.31: 産地はフォルダでなくファイル名で決定(糸島ファイルを本社フォルダに置いても糸島のまま)
+        const resolvedOrigin = (folderKey.startsWith('wafer') && isItoshimaFile(fileMeta.name)) ? 'wafer_itoshima' : folderKey;
         const summary = folderKey.startsWith('substrate')
           ? await analyzeSubstrateWorkbook(buf, fileMeta.name, fileMeta)
           : isGlass
-            ? await analyzeGlassWorkbook(buf, fileMeta.name, fileMeta, folderKey)
+            ? await analyzeGlassWorkbook(buf, fileMeta.name, fileMeta, resolvedOrigin)
             : isWlp
-              ? await analyzeWlpWorkbook(buf, fileMeta.name, fileMeta, folderKey)
-              : await analyzeWorkbook(buf, fileMeta.name, fileMeta, folderKey);
+              ? await analyzeWlpWorkbook(buf, fileMeta.name, fileMeta, resolvedOrigin)
+              : await analyzeWorkbook(buf, fileMeta.name, fileMeta, resolvedOrigin);
         // キャッシュに保存
         try {
           await cachePut({
@@ -8639,7 +8663,7 @@ async function fetchInventoryFromSharePoint(progressCb, opts = {}) {
             lastModifiedDateTime: fileMeta.lastModifiedDateTime,
             size: fileMeta.size || null,
             webUrl: fileMeta.webUrl || null,
-            locationOrigin: folderKey,
+            locationOrigin: resolvedOrigin,
             summary: summary,
             savedAt: new Date().toISOString(),
           });
