@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<title>WALTS 在庫管理ツール v6.32</title>
+<title>WALTS 在庫管理ツール v6.34</title>
 <style>
   :root {
     --bg: #eceef1;
@@ -3263,7 +3263,7 @@ table.history-table .h-stock { font-size: 16px; }
 <div class="app">
 
   <header class="top">
-    <h1>WALTS 在庫管理ツール <span class="sub" id="app-ver">v6.32</span></h1>
+    <h1>WALTS 在庫管理ツール <span class="sub" id="app-ver">v6.34</span></h1>
     <div class="index-info-wrap" id="changes-box">
       <div class="changes-box" id="changes-display">
         <div class="lbl">📂 SharePoint との同期</div>
@@ -3273,7 +3273,7 @@ table.history-table .h-stock { font-size: 16px; }
     </div>
     <div id="fetch-status-bar" style="margin-top:8px; padding:8px 12px; background:#f0f4f8; border-radius:6px; font-size: 14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
       <span id="fetch-status-text" style="flex:1; min-width:200px;">✅ 取得完了 (1.5秒) - 最終取得: 14:32:18</span>
-      <span id="fetch-counts" style="color:#555;">本社 43品名 / 糸島 16品名 / 基板 21品名</span>
+      <span id="fetch-counts" style="color:#555;">ウエハ 59品名 / 基板 21品名</span>
       <button id="btn-refetch" style="padding:4px 12px; font-size: 14px; cursor:pointer;">🔄 再取得</button>
       <button id="btn-export-json" style="padding:4px 12px; font-size: 14px; cursor:pointer; opacity:0.7;" title="デバッグ用: 現在の集計データをJSONで保存">📥 JSON出力</button>
     </div>
@@ -3661,6 +3661,8 @@ function setOrder(key, data) {
 //    → 内部ビルドを刻むだけで公開版は自動で追従し、手動更新漏れによるズレが起きない。
 // ============================================================
 const CHANGELOG = [
+  { v: 'v6.34', date: '2026-11-17', text: '製品カード見出しの「📊 Excel」ボタンの挙動を変更。従来は最後に保存された状態（＝前回開いていたシート）で開いていたが、今後は「現有在庫（実在庫>0・ダミー除く）のうち入荷日が最も古いロットのシート」を直接開く（先入れ先出しで最古在庫をすぐ確認できる）。実在庫のあるロットが無い製品は従来どおりファイル先頭を開く。ロット明細行の各シート直リンクは従来どおり。表示のみ' },
+  { v: 'v6.33', date: '2026-11-17', text: '糸島/本社の産地区別を廃止（拠点を本社に統合）。糸島ウエハを本社フォルダへ集約したのに合わせ、製品カード・変動リストの「糸島」「本社」バッジ表示を削除し、ヘッダーの品名カウントは「本社○／糸島○」から「ウエハ○（本社＋糸島を合算）」に変更。検索対象テキストからも産地語を除外。取得は従来どおり両フォルダを読む（糸島フォルダが空/404でもスキップ）ので、ファイルがどちらにあってもウエハとして正しく集計。表示のみ（在庫の数え方・キャッシュへの影響なし）' },
   { v: 'v6.32', date: '2026-11-16', text: '①更新ボタン(再読込)でときどき「データ取得に失敗しました」と出る不具合を修正。原因はログインのポップアップで、クリック操作のない自動起動時に開くとブラウザにブロックされていた。(a)認証情報の保存先を sessionStorage→localStorage に変更し、ブラウザを閉じて開き直してもログインを保持（裏で自動的にトークン更新＝ポップアップ不要）。(b)自動起動時はポップアップを一切開かず、ログインが必要なときは「🔑 ログインして取得」ボタンを表示し、押した瞬間（＝クリック操作）にだけログイン画面を開くようにした。初回のみ一度ログインが必要（以降は自動）。②更新履歴とヘッダーのバージョン表示を修正。従来は v5系前提の版数処理のため v6.xx の更新履歴が最新行に出ず下部に埋もれ、ヘッダー表示も v6.00 固定で更新しても変わらなかった。v6.xx は束ねず個別に新しい順で先頭表示し、ヘッダー/タイトルのバージョンは常に最新の v6.xx を自動反映。いずれも表示・認証まわりのみ（在庫の数え方・キャッシュへの影響なし）' },
   { v: 'v6.31', date: '2026-11-16', text: '糸島保管ウエハの産地判定を「フォルダ」から「ファイル名」に変更し、糸島ファイルを本社フォルダへ移動しても糸島のまま分類・表示されるようにした（糸島ファイルは口径φ○○inchを名前に持つか★ITO/★SI0631始まり。本社の★製品名とは別名で衝突しない）。あわせて、取得時にフォルダが存在しない(404)場合は致命的エラーにせずスキップするよう変更（糸島フォルダを無くして本社へ集約しても読み込みが止まらない）。現行フォルダ構成では結果は不変（数え方・キャッシュへの影響なし）。表示・分類のみ' },
   { v: 'v6.25', date: '2026-11-04', text: '工程分割品(FC150等)で「入荷予定」の表示を区別。入荷日が未来ではなく“加工中”を理由に入荷予定扱いになっているロット＝ベースウエハは既に手元にある追加工中なので、入荷予定ロット欄に「🔧 追加工中（ベースウエハ入荷済 ＋入荷日）」と表示（見出しも「追加工中ロット（ベースウエハ入荷済）」等に切替）。本当の新規入荷予定（入荷日が未来/未定）は従来どおり。表示のみ（枚数は不変）' },
@@ -4518,10 +4520,8 @@ function renderChanges() {
     else if (diffMin < 1440) agoText = Math.floor(diffMin/60) + '時間前';
     else agoText = Math.floor(diffMin/1440) + '日前';
     
-    const origin = c.origin === 'itoshima'
-      ? '<span class="origin-badge itoshima">糸島</span>'
-      : '<span class="origin-badge honsha">本社</span>';
-    
+    const origin = '';  // v6.33: 糸島/本社の産地区別を廃止(拠点統合)。産地バッジは表示しない
+
     html += `
       <div class="change-item">
         <span class="ago">${agoText}</span>
@@ -5092,7 +5092,7 @@ function renderProductCard(p) {
   const filterLot = (l) => {
     if (!showEmpty && l.stock === 0 && l.reserved === 0) return false;
     if (q) {
-      const hay = p.product + ' ' + (p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '糸島' : '本社') + ' ' + l.lot + ' ' + l.sheet + ' ' +
+      const hay = p.product + ' ' + l.lot + ' ' + l.sheet + ' ' +
                   l.customers.join(' ') + ' ' + l.locations.join(' ');
       if (!matchSearch(hay, q)) return false;
     }
@@ -5100,7 +5100,7 @@ function renderProductCard(p) {
   };
   const filterIncoming = (l) => {
     if (q) {
-      const hay = p.product + ' ' + (p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '糸島' : '本社') + ' ' + l.lot + ' ' + l.sheet + ' ' +
+      const hay = p.product + ' ' + l.lot + ' ' + l.sheet + ' ' +
                   l.customers.join(' ');
       if (!matchSearch(hay, q)) return false;
     }
@@ -5138,9 +5138,13 @@ function renderProductCard(p) {
               <h2 class="name">${escape(displayName(p))}</h2>
             </div>
             <div class="pc-meta">
-              ${p.location_origin === 'wafer_itoshima' || p.location_origin === 'itoshima' ? '<span class="origin-badge itoshima">糸島</span>' : '<span class="origin-badge honsha">本社</span>'}
               <span class="file">${escape(p.file)}</span>
-              ${p.web_url ? `<span class="file-link-group"><a class="file-link-btn web" href="#" onclick="openInExcelWeb(event, '${encodeURIComponent(p.web_url)}')" title="ブラウザのExcel Onlineでファイルを開く">📊 Excel</a></span>` : ''}
+              ${p.web_url ? (() => {
+                const _sh = oldestStockSheet(p);
+                const _arg = _sh ? `, '${encodeURIComponent(_sh)}'` : '';
+                const _ttl = _sh ? `現有在庫で最も古い入荷ロットのシート「${escape(_sh)}」を開く` : 'ブラウザのExcel Onlineでファイルを開く（在庫のあるシートが特定できないため先頭を表示）';
+                return `<span class="file-link-group"><a class="file-link-btn web" href="#" onclick="openInExcelWeb(event, '${encodeURIComponent(p.web_url)}'${_arg})" title="${_ttl}">📊 Excel</a></span>`;
+              })() : ''}
             </div>
           </div>
         </div>
@@ -5397,6 +5401,18 @@ window.openInExcelDesktop = function(event, encodedUrl) {
   document.body.removeChild(a);
 };
 // ブラウザのExcel Onlineで開く (シート指定オプションあり)
+// v6.34: 製品の「現有在庫(非ダミー・実在庫>0)」のうち、入荷日が最も古いロットのシート名を返す。
+//   ヘッダーの「📊 Excel」ボタンを、最後に保存された状態ではなく最古在庫のシートで開くため。
+//   実在庫を持つロットが無い/シート名が無い場合は null(→従来どおりファイル先頭で開く)。
+function oldestStockSheet(p) {
+  const lots = (p && Array.isArray(p.lots) ? p.lots : [])
+    .filter(l => l && !l.is_dummy && (Number(l.stock) || 0) > 0 && l.sheet);
+  if (!lots.length) return null;
+  const withIso = lots.filter(l => l.arrival_iso)
+    .sort((a, b) => (a.arrival_iso < b.arrival_iso ? -1 : (a.arrival_iso > b.arrival_iso ? 1 : 0)));
+  const pick = withIso[0] || lots[0];   // 入荷日ISOが古い順。ISO無しのみの時は先頭ロット
+  return pick.sheet || null;
+}
 window.openInExcelWeb = function(event, encodedUrl, sheetName) {
   event.stopPropagation();
   event.preventDefault();
@@ -8767,7 +8783,7 @@ async function bootSharePointFlow(forceRefresh = false, interactive = true) {
     const ts = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
     statusText.innerHTML = `✅ 取得完了 (${elapsed}秒) - 最終取得: ${ts}` + (failTotal > 0 ? ` <span style="color:#c33;">⚠️ ${failTotal}件失敗</span>` : '');
-    fetchCounts.textContent = `本社 ${honshaCount}品名 / 糸島 ${itoshimaCount}品名 / 基板 ${substrateCount}品名`;
+    fetchCounts.textContent = `ウエハ ${honshaCount + itoshimaCount}品名 / 基板 ${substrateCount}品名`;  // v6.33: 糸島区別を廃止し本社と合算
     refetchBtn.disabled = false;
     exportBtn.disabled = (wafer.length + substrate.length === 0);
 
