@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<title>WALTS 在庫管理ツール v6.34</title>
+<title>WALTS 在庫管理ツール v6.37</title>
 <style>
   :root {
     --bg: #eceef1;
@@ -2156,6 +2156,9 @@ table.quote-table tbody tr { background: var(--panel); color: var(--ink); }
 table.quote-table tbody tr:nth-child(even) { background: #f6f8fb; }
 table.quote-table td.q-m { font-weight: 700; white-space: nowrap; }
 table.quote-table td.q-issue { white-space: nowrap; color: var(--ink-dim, #666); }
+/* v6.36: ファイル名日付が発行日(db24)と相違する場合は強調(採番日ズレの気づき用) */
+table.quote-table td.q-fissue.q-datediff { color: #c0392b; font-weight: 700; background: #fdf3e7; }
+table.quote-table .q-basis-db24 { margin-left: 5px; font-size: 11px; font-weight: 600; color: #8a6d3b; background: #fcf3dd; border-radius: 3px; padding: 0 4px; }
 table.quote-table td.q-term { white-space: nowrap; font-weight: 700; }
 .q-term.q-expired { color: #b02626; }
 .q-term.q-soon { color: #a35b12; }
@@ -3263,7 +3266,7 @@ table.history-table .h-stock { font-size: 16px; }
 <div class="app">
 
   <header class="top">
-    <h1>WALTS 在庫管理ツール <span class="sub" id="app-ver">v6.34</span></h1>
+    <h1>WALTS 在庫管理ツール <span class="sub" id="app-ver">v6.37</span></h1>
     <div class="index-info-wrap" id="changes-box">
       <div class="changes-box" id="changes-display">
         <div class="lbl">📂 SharePoint との同期</div>
@@ -3414,11 +3417,11 @@ table.history-table .h-stock { font-size: 16px; }
       <div class="quote-controls">
         <label>見積有効期間:
           <select id="quote-validity" onchange="renderQuoteTable()">
-            <option value="30">発行日＋30日</option>
-            <option value="60">発行日＋60日</option>
-            <option value="90" selected>発行日＋90日</option>
-            <option value="120">発行日＋120日</option>
-            <option value="180">発行日＋180日</option>
+            <option value="30">ファイル名日付＋30日</option>
+            <option value="60">ファイル名日付＋60日</option>
+            <option value="90" selected>ファイル名日付＋90日</option>
+            <option value="120">ファイル名日付＋120日</option>
+            <option value="180">ファイル名日付＋180日</option>
           </select>
         </label>
         <span class="q-viewtoggle">
@@ -3661,6 +3664,9 @@ function setOrder(key, data) {
 //    → 内部ビルドを刻むだけで公開版は自動で追従し、手動更新漏れによるズレが起きない。
 // ============================================================
 const CHANGELOG = [
+  { v: 'v6.37', date: '2026-11-24', text: '見積フォローの「見積までの期限（残日数）」の基準を、db24の発行日から「見積書ファイル名の日付」に変更。db24の発行日は採番日になる場合があり実際の見積日とズレるため。ファイル名(path_rel)先頭のYYYYMMDDを採用し、無い行のみ従来どおりdb24発行日で計算（その行は期限欄に「※発行日」表示）。有効期間プルダウン・列見出し・表下の注記を「ファイル名日付基準」に変更して基準を明示。CSVにも「期限基準」列を追加。表示のみ（在庫の数え方に影響なし）' },
+  { v: 'v6.36', date: '2026-11-24', text: '見積フォローに「ファイル名(日付)」列を発行日の隣に追加。見積書ファイル名(path_rel)の先頭YYYYMMDDを日付として表示し、db24発行日と相違する行は赤で強調（採番日ズレの気づき用）。表示のみ' },
+  { v: 'v6.35', date: '2026-11-20', text: 'FC150LC-0102JY を「ベースウエハ ／ Bump付き（高さ別）」に分割表示。判定＝備考欄にC番号あり（最優先）＋Cu/SnAg列に値あり→Bump付き、高さ＝Cu/SnAgの組合せ（例 Cu30/SnAg15）でグループ化（縦結合セルはマスター値を継承）。過去出荷（使用済）は高さ別カードを作らずベースに集約し空カードの乱立を防止。備考 or 保管場所に「加工中」記載のBumpウエハは入荷予定（加工中）扱い（例 C10284「再加工中」）。分割バリアントのΦ表示はファイル名のφ○○inchから補完（FC150LCはΦ12）。数え方変更につきキャッシュ更新＋core.js再生成' },
   { v: 'v6.34', date: '2026-11-17', text: '製品カード見出しの「📊 Excel」ボタンの挙動を変更。従来は最後に保存された状態（＝前回開いていたシート）で開いていたが、今後は「現有在庫（実在庫>0・ダミー除く）のうち入荷日が最も古いロットのシート」を直接開く（先入れ先出しで最古在庫をすぐ確認できる）。実在庫のあるロットが無い製品は従来どおりファイル先頭を開く。ロット明細行の各シート直リンクは従来どおり。表示のみ' },
   { v: 'v6.33', date: '2026-11-17', text: '糸島/本社の産地区別を廃止（拠点を本社に統合）。糸島ウエハを本社フォルダへ集約したのに合わせ、製品カード・変動リストの「糸島」「本社」バッジ表示を削除し、ヘッダーの品名カウントは「本社○／糸島○」から「ウエハ○（本社＋糸島を合算）」に変更。検索対象テキストからも産地語を除外。取得は従来どおり両フォルダを読む（糸島フォルダが空/404でもスキップ）ので、ファイルがどちらにあってもウエハとして正しく集計。表示のみ（在庫の数え方・キャッシュへの影響なし）' },
   { v: 'v6.32', date: '2026-11-16', text: '①更新ボタン(再読込)でときどき「データ取得に失敗しました」と出る不具合を修正。原因はログインのポップアップで、クリック操作のない自動起動時に開くとブラウザにブロックされていた。(a)認証情報の保存先を sessionStorage→localStorage に変更し、ブラウザを閉じて開き直してもログインを保持（裏で自動的にトークン更新＝ポップアップ不要）。(b)自動起動時はポップアップを一切開かず、ログインが必要なときは「🔑 ログインして取得」ボタンを表示し、押した瞬間（＝クリック操作）にだけログイン画面を開くようにした。初回のみ一度ログインが必要（以降は自動）。②更新履歴とヘッダーのバージョン表示を修正。従来は v5系前提の版数処理のため v6.xx の更新履歴が最新行に出ず下部に埋もれ、ヘッダー表示も v6.00 固定で更新しても変わらなかった。v6.xx は束ねず個別に新しい順で先頭表示し、ヘッダー/タイトルのバージョンは常に最新の v6.xx を自動反映。いずれも表示・認証まわりのみ（在庫の数え方・キャッシュへの影響なし）' },
@@ -5754,7 +5760,14 @@ function quoteBuildLookup() {
   const cols = window.QV_COLS || [];
   const rows = window.QV_ROWS || [];
   const idx = {};
-  ['新見積No.', '発行日', '見積状況', 'D No.', '品名', '顧客名', '担当者'].forEach(name => { idx[name] = cols.indexOf(name); });
+  ['新見積No.', '発行日', '見積状況', 'D No.', '品名', '顧客名', '担当者', 'path_rel'].forEach(name => { idx[name] = cols.indexOf(name); });
+  // v6.36: 見積書ファイルのパス(path_rel)の「ファイル名先頭 YYYYMMDD」から日付を取り出す。
+  //   db24の発行日は採番日になる場合があるため、ファイル名日付を並列表示する用。
+  const fileDateFrom = (pr) => {
+    const base = String(pr || '').split(/[\/\\]/).pop() || '';
+    const m = base.match(/(20\d{2})(\d{2})(\d{2})/);
+    return m ? `${m[1]}/${+m[2]}/${+m[3]}` : '';
+  };
   const map = new Map();
   for (const r of rows) {
     const mno = String(r[idx['新見積No.']] || '').trim();
@@ -5766,6 +5779,7 @@ function quoteBuildLookup() {
       hin:    idx['品名'] >= 0 ? String(r[idx['品名']] || '').trim() : '',
       cust:   idx['顧客名'] >= 0 ? String(r[idx['顧客名']] || '').trim() : '',
       tanto:  idx['担当者'] >= 0 ? String(r[idx['担当者']] || '').trim() : '',
+      fileIssue: idx['path_rel'] >= 0 ? fileDateFrom(r[idx['path_rel']]) : '',
     });
   }
   quoteState.lookup = map;
@@ -5862,9 +5876,14 @@ function quoteComputeRows(validity) {
   for (const [m, e] of byM) {
     const q = lookup.get(m) || null;
     const db24kind = q ? quoteStatusKind(q.status) : 'unknown';
-    const issueDt = q ? quoteParseDate(q.issue) : null;
+    const issueDt = q ? quoteParseDate(q.issue) : null;                            // db24発行日
+    const fileIssueDt = (q && q.fileIssue) ? quoteParseDate(q.fileIssue) : null;   // ファイル名日付
+    // v6.37: 見積期限の基準は「ファイル名日付」を優先(db24発行日は採番日になる場合があるため)。
+    //   ファイル名に日付が無い行のみ db24発行日 にフォールバック。
+    const baseDt = fileIssueDt || issueDt;
+    const dateBasis = fileIssueDt ? 'file' : (issueDt ? 'db24' : '');
     let daysLeft = null, expiry = null;
-    if (issueDt) { expiry = new Date(issueDt.getTime() + validity * 86400000); daysLeft = Math.round((expiry - today) / 86400000); }
+    if (baseDt) { expiry = new Date(baseDt.getTime() + validity * 86400000); daysLeft = Math.round((expiry - today) / 86400000); }
     const dArr = dmap.get(m) || [];
     let dno = dArr.join(', ');
     let dnoSrc = dArr.length ? 'db30' : '';
@@ -5878,6 +5897,7 @@ function quoteComputeRows(validity) {
       cust: q && q.cust ? q.cust : [...e.custRaw][0] || '',
       tanto: q ? q.tanto : '', hin: q ? q.hin : '',
       issue: q ? q.issue : '', status: q ? q.status : '(db24に無し)',
+      fileIssue: q ? (q.fileIssue || '') : '', dateBasis,
       dno, dnoSrc, kind, db24kind, daysLeft, expiry,
     });
   }
@@ -5896,7 +5916,7 @@ function quoteTermPlain(r) {
   if (r.kind === 'won') return r.dno ? (r.db24kind === 'won' ? '受注済→D番号へ要書換' : '受注済(db30)→D番号へ要書換') : '受注済→D番号発行待ち';
   if (r.kind === 'lost') return '失注→予約解放';
   if (r.kind === 'unknown') return '—';
-  if (r.daysLeft == null) return '発行日不明';
+  if (r.daysLeft == null) return '日付不明';
   if (r.daysLeft < 0) return `期限切れ ${-r.daysLeft}日`;
   return `あと ${r.daysLeft}日`;
 }
@@ -5962,7 +5982,7 @@ function renderQuoteTable() {
       <tfoot><tr class="q-sumfoot"><td>合計 ${groups.length} 製品</td><td class="q-pieces">${totR}</td><td class="q-pieces q-release">${totX}</td><td class="q-pieces">${totR + totX}</td><td></td></tr></tfoot>
     </table>`;
     const noteS = document.getElementById('quote-note');
-    if (noteS) noteS.textContent = `${qq ? `絞り込み ${groups.length} 製品・` : ''}製品ごと集計（予約解除すべき=失注・期限切れ ／ 予約中=受注含む）・有効期間 発行日＋${validity}日`;
+    if (noteS) noteS.textContent = `${qq ? `絞り込み ${groups.length} 製品・` : ''}製品ごと集計（予約解除すべき=失注・期限切れ ／ 予約中=受注含む）・期限はファイル名日付＋${validity}日が基準（無い行は発行日）`;
     const qcS = document.getElementById('quote-count');
     if (qcS) qcS.textContent = `${rows.length}件`;
     return;
@@ -5988,7 +6008,7 @@ function renderQuoteTable() {
     else if (r.kind === 'lost') { rowCls = 'q-lost'; term = '失注 → 予約解放'; termCls = 'q-act-lost'; }
     else if (r.kind === 'unknown') { rowCls = 'q-unknown'; term = '—'; }
     else {
-      if (r.daysLeft == null) { term = '発行日不明'; termCls = 'q-nodate'; }
+      if (r.daysLeft == null) { term = '日付不明'; termCls = 'q-nodate'; }
       else if (r.daysLeft < 0) { term = `期限切れ ${-r.daysLeft}日`; termCls = 'q-expired'; rowCls = 'q-expiredrow'; }
       else if (r.daysLeft <= 14) { term = `あと ${r.daysLeft}日`; termCls = 'q-soon'; }
       else { term = `あと ${r.daysLeft}日`; }
@@ -6007,20 +6027,21 @@ function renderQuoteTable() {
       <td class="q-d">${dnoCell}</td>
       <td class="q-cust">${escape(r.cust)}</td>
       <td class="q-issue">${escape(r.issue || '—')}</td>
-      <td class="q-term ${termCls}">${term}</td>
+      <td class="q-issue q-fissue${r.fileIssue && r.fileIssue !== r.issue ? ' q-datediff' : ''}"${r.fileIssue && r.fileIssue !== r.issue ? ' title="発行日と相違"' : ''}>${escape(r.fileIssue || '—')}</td>
+      <td class="q-term ${termCls}">${term}${(r.dateBasis === 'db24' && r.daysLeft != null) ? '<span class="q-basis-db24" title="ファイル名に日付が無いため発行日(db24)を基準にしています">※発行日</span>' : ''}</td>
       <td class="q-st">${statusBadge}</td>
     </tr>`;
   }).join('');
 
   wrap.innerHTML = `<table class="quote-table">
     <thead><tr>
-      <th>製品名</th><th>M番号</th><th>予約</th><th>D番号<span class="th-sub">(書換先)</span></th><th>顧客</th><th>発行日</th><th>見積までの期限</th><th>見積状況</th>
+      <th>製品名</th><th>M番号</th><th>予約</th><th>D番号<span class="th-sub">(書換先)</span></th><th>顧客</th><th>発行日<span class="th-sub">(db24)</span></th><th>ファイル名<span class="th-sub">(日付=基準)</span></th><th>見積までの期限<span class="th-sub">(ファイル名日付基準)</span></th><th>見積状況</th>
     </tr></thead>
     <tbody>${body || '<tr><td colspan="8" class="q-none">該当なし</td></tr>'}</tbody>
   </table>`;
 
   const note = document.getElementById('quote-note');
-  if (note) note.textContent = `${(qq || onlyAction) ? `表示 ${shown.length} / 全 ${rows.length} 件・` : ''}見積データ ${quoteState.generated || ''}・有効期間 発行日＋${validity}日`;
+  if (note) note.textContent = `${(qq || onlyAction) ? `表示 ${shown.length} / 全 ${rows.length} 件・` : ''}見積データ ${quoteState.generated || ''}・期限はファイル名日付＋${validity}日が基準（ファイル名に日付が無い行は発行日基準）`;
   const qc = document.getElementById('quote-count');
   if (qc) qc.textContent = `${rows.length}件`;
 }
@@ -6065,11 +6086,12 @@ function quoteExportCsv() {
   } else {
     const rows = quoteComputeRows(validity).slice();
     rows.sort((a, b) => a.products.localeCompare(b.products, 'ja') || a.m.localeCompare(b.m));  // 製品ごとにまとめる
-    lines.push(['製品名', 'M番号', '予約枚数', 'D番号(書換先)', 'D番号出所', '顧客', '担当者', '発行日', '有効期限', '残日数', '状態', '見積状況(db24)', '品名(db24)', 'シート']);
+    lines.push(['製品名', 'M番号', '予約枚数', 'D番号(書換先)', 'D番号出所', '顧客', '担当者', '発行日(db24)', 'ファイル名日付', '期限基準', '有効期限', '残日数', '状態', '見積状況(db24)', '品名(db24)', 'シート']);
     for (const r of rows) lines.push([
       r.products, r.m, r.pieces || 0, r.dno || '', r.dnoSrc || '',
-      r.cust || '', r.tanto || '', r.issue || '', fmtDate(r.expiry),
-      (r.daysLeft == null ? '' : r.daysLeft), quoteTermPlain(r),
+      r.cust || '', r.tanto || '', r.issue || '', r.fileIssue || '',
+      (r.dateBasis === 'file' ? 'ファイル名日付' : (r.dateBasis === 'db24' ? '発行日(db24)' : '')),
+      fmtDate(r.expiry), (r.daysLeft == null ? '' : r.daysLeft), quoteTermPlain(r),
       r.status || '', r.hin || '', r.sheet || '',
     ]);
   }
@@ -7209,6 +7231,10 @@ function mbThickOf(cellText, sheetName) {
    ※ここを直したら core.js も再生成すること (build_core.py)
    ============================================================ */
 const PROCESS_SPLIT_CONFIGS = [
+  // v6.35: FC150LC を「ベースウエハ / Bump付き(高さ別)」に分割。
+  //   判定=備考欄にC番号あり(最優先) ＋ Cu/SnAg列に値あり → Bump付き。高さ=Cu/SnAgの組合せ(例 Cu30/SnAg15)。
+  //   どちらか欠ける or 両方空 → ベースウエハ。※備考・Cu/SnAgは縦結合可(getCellはマスター値を返す)。
+  { test: /^FC150LC/i, kind: 'bump', cuHeaders: ['Cu'], snagHeaders: ['SnAg'], baseLabel: 'ベースウエハ' },
   { test: /^FC150(?![0-9A-Za-z])/i, kind: 'process', piHeaders: ['PI'], ballHeaders: ['ボール'],
     labels: { base: 'SiNベース', pi: 'PI塗布済', ball: 'PI+ボール' } },
   // v5.56: ITO は「マスク」列の値でウエハ単位に分割 (1101 / 1102 / 空欄=未確定)。
@@ -7483,7 +7509,10 @@ function displayName(p) {
   const base = trimOldName(displayNameBase(p));
   if (/^Φ/.test(base)) return base;                 // 既に先頭にサイズあり → そのまま
   if (/^Glass\b/i.test(p.product)) return `Φ8 ${base}`;  // v5.67: Glassは全てΦ8を先頭に付加
-  return `${base} (${WAFER_SIZE[p.product] || 'Φ8'})`;
+  // v6.35: 対応表ミス時はファイル名の φ○○inch から口径を補う(分割バリアントで品名が完全一致せずΦ8に化けるのを防ぐ。例 FC150LCの高さ別)
+  const fφ = (p.file || '').match(/φ\s*(\d+)\s*inch/i);
+  const size = WAFER_SIZE[p.product] || (fφ ? 'Φ' + fφ[1] : 'Φ8');
+  return `${base} (${size})`;
 }
 function displayNameBase(p) {
   // v5.57: 対応表による改名を最優先 (新名はΦ等も含む完成形)
@@ -7695,10 +7724,13 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
     //   splitCfg!=null のシートは単一summaryを作らず、ウエハ毎に各タイプへ振り分ける。
     const splitCfg = processSplitConfig(baseProduct);
     const splitKind = splitCfg ? (splitCfg.kind || 'process') : null;
-    let piCol = null, ballCol = null, maskCol = null;
+    let piCol = null, ballCol = null, maskCol = null, cuCol = null, snagCol = null;
     if (splitCfg) {
       if (splitKind === 'mask') {
         maskCol = findColByHeader(ws, splitCfg.maskHeaders);  // slot/W# 表どちらでも
+      } else if (splitKind === 'bump') {
+        cuCol = findColByHeader(ws, splitCfg.cuHeaders);     // v6.35: バンプ高さ(Cu/SnAg)列
+        snagCol = findColByHeader(ws, splitCfg.snagHeaders);
       } else {
         const hr = findWaferHeaderRow(ws);
         piCol = colInRow(ws, hr, splitCfg.piHeaders);
@@ -7834,6 +7866,27 @@ async function analyzeWorkbook(arrayBuffer, filename, fileMeta, locationOrigin) 
             const mv = maskCol ? cleanText(ws.getCell(r, maskCol).value).trim() : '';
             if (mv) { typeKey = mv; variantLabel[typeKey] = `(${mv})`; }
             else { typeKey = splitCfg.undecidedKey; variantLabel[typeKey] = splitCfg.undecidedLabel; }
+          } else if (splitKind === 'bump') {
+            // v6.35: 備考C番号(最優先) ＋ Cu/SnAg値あり → Bump付き。高さ=Cu/SnAgの組合せでグループ化。
+            const biko = cols['備考'] ? cleanText(ws.getCell(r, cols['備考']).value) : '';
+            const hasC = /C\s?\d{4,5}/i.test(biko);
+            const cuV = cuCol ? cleanText(ws.getCell(r, cuCol).value).trim() : '';
+            const snV = snagCol ? cleanText(ws.getCell(r, snagCol).value).trim() : '';
+            const hasBump = (cuV !== '' || snV !== '');
+            const baseKey = () => { typeKey = '__base__'; variantLabel['__base__'] = splitCfg.baseLabel || 'ベースウエハ'; };
+            if (status === '使用済') {
+              // 出荷済は高さ別カードを作らずベースに集約(過去出荷の高さで空カードが乱立するのを防ぐ)
+              baseKey();
+            } else if (hasC && hasBump) {
+              typeKey = 'Cu' + cuV + '/SnAg' + snV;      // 高さ別キー (ラベルもこの文字列)
+              variantLabel[typeKey] = 'Cu' + cuV + '/SnAg' + snV;
+              // v6.35: 「加工中」記載(備考 or 保管場所)のBumpウエハは入荷予定(加工中)扱いにする。
+              //   例 C10284「バンプマスクミスのため、再加工中」(保管場所欄)。"再加工中"も/加工中/に一致、"新光加工"は不一致。
+              const hoka = cols['保管'] ? cleanText(ws.getCell(r, cols['保管']).value) : '';
+              if (/加工中/.test(biko) || /加工中/.test(hoka)) stagePending = true;
+            } else {
+              baseKey();
+            }
           } else {
             const wt = waferProcessType(ws, r, piCol, ballCol, ballColorMap, piColorMap);
             typeKey = wt.type;
@@ -8430,7 +8483,7 @@ const CACHE_STORE = 'inventory_cache';
 const CACHE_VERSION = 1;
 // 集計ロジックを大きく変えたら CACHE_SCHEMA_VERSION を上げる
 // (キャッシュ全クリアになる)
-const CACHE_SCHEMA_VERSION = 'v6.25-processing-2026-11-04';
+const CACHE_SCHEMA_VERSION = 'v6.35-fc150lc-bump-proc-2026-11-20';
 
 
 
